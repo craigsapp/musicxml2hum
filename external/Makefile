@@ -15,9 +15,7 @@
 ## parent directory's Makefile.
 ##
 
-.PHONY: humlib libtool guile
-
-HUMDRUM = humdrum
+.PHONY: humlib pugixml
 
 all: humlib pugixml
 
@@ -29,6 +27,7 @@ ifeq ($(wildcard humlib),)
 endif
 	(cd humlib && make CFLAGS=-D_USE_HUMLIB_OPTIONS_)
 
+
 pugixml:
 ifeq ($(wildcard pugixml),)
 	wget https://github.com/zeux/pugixml/archive/master.zip -O pugixml.zip
@@ -36,7 +35,6 @@ ifeq ($(wildcard pugixml),)
 	mv pugixml-master pugixml
 endif
 	(cd pugixml && cmake . && make)
-
 
 
 clean:

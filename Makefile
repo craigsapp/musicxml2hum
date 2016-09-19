@@ -12,17 +12,17 @@
 ##
 
 # targets which don't actually refer to files:
-.PHONY: external tests
+.PHONY: external tests humlib pugixml
 .SUFFIXES:
 
 OBJDIR    = obj
 SRCDIR    = src
 INCDIR    = include
-TARGDIR   = bin
+BINDIR    = bin
 TARGET    = xml2hum2
 INCDIRS   = -I$(INCDIR)
 INCDIRS  += -Iexternal/humlib/include 
-INCDIRS  += -Isrc 
+INCDIRS  += -Iexternal/pugixml/src 
 LIBDIRS   = -Lexternal/humlib/lib
 LIBDIRS  += -Lexternal/pugixml
 HUMLIB    = humlib
@@ -40,20 +40,20 @@ vpath %.cpp $(SRCDIR)
 vpath %.o   $(OBJDIR)
 
 # generating a list of the object files
-#OBJS = $(notdir $(patsubst %.cpp,%.o,$(wildcard $(SRCDIR)/*.cpp)))
-SRCS = $(wildcard $(SRCDIR)/*.cpp)
+OBJS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%,$(patsubst %.cpp,%.o,$(wildcard $(SRCDIR)/*.cpp)))
 
 
-all: objdir external targetdir
-	$(COMPILER) $(PREFLAGS) -o $(TARGDIR)/$(TARGET) $(SRCS) $(POSTFLAGS) \
-		&& strip $(TARGDIR)/$(TARGET)
+all: objdir bindir external $(OBJS)
+	@echo [CC] $(BINDIR)/$(TARGET)
+	@$(COMPILER) $(PREFLAGS) -o $(BINDIR)/$(TARGET) $(OBJS) $(POSTFLAGS) \
+		&& strip $(BINDIR)/$(TARGET)
 
 objdir:
 	mkdir -p $(OBJDIR)
 
 
-targetdir:
-	mkdir -p $(TARGDIR)
+bindir:
+	mkdir -p $(BINDIR)
 
 
 external:
@@ -70,8 +70,14 @@ tests:
 
 
 clean:
+	-rm $(OBJDIR)/*.o
+	-rmdir $(OBJDIR)
+
+
+superclean: clean
 	(cd external && $(MAKE) clean)
-	-rm -f $(TARGET)
+	-rm $(BINDIR)/$(TARGET)
+	-rmdir $(BINDIR)
 
 
 ###########################################################################
@@ -79,47 +85,12 @@ clean:
 # defining an explicit rule for object file dependencies                  #
 #                                                                         #
 
-%.o : %.cpp
+$(OBJDIR)/%.o : %.cpp
 	@echo [CC] $@
-	@$(COMPILER) $(PREFLAGS) -o $(OBJDIR)/$(notdir $@) $(POSTFLAGS) $<
+	@$(COMPILER) $(PREFLAGS) -g -c -o $(OBJDIR)/$(notdir $@) $<
+
 
 #                                                                         #
 ###########################################################################
-
-
-
-###########################################################################
-#                                                                         #
-# Dependencies -- generated with the following command in                 #
-#      the src directory (in bash shell):                                 #
-#                                                                         #
-#   for i in *.cpp                                                        #
-#   do                                                                    #
-#      cc -I../include -MM $i | sed 's/\.\.\/include\///g'                #
-#      echo ""                                                            #
-#   done                                                                  #
-#                                                                         #
-# Or in a csh-type shell (such as tcsh):                                  #
-#                                                                         #
-#   foreach i (*.cpp)                                                     #
-#      cc -I../include -MM $i | sed 's/\.\.\/include\///g'                #
-#      echo ""                                                            #
-#   end                                                                   #
-
- 
-MxmlEvent.o: MxmlEvent.cpp humlib.h MxmlEvent.h pugiconfig.hpp \
-  pugixml.hpp MxmlMeasure.h
-
-MxmlMeasure.o: MxmlMeasure.cpp humlib.h MxmlEvent.h pugiconfig.hpp \
-  pugixml.hpp MxmlMeasure.h MxmlPart.h
-
-MxmlPart.o: MxmlPart.cpp humlib.h MxmlMeasure.h pugiconfig.hpp \
-  pugixml.hpp MxmlPart.h
-
-main.o: main.cpp xml2hum.h humlib.h pugiconfig.hpp pugixml.hpp \
-  MxmlPart.h MxmlMeasure.h MxmlEvent.h
-
-xml2hum.o: xml2hum.cpp xml2hum.h humlib.h pugiconfig.hpp \
-  pugixml.hpp MxmlPart.h MxmlMeasure.h MxmlEvent.h
 
 
