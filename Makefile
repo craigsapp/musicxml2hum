@@ -3,9 +3,9 @@
 ## Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 ## Creation Date: Sat Aug  6 10:57:54 CEST 2016
 ## Last Modified: Sun Sep 18 12:31:52 PDT 2016
-## Filename:      xml2hum2/Makefile
+## Filename:      musicxml2hum/Makefile
 ##
-## Description: This Makefile compiles the xml2hum2 program.
+## Description: This Makefile compiles the musicxml2hum program.
 ##
 ## To run this makefile, type (without quotes) "make" (or
 ## "gmake library" on FreeBSD computers).
@@ -19,7 +19,7 @@ OBJDIR    = obj
 SRCDIR    = src
 INCDIR    = include
 BINDIR    = bin
-TARGET    = xml2hum2
+TARGET    = musicxml2hum
 INCDIRS   = -I$(INCDIR)
 INCDIRS  += -Iexternal/humlib/include 
 INCDIRS  += -Iexternal/pugixml/src 

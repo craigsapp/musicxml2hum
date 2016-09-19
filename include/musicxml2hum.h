@@ -2,8 +2,8 @@
 // Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 // Creation Date: Sat Aug  6 10:53:40 CEST 2016
 // Last Modified: Sun Sep 18 13:33:18 PDT 2016
-// Filename:      xml2hum.h
-// URL:           https://github.com/craigsapp/xml2hum/blob/master/include/xml2hum.h
+// Filename:      musicxml2hum.h
+// URL:           https://github.com/craigsapp/musicxml2hum/blob/master/include/musicxml2hum.h
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //

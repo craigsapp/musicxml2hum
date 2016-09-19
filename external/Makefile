@@ -40,6 +40,8 @@ endif
 clean:
 	-rm -f humlib.zip
 	-rm -rf humlib
+	-rm -f pugixml.zip
+	-rm -rf pugixml
 
 
 

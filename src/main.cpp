@@ -3,7 +3,7 @@
 // Creation Date: Sat Aug  6 10:53:40 CEST 2016
 // Last Modified: Sun Sep 18 13:11:26 PDT 2016
 // Filename:      main.cpp
-// URL:           https://github.com/craigsapp/xml2hum/blob/master/src/main.cpp
+// URL:           https://github.com/craigsapp/musicxml2hum/blob/master/src/main.cpp
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //
@@ -11,7 +11,7 @@
 //                Humdrum files.
 //
 
-#include "xml2hum.h"
+#include "musicxml2hum.h"
 
 #include <iostream>
 

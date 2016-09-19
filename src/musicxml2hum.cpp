@@ -2,15 +2,15 @@
 // Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 // Creation Date: Sat Aug  6 10:53:40 CEST 2016
 // Last Modified: Sun Sep 18 14:16:18 PDT 2016
-// Filename:      xml2hum.cpp
-// URL:           https://github.com/craigsapp/hum2ly/blob/master/src/xml2hum.cpp
+// Filename:      musicxml2hum.cpp
+// URL:           https://github.com/craigsapp/hum2ly/blob/master/src/musicxml2hum.cpp
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //
 // Description:   Convert a MusicXML file into a Humdrum file.
 //
 
-#include "xml2hum.h"
+#include "musicxml2hum.h"
 
 using namespace std;
 using namespace pugi;
