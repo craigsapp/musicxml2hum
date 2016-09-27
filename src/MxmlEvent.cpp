@@ -1,4 +1,15 @@
-// vim: ts=3
+//
+// Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
+// Creation Date: Sat Aug  6 10:53:40 CEST 2016
+// Last Modified: Sun Sep 18 14:16:18 PDT 2016
+// Filename:      musicxml2hum.cpp
+// URL:           https://github.com/craigsapp/hum2ly/blob/master/src/MxmlEvent.cpp
+// Syntax:        C++11
+// vim:           ts=3 noexpandtab
+//
+// Description:   MusicXML parsing abstraction for elements which are children
+//                of the measure element.
+//
 
 #include "humlib.h"
 
@@ -17,12 +28,13 @@
 
 using namespace pugi;
 using namespace std;
-using namespace hum;
+
+namespace hum {
 
 class MxmlMeasure;
 class MxmlPart;
 
-int MxmlEvent::counter = 0;
+int MxmlEvent::m_counter = 0;
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -34,8 +46,8 @@ int MxmlEvent::counter = 0;
 
 MxmlEvent::MxmlEvent(MxmlMeasure* measure) {
 	clear();
-	owner = measure;
-	sequence = counter++;
+	m_owner = measure;
+	m_sequence = m_counter++;
 }
 
 
@@ -57,12 +69,12 @@ MxmlEvent::~MxmlEvent() {
 //
 
 void MxmlEvent::clear(void) {
-	starttime = duration = 0;
-	eventtype = mevent_unknown;
-	owner = NULL;
-	linked = false;
-	voice = staff = 0;
-	links.clear();
+	m_starttime = m_duration = 0;
+	m_eventtype = mevent_unknown;
+	m_owner = NULL;
+	m_linked = false;
+	m_voice = m_staff = 0;
+	m_links.clear();
 }
 
 
@@ -73,7 +85,7 @@ void MxmlEvent::clear(void) {
 //
 
 void MxmlEvent::setStartTime(HumNum value) {
-	starttime = value;
+	m_starttime = value;
 }
 
 
@@ -84,7 +96,7 @@ void MxmlEvent::setStartTime(HumNum value) {
 //
 
 void MxmlEvent::setDuration(HumNum value) {
-	duration = value;
+	m_duration = value;
 }
 
 
@@ -95,7 +107,7 @@ void MxmlEvent::setDuration(HumNum value) {
 //
 
 HumNum MxmlEvent::getStartTime(void) const {
-	return starttime;
+	return m_starttime;
 }
 
 
@@ -106,7 +118,7 @@ HumNum MxmlEvent::getStartTime(void) const {
 //
 
 HumNum MxmlEvent::getDuration(void) const {
-	return duration;
+	return m_duration;
 }
 
 
@@ -117,7 +129,7 @@ HumNum MxmlEvent::getDuration(void) const {
 //
 
 void MxmlEvent::setOwner(MxmlMeasure* measure) {
-	owner = measure;
+	m_owner = measure;
 }
 
 
@@ -128,7 +140,7 @@ void MxmlEvent::setOwner(MxmlMeasure* measure) {
 //
 
 MxmlMeasure* MxmlEvent::getOwner(void) const {
-	return owner;
+	return m_owner;
 }
 
 
@@ -138,11 +150,11 @@ MxmlMeasure* MxmlEvent::getOwner(void) const {
 // MxmlEvent::getPartNumber --
 //
 
-int MxmlEvent::getPartNumber(void) {
-	if (!owner) {
+int MxmlEvent::getPartNumber(void) const {
+	if (!m_owner) {
 		return 0;
 	}
-	return owner->getPartNumber();
+	return m_owner->getPartNumber();
 }
 
 
@@ -153,7 +165,7 @@ int MxmlEvent::getPartNumber(void) {
 //
 
 const char* MxmlEvent::getName(void) const {
-	return node.name();
+	return m_node.name();
 }
 
 
@@ -169,8 +181,8 @@ int MxmlEvent::setQTicks(long value) {
 	if (value <= 0) {
 		return 0;
 	}
-	if (owner) {
-		return owner->setQTicks(value);
+	if (m_owner) {
+		return m_owner->setQTicks(value);
 	} else {
 		return 0;
 	}
@@ -184,8 +196,8 @@ int MxmlEvent::setQTicks(long value) {
 //
 
 long MxmlEvent::getQTicks(void) const {
-	if (owner) {
-		return owner->getQTicks();
+	if (m_owner) {
+		return m_owner->getQTicks();
 	} else {
 		return 0;
 	}
@@ -210,7 +222,7 @@ bool MxmlEvent::parseEvent(xpath_node el) {
 //
 
 long MxmlEvent::getIntValue(const char* query) const {
-	const char* val = node.select_node(query).node().child_value();
+	const char* val = m_node.select_node(query).node().child_value();
 	if (strcmp(val, "") == 0) {
 		return 0;
 	} else {
@@ -243,7 +255,7 @@ void MxmlEvent::setDurationByTicks (long value) {
 //
 
 bool MxmlEvent::hasChild(const char* query) const {
-	xpath_node result = node.select_single_node(query);
+	xpath_node result = m_node.select_single_node(query);
 	return !result.node().empty();
 }
 
@@ -255,10 +267,10 @@ bool MxmlEvent::hasChild(const char* query) const {
 //
 
 void MxmlEvent::attachToLastEvent(void) {
-	if (!owner) {
+	if (!m_owner) {
 		return;
 	}
-	owner->attachToLastEvent(this);
+	m_owner->attachToLastEvent(this);
 }
 
 
@@ -269,7 +281,7 @@ void MxmlEvent::attachToLastEvent(void) {
 //
 
 void MxmlEvent::link(MxmlEvent* event) {
-	links.push_back(event);
+	m_links.push_back(event);
 	event->setLinked();
 }
 
@@ -281,7 +293,7 @@ void MxmlEvent::link(MxmlEvent* event) {
 //
 
 void MxmlEvent::setLinked(void) {
-	linked = true;
+	m_linked = true;
 }
 
 
@@ -292,7 +304,7 @@ void MxmlEvent::setLinked(void) {
 //
 
 bool MxmlEvent::isLinked(void) const {
-	return linked;
+	return m_linked;
 }
 
 
@@ -303,7 +315,7 @@ bool MxmlEvent::isLinked(void) const {
 //
 
 bool MxmlEvent::isChord(void) const {
-	if ((links.size() > 0) && (strcmp(node.name(), "note") == 0)) {
+	if ((m_links.size() > 0) && (strcmp(m_node.name(), "note") == 0)) {
 		return true;
 	} else {
 		return false;
@@ -318,7 +330,7 @@ bool MxmlEvent::isChord(void) const {
 //
 
 void MxmlEvent::printEvent(void) const {
-	cout << getStartTime() << "\t" << getDuration() << "\t" << node.name();
+	cout << getStartTime() << "\t" << getDuration() << "\t" << m_node.name();
 	if (isChord()) {
 		cout << "\tCHORD";
 	}
@@ -333,7 +345,7 @@ void MxmlEvent::printEvent(void) const {
 //
 
 int MxmlEvent::getSequenceNumber(void) const {
-	return sequence;
+	return m_sequence;
 }
 
 
@@ -343,8 +355,8 @@ int MxmlEvent::getSequenceNumber(void) const {
 // MxmlEvent::getVoiceNumber --
 //
 
-int MxmlEvent::getVoiceNumber(void) {
-	return voice;
+int MxmlEvent::getVoiceNumber(void) const {
+	return m_voice;
 }
 
 
@@ -354,8 +366,8 @@ int MxmlEvent::getVoiceNumber(void) {
 // MxmlEvent::getStaffNumber --
 //
 
-int MxmlEvent::getStaffNumber(void) {
-	return staff;
+int MxmlEvent::getStaffNumber(void) const {
+	return m_staff;
 }
 
 
@@ -366,7 +378,7 @@ int MxmlEvent::getStaffNumber(void) {
 //
 
 void MxmlEvent::setVoice(int value) {
-	voice = (short)value;
+	m_voice = (short)value;
 }
 
 
@@ -377,7 +389,7 @@ void MxmlEvent::setVoice(int value) {
 //
 
 void MxmlEvent::setStaff(int value) {
-	staff = (short)value;
+	m_staff = (short)value;
 }
 
 
@@ -387,8 +399,8 @@ void MxmlEvent::setStaff(int value) {
 // MxmlEvent::getType --
 //
 
-measure_event_type MxmlEvent::getType(void) {
-	return eventtype;
+measure_event_type MxmlEvent::getType(void) const {
+	return m_eventtype;
 }
 
 
@@ -399,36 +411,36 @@ measure_event_type MxmlEvent::getType(void) {
 //
 
 bool MxmlEvent::parseEvent(xml_node el) {
-	node = el;
+	m_node = el;
 
-	if (strcmp(node.name(), "attributes") == 0) {
-		eventtype = mevent_attributes;
-	} else if (strcmp(node.name(), "backup") == 0) {
-		eventtype = mevent_backup;
-	} else if (strcmp(node.name(), "barline") == 0) {
-		eventtype = mevent_barline;
-	} else if (strcmp(node.name(), "bookmark") == 0) {
-		eventtype = mevent_bookmark;
-	} else if (strcmp(node.name(), "direction") == 0) {
-		eventtype = mevent_direction;
-	} else if (strcmp(node.name(), "figured-bass") == 0) {
-		eventtype = mevent_figured_bass;
-	} else if (strcmp(node.name(), "forward") == 0) {
-		eventtype = mevent_forward;
-	} else if (strcmp(node.name(), "grouping") == 0) {
-		eventtype = mevent_grouping;
-	} else if (strcmp(node.name(), "harmony") == 0) {
-		eventtype = mevent_harmony;
-	} else if (strcmp(node.name(), "link") == 0) {
-		eventtype = mevent_link;
-	} else if (strcmp(node.name(), "note") == 0) {
-		eventtype = mevent_note;
-	} else if (strcmp(node.name(), "print") == 0) {
-		eventtype = mevent_print;
-	} else if (strcmp(node.name(), "sound") == 0) {
-		eventtype = mevent_sound;
+	if (strcmp(m_node.name(), "attributes") == 0) {
+		m_eventtype = mevent_attributes;
+	} else if (strcmp(m_node.name(), "backup") == 0) {
+		m_eventtype = mevent_backup;
+	} else if (strcmp(m_node.name(), "barline") == 0) {
+		m_eventtype = mevent_barline;
+	} else if (strcmp(m_node.name(), "bookmark") == 0) {
+		m_eventtype = mevent_bookmark;
+	} else if (strcmp(m_node.name(), "direction") == 0) {
+		m_eventtype = mevent_direction;
+	} else if (strcmp(m_node.name(), "figured-bass") == 0) {
+		m_eventtype = mevent_figured_bass;
+	} else if (strcmp(m_node.name(), "forward") == 0) {
+		m_eventtype = mevent_forward;
+	} else if (strcmp(m_node.name(), "grouping") == 0) {
+		m_eventtype = mevent_grouping;
+	} else if (strcmp(m_node.name(), "harmony") == 0) {
+		m_eventtype = mevent_harmony;
+	} else if (strcmp(m_node.name(), "link") == 0) {
+		m_eventtype = mevent_link;
+	} else if (strcmp(m_node.name(), "note") == 0) {
+		m_eventtype = mevent_note;
+	} else if (strcmp(m_node.name(), "print") == 0) {
+		m_eventtype = mevent_print;
+	} else if (strcmp(m_node.name(), "sound") == 0) {
+		m_eventtype = mevent_sound;
 	} else {
-		eventtype = mevent_unknown;
+		m_eventtype = mevent_unknown;
 	}
 
 	int tempvoice    = 0;
@@ -436,7 +448,7 @@ bool MxmlEvent::parseEvent(xml_node el) {
 	int tempduration = 0;
 	const char* tempname;
 
-	for (auto el = node.first_child(); el; el = el.next_sibling()) {
+	for (auto el = m_node.first_child(); el; el = el.next_sibling()) {
 		tempname = el.name();
 		if (strcmp(tempname, "staff") == 0) {
 			tempstaff = atoi(el.child_value());
@@ -447,10 +459,10 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		}
 	}
 
-	voice = (short)tempvoice;
-	staff = (short)tempstaff;
+	m_voice = (short)tempvoice;
+	m_staff = (short)tempstaff;
 
-	switch (eventtype) {
+	switch (m_eventtype) {
 		case mevent_note:
 			setDuration(0);
 			if (hasChild("./chord")) {
@@ -489,5 +501,9 @@ bool MxmlEvent::parseEvent(xml_node el) {
 
 	return true;
 }
+
+
+} // end namespace hum
+
 
 

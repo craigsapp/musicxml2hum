@@ -7,11 +7,11 @@
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //
-// Description:   Convert a MusicXml file into a Humdrum file.
+// Description:   Inteface to convert a MusicXml file into a Humdrum file.
 //
 
-#ifndef _XML2HUM_H
-#define _XML2HUM_H
+#ifndef _MUSICXML2HUM_H
+#define _MUSICXML2HUM_H
 
 #define _USE_HUMLIB_OPTIONS_
 #include "humlib.h"
@@ -23,17 +23,12 @@
 #include "MxmlMeasure.h"
 #include "MxmlEvent.h"
 
-namespace hum {
-
 using namespace std;
 using namespace pugi;
 
+namespace hum {
 
-//////////////////////////////
-//
-// MusicXmlToHumdrumConverter -- The main class for converting MusicXML data
-//    into Humdrum data.
-//
+
 
 class MusicXmlToHumdrumConverter {
 	public:
@@ -70,24 +65,19 @@ class MusicXmlToHumdrumConverter {
 		                             xml_node partdeclaration,
 		                             xml_node partcontent);
 
-
-
 		bool convert          (ostream& out);
 		bool convertPart      (ostream& out, const string& partname,
 		                       int partindex);
 
-
 	private:
 		Options m_options;
-
 
 };
 
 
 }  // end of namespace hum
 
-
-#endif /* _XML2HUM_H */
+#endif /* _MUSICXML2HUM_H */
 
 
 

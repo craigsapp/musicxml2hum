@@ -1,4 +1,15 @@
-// vim: ts=3
+//
+// Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
+// Creation Date: Sat Aug  6 10:53:40 CEST 2016
+// Last Modified: Sun Sep 18 14:16:18 PDT 2016
+// Filename:      MxmlEvent.cpp
+// URL:           https://github.com/craigsapp/musicxml2hum/blob/master/include/MxmlEvent.h
+// Syntax:        C++11
+// vim:           ts=3 noexpandtab
+//
+// Description:   MusicXML parsing abstraction for elements which are children
+//                of the measure element.
+//
 
 #ifndef _MXMLEVENT_H
 #define _MXMLEVENT_H
@@ -10,16 +21,15 @@
 
 using namespace pugi;
 using namespace std;
-using namespace hum;
+
+
+namespace hum {
 
 class MxmlMeasure;
 
-////////////////////////////////////////////////////////////////////////////
-//
-// MxmlEvent -- an item contained in a measure
-//
 
-// Event types
+// Event types: These are all of the XML elements which can be children of
+// the measure element in MusicXML.
 
 enum measure_event_type {
 	mevent_unknown,
@@ -41,53 +51,55 @@ enum measure_event_type {
 
 class MxmlEvent {
 	public:
-		              MxmlEvent          (MxmlMeasure* measure);
-		             ~MxmlEvent          ();
-		void          clear              (void);
-		bool          parseEvent         (xml_node el);
-		bool          parseEvent         (xpath_node el);
-		void          setTickStart       (long value, long ticks);
-		void          setTickDur         (long value, long ticks);
-		void          setStartTime       (HumNum value);
-		void          setDuration        (HumNum value);
-		void          setDurationByTicks (long value);
-		HumNum        getStartTime       (void) const;
-		HumNum        getDuration        (void) const;
-		void          setOwner           (MxmlMeasure* measure);
-		MxmlMeasure*  getOwner           (void) const;
-		const char*   getName            (void) const;
-		int           setQTicks          (long value);
-		long          getQTicks          (void) const;
-		long          getIntValue        (const char* query) const;
-		bool          hasChild           (const char* query) const;
-		void          link               (MxmlEvent* event);
-		bool          isLinked           (void) const;
-		void          setLinked          (void);
-		void          attachToLastEvent  (void);
-		bool          isChord            (void) const;
-		void          printEvent         (void) const;
-		int           getSequenceNumber  (void) const;
-		int           getVoiceNumber     (void);
-		int           getStaffNumber     (void);
-		void          setVoice           (int value);
-		void          setStaff           (int value);
-		measure_event_type getType       (void);
-		int           getPartNumber      (void);
+		                   MxmlEvent          (MxmlMeasure* measure);
+		                  ~MxmlEvent          ();
+		void               clear              (void);
+		bool               parseEvent         (xml_node el);
+		bool               parseEvent         (xpath_node el);
+		void               setTickStart       (long value, long ticks);
+		void               setTickDur         (long value, long ticks);
+		void               setStartTime       (HumNum value);
+		void               setDuration        (HumNum value);
+		void               setDurationByTicks (long value);
+		HumNum             getStartTime       (void) const;
+		HumNum             getDuration        (void) const;
+		void               setOwner           (MxmlMeasure* measure);
+		MxmlMeasure*       getOwner           (void) const;
+		const char*        getName            (void) const;
+		int                setQTicks          (long value);
+		long               getQTicks          (void) const;
+		long               getIntValue        (const char* query) const;
+		bool               hasChild           (const char* query) const;
+		void               link               (MxmlEvent* event);
+		bool               isLinked           (void) const;
+		void               setLinked          (void);
+		void               attachToLastEvent  (void);
+		bool               isChord            (void) const;
+		void               printEvent         (void) const;
+		int                getSequenceNumber  (void) const;
+		int                getVoiceNumber     (void) const;
+		int                getStaffNumber     (void) const;
+		void               setVoice           (int value);
+		void               setStaff           (int value);
+		measure_event_type getType            (void) const;
+		int                getPartNumber      (void) const;
 
 	protected:
-		HumNum             starttime;
-		HumNum             duration;
-		measure_event_type eventtype;
-		xml_node           node;
-		MxmlMeasure*       owner;
-		vector<MxmlEvent*> links;
-		bool               linked;
-		int                sequence;
-		static int         counter;
-		short              staff;
-		short              voice;
+		HumNum             m_starttime;  // start time in quarter notes of event
+		HumNum             m_duration;   // duration in quarter notes of event
+		measure_event_type m_eventtype;  // enumeration type of event
+		xml_node           m_node;       // pointer to event in XML structure
+		MxmlMeasure*       m_owner;      // measure that contains this event
+		vector<MxmlEvent*> m_links;      // list of secondary chord notes
+		bool               m_linked;     // true if a secondary chord note
+		int                m_sequence;   // ordering of event in XML file
+		static int         m_counter;    // counter for sequence variable
+		short              m_staff;      // staff number in part for event
+		short              m_voice;      // voice number in part for event
 };
 
+
+} // end namespace hum
 
 #endif /* _MXMLEVENT_H */
 

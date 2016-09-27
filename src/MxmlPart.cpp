@@ -1,4 +1,18 @@
-// vim: ts=3
+//
+// Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
+// Creation Date: Sat Aug  6 10:53:40 CEST 2016
+// Last Modified: Sun Sep 18 14:16:18 PDT 2016
+// Filename:      MxmlPart.cpp
+// URL:           https://github.com/craigsapp/musicxml2hum/blob/master/src/MxmlPart.cpp
+// Syntax:        C++11
+// vim:           ts=3 noexpandtab
+//
+// Description:   MusicXML parsing abstraction for part elements which
+//                contain a list of measures.
+//
+// part element documentation:
+//    http://usermanuals.musicxml.com/MusicXML/Content/EL-MusicXML-part.htm
+//
 
 #include "humlib.h"
 
@@ -17,18 +31,17 @@
 
 using namespace pugi;
 using namespace std;
-using namespace hum;
+
+
+namespace hum {
 
 class MxmlMeasure;
 class MxmlPart;
 
 
-////////////////////////////////////////////////////////////////////////////
-
-
 //////////////////////////////
 //
-// MxmlPart::MxmlPart --
+// MxmlPart::MxmlPart -- Constructor.
 //
 
 MxmlPart::MxmlPart(void) {
@@ -39,7 +52,7 @@ MxmlPart::MxmlPart(void) {
 
 //////////////////////////////
 //
-// MxmlPart::~MxmlPart --
+// MxmlPart::~MxmlPart -- Deconstructor.
 //
 
 MxmlPart::~MxmlPart(void) {
@@ -50,29 +63,30 @@ MxmlPart::~MxmlPart(void) {
 
 //////////////////////////////
 //
-// MxmlPart::clear --
+// MxmlPart::clear -- Clear all internal variables of object.
 //
 
-
 void MxmlPart::clear(void) {
-	for (int i=0; i<(int)measures.size(); i++) {
-		delete measures[i];
-		measures[i] = NULL;
+	for (int i=0; i<(int)m_measures.size(); i++) {
+		delete m_measures[i];
+		m_measures[i] = NULL;
 	}
-	measures.clear();
-	partnum = 0;
+	m_measures.clear();
+	m_partnum = 0;
 }
 
 
 
 //////////////////////////////
 //
-// MxmlPart::getQTicks --
+// MxmlPart::getQTicks -- Return the current divisions element value,
+//    which are the number of integer ticks representing a quarter-note
+//    duration.
 //
 
-long MxmlPart::getQTicks(void) {
-	if (qtick.size() > 0) {
-		return qtick.back();
+long MxmlPart::getQTicks(void) const {
+	if (m_qtick.size() > 0) {
+		return m_qtick.back();
 	} else {
 		return 0;
 	}
@@ -82,27 +96,29 @@ long MxmlPart::getQTicks(void) {
 
 //////////////////////////////
 //
-// MxmlPart::setQTicks --
+// MxmlPart::setQTicks -- Set the current attribute/divisions value,
+//     which is the number of integer ticks representing a quarter-note
+//     duration.
 //
 
 int MxmlPart::setQTicks(long value) {
 	if (value < 0) {
-		return (int)qtick.size();
+		return (int)m_qtick.size();
 	}
-	if (qtick.size() > 0) {
-		if (qtick.back() == value) {
-			return (int)qtick.size();
+	if (m_qtick.size() > 0) {
+		if (m_qtick.back() == value) {
+			return (int)m_qtick.size();
 		}
 	}
-	qtick.push_back(value);
-	return (int)qtick.size();
+	m_qtick.push_back(value);
+	return (int)m_qtick.size();
 }
 
 
 
 //////////////////////////////
 //
-// MxmlPart::addMeasure --
+// MxmlPart::addMeasure -- Append a new measure to the list of measure element.
 //
 
 bool MxmlPart::addMeasure(xpath_node mel) {
@@ -112,11 +128,11 @@ bool MxmlPart::addMeasure(xpath_node mel) {
 
 bool MxmlPart::addMeasure(xml_node mel) {
 	MxmlMeasure* meas = new MxmlMeasure(this);
-	if (measures.size() > 0) {
-		meas->setPreviousMeasure(measures.back());
-		measures.back()->setNextMeasure(meas);
+	if (m_measures.size() > 0) {
+		meas->setPreviousMeasure(m_measures.back());
+		m_measures.back()->setNextMeasure(meas);
 	}
-	measures.push_back(meas);
+	m_measures.push_back(meas);
 	return meas->parseMeasure(mel);
 }
 
@@ -124,92 +140,91 @@ bool MxmlPart::addMeasure(xml_node mel) {
 
 //////////////////////////////
 //
-// MxmlPart::measureCount --
+// MxmlPart::getMeasureCount -- Return the number of stored measures.
 //
 
-int MxmlPart::measureCount(void) {
-	return (int)measures.size();
+int MxmlPart::getMeasureCount(void) const {
+	return (int)m_measures.size();
 }
 
 
 
 //////////////////////////////
 //
-// MxmlPart::getMeasure --
+// MxmlPart::getMeasure -- Get the measure number at the given index.
 //
 
-MxmlMeasure* MxmlPart::getMeasure(int index) {
-	if ((index < 0) || (index >= (int)measures.size())) {
+MxmlMeasure* MxmlPart::getMeasure(int index) const {
+	if ((index < 0) || (index >= (int)m_measures.size())) {
 		return NULL;
 	}
-	return measures[index];
+	return m_measures[index];
 }
 
 
 
 //////////////////////////////
 //
-// MxmlPart::getPreviousMeasure --
+// MxmlPart::getPreviousMeasure -- Given a measure, return the 
+//    previous measure occuring before it.
 //
 
-MxmlMeasure* MxmlPart::getPreviousMeasure(MxmlMeasure* measure) {
+MxmlMeasure* MxmlPart::getPreviousMeasure(MxmlMeasure* measure) const {
 	if (!measure) {
 		return NULL;
 	}
-	if (measure == *measures.begin()) {
+	if (measure == *m_measures.begin()) {
 		return NULL;
 	}
-	if (measures.size() == 0) {
+	if (m_measures.size() == 0) {
 		return NULL;
 	}
 
-	MxmlMeasure* lastmeasure = measures[0];
-	for (int i=1; i<(int)measures.size(); i++) {
-		if (measure == measures[i]) {
-			return lastmeasure;
-		} else {
-			lastmeasure = measures[i];
-		}
-	}
-	return NULL;
+	return measure->getPreviousMeasure();
 }
 
 
 
 //////////////////////////////
 //
-// MxmlPart::getDuration --
+// MxmlPart::getDuration --  Return the duration of the part in units
+//     of quarter notes.  This is a sum of the duration of all measures in
+//     the part.
 //
 
-HumNum MxmlPart::getDuration(void) {
-	if (measures.size() == 0) {
+HumNum MxmlPart::getDuration(void) const {
+	if (m_measures.size() == 0) {
 		return 0;
 	}
-	return measures.back()->getStartTime() + measures.back()->getDuration();
+	return m_measures.back()->getStartTime() + m_measures.back()->getDuration();
 }
 
 
 
 //////////////////////////////
 //
-// MxmlPart::setPartNumber --
+// MxmlPart::setPartNumber -- Set the part number for the part.  Typically
+//   starts at "1" for the top part in a system.
 //
 
 void MxmlPart::setPartNumber(int number) { 
-	partnum = number;
+	m_partnum = number;
 }
 
 
 
 //////////////////////////////
 //
-// MxmlPart::getPartNumber --
+// MxmlPart::getPartNumber -- Return the part number for the part.  Typically
+//     starts at "1" for the top part in a system.
 //
 
-int MxmlPart::getPartNumber(void) { 
-	return partnum;
+int MxmlPart::getPartNumber(void) const { 
+	return m_partnum;
 }
 
+
+} // end namespace hum
 
 
 

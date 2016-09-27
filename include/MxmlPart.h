@@ -1,4 +1,18 @@
-// vim: ts=3
+//
+// Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
+// Creation Date: Sat Aug  6 10:53:40 CEST 2016
+// Last Modified: Sun Sep 18 14:16:18 PDT 2016
+// Filename:      MxmlPart.cpp
+// URL:           https://github.com/craigsapp/hum2ly/blob/master/include/MxmlPart.h
+// Syntax:        C++11
+// vim:           ts=3 noexpandtab
+//
+// Description:   MusicXML parsing abstraction for part elements which
+//                contain a list of measures.
+//
+// part element documentation:
+//    http://usermanuals.musicxml.com/MusicXML/Content/EL-MusicXML-part.htm
+//
 
 #ifndef _MXMLPART_H
 #define _MXMLPART_H
@@ -14,9 +28,10 @@
 
 using namespace pugi;
 using namespace std;
-using namespace hum;
 
-////////////////////////////////////////////////////////////////////////////
+
+namespace hum {
+
 
 class MxmlPart {
 	public:
@@ -27,23 +42,25 @@ class MxmlPart {
 		                                    xml_node part);
 		bool          addMeasure           (xml_node mel);
 		bool          addMeasure           (xpath_node mel);
-		int           measureCount         (void);
-		MxmlMeasure*  getMeasure           (int index);
-		int           getMeasureCount      (void);
-		long          getQTicks            (void);
+		int           getMeasureCount      (void) const;
+		MxmlMeasure*  getMeasure           (int index) const;
+		long          getQTicks            (void) const;
 		int           setQTicks            (long value);
-	   MxmlMeasure*  getPreviousMeasure   (MxmlMeasure* measure);
-		HumNum        getDuration          (void);
+	   MxmlMeasure*  getPreviousMeasure   (MxmlMeasure* measure) const;
+		HumNum        getDuration          (void) const;
 		void          allocateSortedEvents (void);
 		void          setPartNumber        (int number);
-		int           getPartNumber        (void);
+		int           getPartNumber        (void) const;
 
 	protected:
-		vector<MxmlMeasure*> measures;
-		vector<long>         qtick;
-		int                  partnum;
+		vector<MxmlMeasure*> m_measures;
+		vector<long>         m_qtick;
+		int                  m_partnum;
 		
 };
+
+
+} // end namespace hum
 
 #endif /* _MXMLPART_H */
 
