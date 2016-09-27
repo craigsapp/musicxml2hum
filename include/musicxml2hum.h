@@ -51,6 +51,10 @@ class MusicXmlToHumdrumConverter {
 		void   printAttributes      (xml_node node);
 		bool   getPartInfo          (map<string, xml_node>& partinfo,
 		                             vector<string>& partids, xml_document& doc);
+		bool   stitchParts          (ostream& out, vector<string>& partids,
+		                             map<string, xml_node>& partinfo,
+		                             map<string, xml_node>& partcontent,
+		                             vector<MxmlPart>& partdata);
 		bool   getPartContent       (map<string, xml_node>& partcontent,
 		                             vector<string>& partids, xml_document& doc);
 		void   printPartInfo        (vector<string>& partids,

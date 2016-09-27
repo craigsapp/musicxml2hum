@@ -73,6 +73,7 @@ void MxmlPart::clear(void) {
 	}
 	m_measures.clear();
 	m_partnum = 0;
+	m_maxstaff = 0;
 }
 
 
@@ -133,6 +134,7 @@ bool MxmlPart::addMeasure(xml_node mel) {
 		m_measures.back()->setNextMeasure(meas);
 	}
 	m_measures.push_back(meas);
+	int maxstaff = 0;
 	return meas->parseMeasure(mel);
 }
 
@@ -222,6 +224,19 @@ void MxmlPart::setPartNumber(int number) {
 int MxmlPart::getPartNumber(void) const { 
 	return m_partnum;
 }
+
+
+
+//////////////////////////////
+//
+// MxmlPart::getStaffCount -- Return the number of staves which the part
+//   contains, such as 2 for piano parts.
+//
+
+int MxmlPart::getStaffCount(void) const {
+	return m_maxstaff;
+}
+
 
 
 } // end namespace hum

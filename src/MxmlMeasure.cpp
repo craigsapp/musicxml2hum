@@ -71,7 +71,7 @@ void MxmlMeasure::clear(void) {
 
 //////////////////////////////
 //
-// MxmlMeasure::parseMeasure --
+// MxmlMeasure::parseMeasure -- Reads XML data for one part's measure.
 //
 
 bool MxmlMeasure::parseMeasure(xpath_node mel) {
