@@ -4,3 +4,4 @@ obj
 external
 tests
 bin
+.DS_Store
