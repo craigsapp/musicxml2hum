@@ -96,6 +96,12 @@ class MxmlEvent {
 		static int         m_counter;    // counter for sequence variable
 		short              m_staff;      // staff number in part for event
 		short              m_voice;      // voice number in part for event
+      int                m_maxstaff;   // maximum staff number for measure
+
+	private:
+   	void   reportStaffNumberToOwner   (int staffnum);
+
+
 };
 
 

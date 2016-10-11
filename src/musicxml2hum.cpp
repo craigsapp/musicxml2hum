@@ -49,6 +49,7 @@ bool MusicXmlToHumdrumConverter::convertFile(ostream& out, const char* filename)
 	return convert(out, doc);
 }
 
+
 bool MusicXmlToHumdrumConverter::convert(ostream& out, istream& input) {
 	string s(istreambuf_iterator<char>(input), {});
 	return convert(out, s.c_str());
@@ -82,6 +83,7 @@ bool MusicXmlToHumdrumConverter::convert(ostream& out, xml_document& doc) {
 	partdata.resize(partids.size());
 	fillPartData(partdata, partids, partinfo, partcontent);
 	printPartInfo(partids, partinfo, partcontent, partdata);
+	status &= stitchParts(out, partids, partinfo, partcontent, partdata);
 
 	return status;
 }
@@ -153,8 +155,8 @@ bool MusicXmlToHumdrumConverter::fillPartData(vector<MxmlPart>& partdata,
 }
 
 
-bool MusicXmlToHumdrumConverter::fillPartData(MxmlPart& partdata, const string& id,
-		xml_node partdeclaration, xml_node partcontent) {
+bool MusicXmlToHumdrumConverter::fillPartData(MxmlPart& partdata,
+		const string& id, xml_node partdeclaration, xml_node partcontent) {
 	auto measures = partcontent.select_nodes("./measure");
 	for (int i=0; i<(int)measures.size(); i++) {
 		partdata.addMeasure(measures[i].node());
@@ -204,6 +206,31 @@ void MusicXmlToHumdrumConverter::printPartInfo(vector<string>& partids, map<stri
 		}
 		cerr << endl;
 	}
+}
+
+
+//////////////////////////////
+//
+// stitchParts -- Merge individual parts into a single score sequence.
+//
+
+bool MusicXmlToHumdrumConverter::stitchParts(ostream& out,
+		vector<string>& partids, map<string, xml_node>& partinfo,
+		map<string, xml_node>& partcontent, vector<MxmlPart>& partdata) {
+
+	vector<int> partstaves(partdata.size(), 0);
+	int i;
+	for (i=0; i<partstaves.size(); i++) {
+		partstaves[i] = partdata[i].getStaffCount();
+	}
+
+	cout << "\nPARTSTAVES:";
+	for (i=0; i<partstaves.size(); i++) {
+		cout << "\t" << partstaves[i];
+	}
+	cout << endl;
+
+	return true;
 }
 
 

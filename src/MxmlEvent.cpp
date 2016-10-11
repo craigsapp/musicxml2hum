@@ -41,7 +41,7 @@ int MxmlEvent::m_counter = 0;
 
 //////////////////////////////
 //
-// MxmlEvent::MxmlEvent --
+// MxmlEvent::MxmlEvent -- Constructor.
 //
 
 MxmlEvent::MxmlEvent(MxmlMeasure* measure) {
@@ -54,7 +54,7 @@ MxmlEvent::MxmlEvent(MxmlMeasure* measure) {
 
 //////////////////////////////
 //
-// MxmlEvent::~MxmlEvent --
+// MxmlEvent::~MxmlEvent -- Destructor.
 //
 
 MxmlEvent::~MxmlEvent() {
@@ -65,7 +65,7 @@ MxmlEvent::~MxmlEvent() {
 
 //////////////////////////////
 //
-// MxmlEvent::clear --
+// MxmlEvent::clear -- Clear any previous contents of the object.
 //
 
 void MxmlEvent::clear(void) {
@@ -74,6 +74,7 @@ void MxmlEvent::clear(void) {
 	m_owner = NULL;
 	m_linked = false;
 	m_voice = m_staff = 0;
+	m_sequence = -1;
 	m_links.clear();
 }
 
@@ -81,7 +82,8 @@ void MxmlEvent::clear(void) {
 
 //////////////////////////////
 //
-// MxmlEvent::setStartTime --
+// MxmlEvent::setStartTime -- Set the starting timestamp of the event
+//    in terms of quater notes since the start of the music.
 //
 
 void MxmlEvent::setStartTime(HumNum value) {
@@ -92,7 +94,8 @@ void MxmlEvent::setStartTime(HumNum value) {
 
 //////////////////////////////
 //
-// MxmlEvent::setDuration --
+// MxmlEvent::setDuration -- Set the duration of the event in terms
+//   of quarter note durations.
 //
 
 void MxmlEvent::setDuration(HumNum value) {
@@ -103,7 +106,8 @@ void MxmlEvent::setDuration(HumNum value) {
 
 //////////////////////////////
 //
-// MxmlEvent::getStartTime --
+// MxmlEvent::getStartTime -- Return the start time of the event in terms
+//      of quarter notes since the start of the music.
 //
 
 HumNum MxmlEvent::getStartTime(void) const {
@@ -114,7 +118,8 @@ HumNum MxmlEvent::getStartTime(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::getDuration --
+// MxmlEvent::getDuration -- Return the duration of the event in terms
+//      of quarter note durations.
 //
 
 HumNum MxmlEvent::getDuration(void) const {
@@ -125,7 +130,7 @@ HumNum MxmlEvent::getDuration(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::setOwner --
+// MxmlEvent::setOwner -- Indicate which measure the event belongs to.
 //
 
 void MxmlEvent::setOwner(MxmlMeasure* measure) {
@@ -136,7 +141,8 @@ void MxmlEvent::setOwner(MxmlMeasure* measure) {
 
 //////////////////////////////
 //
-// MxmlEvent::getOwner --
+// MxmlEvent::getOwner -- Return the measure object that contains this
+//     event.  If there is no owner, then returns NULL.
 //
 
 MxmlMeasure* MxmlEvent::getOwner(void) const {
@@ -207,18 +213,9 @@ long MxmlEvent::getQTicks(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::parseEvent --
-//
-
-bool MxmlEvent::parseEvent(xpath_node el) {
-	return parseEvent(el.node());
-}
-
-
-
-//////////////////////////////
-//
-// MxmlEvent::getIntValue --
+// MxmlEvent::getIntValue -- Convenience function for an XPath query,
+//    where the child text of the element should be interpreted as
+//    an integer.
 //
 
 long MxmlEvent::getIntValue(const char* query) const {
@@ -234,7 +231,10 @@ long MxmlEvent::getIntValue(const char* query) const {
 
 //////////////////////////////
 //
-// Mxmlvent::setDurationByTicks --
+// Mxmlvent::setDurationByTicks -- Given a <duration> element tick
+//    count, set the duration by dividing by the current quarter-note
+//    duration tick count (from a prevailing attribute setting for
+//    <divisions>).
 //
 
 void MxmlEvent::setDurationByTicks (long value) {
@@ -251,7 +251,8 @@ void MxmlEvent::setDurationByTicks (long value) {
 
 //////////////////////////////
 //
-// MxmlEvent::hasChild --
+// MxmlEvent::hasChild -- True if the given XPath query resulting
+//      element has a child node.
 //
 
 bool MxmlEvent::hasChild(const char* query) const {
@@ -277,7 +278,11 @@ void MxmlEvent::attachToLastEvent(void) {
 
 //////////////////////////////
 //
-// MxmlEvent::link --
+// MxmlEvent::link --  This function is used to link secondary 
+//   elements to a primary one.  Currently only used for chord notes.
+//   The first note of a chord will be stored in event lists, and 
+//   secondary notes will be suppressed from the list and instead
+//   accessed through the m_links structure.
 //
 
 void MxmlEvent::link(MxmlEvent* event) {
@@ -289,7 +294,8 @@ void MxmlEvent::link(MxmlEvent* event) {
 
 //////////////////////////////
 //
-// MxmlEvent::setLinked --
+// MxmlEvent::setLinked -- Indicate that a note is a secondary
+//     chord note.
 //
 
 void MxmlEvent::setLinked(void) {
@@ -300,7 +306,8 @@ void MxmlEvent::setLinked(void) {
 
 //////////////////////////////
 //
-// MxmlEvent::isLinked --
+// MxmlEvent::isLinked -- Returns true if the note is a secondary
+//     chord note.
 //
 
 bool MxmlEvent::isLinked(void) const {
@@ -311,7 +318,8 @@ bool MxmlEvent::isLinked(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::isChord --
+// MxmlEvent::isChord -- Returns true if the event is the primary note
+//    in a chord.
 //
 
 bool MxmlEvent::isChord(void) const {
@@ -326,7 +334,7 @@ bool MxmlEvent::isChord(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::printEvent --
+// MxmlEvent::printEvent -- Useful for debugging.
 //
 
 void MxmlEvent::printEvent(void) const {
@@ -341,7 +349,9 @@ void MxmlEvent::printEvent(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::getSequenceNumber --
+// MxmlEvent::getSequenceNumber -- Return the sequence number of the 
+//   event in the input data file.  Useful for sorting items which 
+//   occur at the same time.
 //
 
 int MxmlEvent::getSequenceNumber(void) const {
@@ -352,7 +362,7 @@ int MxmlEvent::getSequenceNumber(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::getVoiceNumber --
+// MxmlEvent::getVoiceNumber -- Return the voice number of the event.
 //
 
 int MxmlEvent::getVoiceNumber(void) const {
@@ -363,7 +373,7 @@ int MxmlEvent::getVoiceNumber(void) const {
 
 //////////////////////////////
 //
-// MxmlEvent::getStaffNumber --
+// MxmlEvent::getStaffNumber -- Return the staff number of the event.
 //
 
 int MxmlEvent::getStaffNumber(void) const {
@@ -409,6 +419,11 @@ measure_event_type MxmlEvent::getType(void) const {
 //
 // MxmlEvent::parseEvent --
 //
+
+bool MxmlEvent::parseEvent(xpath_node el) {
+	return parseEvent(el.node());
+}
+
 
 bool MxmlEvent::parseEvent(xml_node el) {
 	m_node = el;
@@ -461,6 +476,7 @@ bool MxmlEvent::parseEvent(xml_node el) {
 
 	m_voice = (short)tempvoice;
 	m_staff = (short)tempstaff;
+   reportStaffNumberToOwner(m_staff);
 
 	switch (m_eventtype) {
 		case mevent_note:
@@ -500,6 +516,23 @@ bool MxmlEvent::parseEvent(xml_node el) {
 	}
 
 	return true;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Private functions
+//
+
+//////////////////////////////
+//
+// MxmlEvent::reportStaffNumberToOwner --
+
+void MxmlEvent::reportStaffNumberToOwner(int staffnum) {
+
+ggg
+
 }
 
 

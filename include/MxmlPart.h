@@ -51,11 +51,15 @@ class MxmlPart {
 		void          allocateSortedEvents (void);
 		void          setPartNumber        (int number);
 		int           getPartNumber        (void) const;
+		int           getStaffCount        (void) const;
+
+
 
 	protected:
 		vector<MxmlMeasure*> m_measures;
 		vector<long>         m_qtick;
 		int                  m_partnum;
+		int                  m_maxstaff;
 		
 };
 
