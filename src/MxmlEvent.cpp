@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 
+#include <sstream>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -237,7 +238,7 @@ long MxmlEvent::getIntValue(const char* query) const {
 //    <divisions>).
 //
 
-void MxmlEvent::setDurationByTicks (long value) {
+void MxmlEvent::setDurationByTicks(long value, xml_node el) {
 	long ticks = getQTicks();
 	if (ticks == 0) {
 		setDuration(0);
@@ -245,8 +246,20 @@ void MxmlEvent::setDurationByTicks (long value) {
 	}
 	HumNum val = value;
 	val /= ticks;
+
+	if (el) {
+		HumNum checkval = getEmbeddedDuration(el);
+		if (checkval != val) {
+			// cerr << "WARNING: True duration " << checkval << " does not match";
+			// cerr << " tick duration (buggy data: " << val << ")" << endl;
+			val = checkval;
+		}
+	}
+
+
 	setDuration(val);
 }
+
 
 
 //////////////////////////////
@@ -406,6 +419,21 @@ void MxmlEvent::setStaff(int value) {
 
 //////////////////////////////
 //
+// MxmlEvent::getStaff -- 
+//
+
+int MxmlEvent::getStaff(void) const {
+	if (!m_staff) {
+		return 1;
+	} else {
+		return m_staff;
+	}
+}
+
+
+
+//////////////////////////////
+//
 // MxmlEvent::getType --
 //
 
@@ -485,7 +513,7 @@ bool MxmlEvent::parseEvent(xml_node el) {
 				setDuration(0);
 				attachToLastEvent();
 			} else {
-				setDurationByTicks(tempduration);
+				setDurationByTicks(tempduration, el);
 			}
 			break;
 
@@ -520,20 +548,258 @@ bool MxmlEvent::parseEvent(xml_node el) {
 
 
 
+//////////////////////////////
+//
+// MxmlEvent::getRecip -- return **recip value for note/rest.
+//
+
+string MxmlEvent::getRecip(void) const {
+	HumNum dur = m_duration;
+	dur /= 4;  // convert to whole-note units;
+	int n = getDotCount();
+	if (n) {
+		dur = dur * (1 << n) / ((1 << (n+1)) - 1);
+	}
+	stringstream ss;
+	ss << dur.getDenominator();
+	if (dur.getNumerator() != 1) {
+		ss << "%" << dur.getNumerator();
+	}
+	for (int i=0; i<n; i++) {
+		ss << ".";
+	}
+	return ss.str();
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::getKernPitch -- return **kern pitch of note/rest.
+//
+
+string MxmlEvent::getKernPitch(void) const {
+	bool rest = false;
+	xml_node child = m_node.first_child();
+
+	string step;
+	int alter  = 0;
+	int octave = 4;
+
+	while (child) {
+		if (strcmp(child.name(), "rest") == 0) {
+			rest = true;
+			break;
+		}
+		if (strcmp(child.name(), "pitch") == 0) {
+			xml_node grandchild = child.first_child();
+			while (grandchild) {
+				if (strcmp(grandchild.name(), "step") == 0) {
+					step = grandchild.child_value();
+				} else if (strcmp(grandchild.name(), "alter") == 0) {
+					alter = atoi(grandchild.child_value());
+				} else if (strcmp(grandchild.name(), "octave") == 0) {
+					octave = atoi(grandchild.child_value());
+				}
+				grandchild = grandchild.next_sibling();
+			}
+		}
+		child = child.next_sibling();
+	}
+
+	if (rest) {
+		return "r";
+	}
+
+	int count = 1;
+	char pc = 'C';
+	if (step.size() > 0) {
+		pc = step[0];
+	}
+	if (octave > 3) {
+		pc = tolower(pc);
+		count = octave - 3;
+	} else {
+		pc = toupper(pc);
+		count = 4 - octave;
+	}
+	string output;
+	for (int i=0; i<count; i++) {
+		output += pc;
+	}
+	if (alter > 0) {  // sharps
+		for (int i=0; i<alter; i++) {
+			output += '#';
+		}
+	} else if (alter < 0) { // flats
+		for (int i=0; i>alter; i--) {
+			output += '-';
+		}
+	}
+	// print cautionary natural sign here...
+
+	return output;
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::getNode --
+//
+
+xml_node MxmlEvent::getNode(void) {
+	return m_node;
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////
 //
-// Private functions
+// private functions --
 //
 
 //////////////////////////////
 //
 // MxmlEvent::reportStaffNumberToOwner --
+//
 
 void MxmlEvent::reportStaffNumberToOwner(int staffnum) {
-
-ggg
-
+	if (m_owner != NULL) {
+		m_owner->receiveStaffNumberFromChild(staffnum);
+	}
 }
+
+
+
+//////////////////////////////
+//
+//  MxmlEvent::getDotCount -- return the number of augmentation dots
+//     which are children of the given event element.
+//
+
+int MxmlEvent::getDotCount(void) const {
+	xml_node child = m_node.first_child();
+	int output = 0;
+	while (child) {
+		if (output && (strcmp(child.name(), "dot") != 0)) {
+			return output;
+		}
+		if (strcmp(child.name(), "dot") == 0) {
+			output++;
+		}
+		child = child.next_sibling();
+	}
+	return output;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// static functions --
+//
+
+//////////////////////////////
+//
+// MxmlEvent::getEmbeddedDuration -- Given a <note>, return the
+//   expeceded duration of the note, not from the <duration>, but
+//   from a combination of <type> <dot>s and <time-modification>.
+//   This value should match <duration>, but Sibelius has a buggy
+//   <divisions> value so there can be round-off errors in the
+//   duration of notes in MusicXML output from Sibelius.
+//
+
+HumNum MxmlEvent::getEmbeddedDuration(xml_node el) {
+	if (!el) {
+		return 0;
+	}
+	xml_node child = el.first_child();
+   int dots          = 0;  // count of <dot /> elements
+   HumNum type       = 0;  // powoftwo note type (as duration)
+   bool tuplet       = false;  // is a tuplet
+   int actualnotes   = 1;      // numerator of tuplet factor
+   int normalnotes   = 1;      // denominator of tuplet factor
+   HumNum normaltype = 0;      // poweroftwo duration of tuplet
+   int tupdots       = 0;      // dots of "normal type" duration
+	HumNum tfactor    = 1;
+
+	while (child) {
+		if (strcmp(child.name(), "dot") == 0) { 
+			dots++;
+		} else if (strcmp(child.name(), "type") == 0) {
+			type = getQuarterDurationFromType(child.child_value());
+		} else if (strcmp(child.name(), "time-modification") == 0) {
+			xml_node grandchild = child.first_child();
+			normaltype = type;
+			tuplet = true;
+			while (grandchild) {
+				if (strcmp(grandchild.name(), "actual-notes") == 0) {
+					actualnotes = atoi(grandchild.child_value());
+				} else if (strcmp(grandchild.name(), "normal-notes") == 0) {
+					normalnotes = atoi(grandchild.child_value());
+				}
+				grandchild = grandchild.next_sibling();
+			}
+         // no duration information after <time-modification> so exit
+			// outer loop now.
+			break;
+		} else if (strcmp(child.name(), "normal-dot") == 0) {
+			tupdots++;
+		}
+		child = child.next_sibling();
+	}
+
+	HumNum duration = type;
+	if (dots) {
+		HumNum newdur = duration;
+		for (int i=0; i<dots; i++) {
+			newdur += duration / (1 << (i+1));
+		}
+		duration = newdur;
+	}
+	if (tuplet) {
+		HumNum modification(actualnotes, normalnotes);
+		duration /= modification;
+      if (normaltype != type) {
+			cerr << "Warning: cannot handle this tuplet type yet" << endl;
+		}
+      if (tupdots != 0) {
+			cerr << "Warning: cannot handle this tuplet dots yet" << endl;
+		}
+	}
+	
+	return duration;
+}
+
+
+
+////////////////////////////////////////
+//
+// MxmlEvent::getQuarterDurationFromType --
+//
+
+HumNum MxmlEvent::getQuarterDurationFromType(const char* type) {
+	if      (strcmp(type, "quarter") == 0) { return 1;              } 
+	else if (strcmp(type, "eighth") == 0)  { return HumNum(1, 2);   }
+	else if (strcmp(type, "half") == 0)    { return 2;              }
+	else if (strcmp(type, "16th") == 0)    { return HumNum(1, 4);   }
+	else if (strcmp(type, "whole") == 0)   { return 4;              }
+	else if (strcmp(type, "32nd") == 0)    { return HumNum(1, 8);   }
+	else if (strcmp(type, "64th") == 0)    { return HumNum(1, 16);  }
+	else if (strcmp(type, "128th") == 0)   { return HumNum(1, 32);  }
+	else if (strcmp(type, "256th") == 0)   { return HumNum(1, 64);  }
+	else if (strcmp(type, "512th") == 0)   { return HumNum(1, 128); }
+	else if (strcmp(type, "1024th") == 0)  { return HumNum(1, 256); }
+	else if (strcmp(type, "breve") == 0)   { return 8;              }
+	else if (strcmp(type, "long") == 0)    { return 16;             }
+	else if (strcmp(type, "maxima") == 0)  { return 32;             }
+	else {
+		cerr << "Error: Unknown note type: " << type << endl;
+		return 0;
+	}
+}
+
 
 
 } // end namespace hum

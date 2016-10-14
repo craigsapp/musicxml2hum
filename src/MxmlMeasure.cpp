@@ -90,122 +90,17 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
 	setStartTime();
 	calculateDuration();
 
-	cout << endl;
-	cout << "MEASURE DURATION: " << getDuration() << endl;
-	for (int i=0; i<(int)m_events.size(); i++) {
-		m_events[i]->printEvent();
-	}
+	// For debugging:
+	//
+	// cout << endl;
+	// cout << "MEASURE DURATION: " << getDuration() << endl;
+	// for (int i=0; i<(int)m_events.size(); i++) {
+	// 	m_events[i]->printEvent();
+	// }
 
 	sortEvents();
 
 	return output;
-}
-
-
-
-//////////////////////////////
-//
-// MxmlMeasure::sortEvents --
-//
-
-void MxmlMeasure::sortEvents(void) {
-	int i;
-	set<HumNum> times;
-
-	for (i=0; i<(int)m_events.size(); i++) {
-
-		// skip storing certain types of events:
-		switch (m_events[i]->getType()) {
-			case mevent_forward:
-			case mevent_backup:
-				continue;
-			case mevent_note:
-				if (m_events[i]->isChord()) {
-					continue;
-				}
-				break;
-			default:
-				break;
-		}
-
-		times.insert(m_events[i]->getStartTime());
-	}
-
-	m_sortedevents.resize(times.size());
-	int counter = 0;
-
-	for (HumNum val : times) {
-		m_sortedevents[counter++].starttime = val;
-	}
-
-	// setup sorted access:
-	map<HumNum, SimultaneousEvents*> mapping;
-	for (i=0; i<(int)m_sortedevents.size(); i++) {
-		mapping[m_sortedevents[i].starttime] = &m_sortedevents[i];
-	}
-
-	HumNum duration;
-	HumNum starttime;
-	for (i=0; i<(int)m_events.size(); i++) {
-
-		// skip storing certain types of events:
-		switch (m_events[i]->getType()) {
-			case mevent_forward:
-			case mevent_backup:
-				continue;
-			case mevent_note:
-				if (m_events[i]->isChord()) {
-					continue;
-				}
-				break;
-			default:
-				break;
-		}
-
-		starttime = m_events[i]->getStartTime();
-		duration  = m_events[i]->getDuration();
-		if (duration == 0) {
-			mapping[starttime]->zerodur.push_back(m_events[i]);
-		} else {
-			mapping[starttime]->nonzerodur.push_back(m_events[i]);
-		}
-	}
-
-	
-	int j;
-	vector<SimultaneousEvents>& se = m_sortedevents;
-	cout << "TIME SORTED EVENTS:" << endl;
-	for (i=0; i<(int)se.size(); i++) {
-		if (se[i].zerodur.size() > 0) {
-			cout << se[i].starttime << "z\t";
-			for (j=0; j<(int)se[i].zerodur.size(); j++) {
-				cout << " " << se[i].zerodur[j]->getName();
-				cout << "(";
-				cout << se[i].zerodur[j]->getPartNumber();
-				cout << ",";
-				cout << se[i].zerodur[j]->getStaffNumber();
-				cout << ",";
-				cout << se[i].zerodur[j]->getVoiceNumber();
-				cout << ")";
-			}
-			cout << endl;
-		}
-		if (se[i].nonzerodur.size() > 0) {
-			cout << se[i].starttime << "\t";
-			for (j=0; j<(int)se[i].nonzerodur.size(); j++) {
-				cout << " " << se[i].nonzerodur[j]->getName();
-				cout << "(";
-				cout << se[i].nonzerodur[j]->getPartNumber();
-				cout << ",";
-				cout << se[i].nonzerodur[j]->getStaffNumber();
-				cout << ",";
-				cout << se[i].nonzerodur[j]->getVoiceNumber();
-				cout << ")";
-			}
-			cout << endl;
-		}
-	}
-
 }
 
 
@@ -394,6 +289,17 @@ int MxmlMeasure::getEventCount(void) const {
 
 //////////////////////////////
 //
+// MxmlMeasure::getSortedEvents --
+//
+
+vector<SimultaneousEvents>* MxmlMeasure::getSortedEvents(void) {
+	return &m_sortedevents;
+}
+
+
+
+//////////////////////////////
+//
 // MxmlMeasure::getEvent --
 //
 
@@ -450,6 +356,153 @@ MxmlMeasure* MxmlMeasure::getPreviousMeasure(void) const {
 MxmlMeasure* MxmlMeasure::getNextMeasure(void) const {
 	return m_following;
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// private functions --
+//
+
+//////////////////////////////
+//
+// MxmlMeasure::sortEvents --
+//
+
+void MxmlMeasure::sortEvents(void) {
+	int i;
+	set<HumNum> times;
+
+	for (i=0; i<(int)m_events.size(); i++) {
+
+		// skip storing certain types of events:
+		switch (m_events[i]->getType()) {
+			case mevent_forward:
+			case mevent_backup:
+				continue;
+			case mevent_note:
+				if (m_events[i]->isChord()) {
+					continue;
+				}
+				break;
+			default:
+				break;
+		}
+
+		times.insert(m_events[i]->getStartTime());
+	}
+
+	m_sortedevents.resize(times.size());
+	int counter = 0;
+
+	for (HumNum val : times) {
+		m_sortedevents[counter++].starttime = val;
+	}
+
+	// setup sorted access:
+	map<HumNum, SimultaneousEvents*> mapping;
+	for (i=0; i<(int)m_sortedevents.size(); i++) {
+		mapping[m_sortedevents[i].starttime] = &m_sortedevents[i];
+	}
+
+	HumNum duration;
+	HumNum starttime;
+	for (i=0; i<(int)m_events.size(); i++) {
+
+		// skip storing certain types of events:
+		switch (m_events[i]->getType()) {
+			case mevent_forward:
+			case mevent_backup:
+				continue;
+			case mevent_note:
+				if (m_events[i]->isChord()) {
+					continue;
+				}
+				break;
+			default:
+				break;
+		}
+
+		starttime = m_events[i]->getStartTime();
+		duration  = m_events[i]->getDuration();
+		if (duration == 0) {
+			mapping[starttime]->zerodur.push_back(m_events[i]);
+		} else {
+			mapping[starttime]->nonzerodur.push_back(m_events[i]);
+		}
+	}
+
+	
+	/* debugging information:
+
+	int j;
+	vector<SimultaneousEvents>& se = m_sortedevents;
+
+	cout << "QTIME SORTED EVENTS:" << endl;
+	for (i=0; i<(int)se.size(); i++) {
+		if (se[i].zerodur.size() > 0) {
+			cout << se[i].starttime << "z\t";
+			for (j=0; j<(int)se[i].zerodur.size(); j++) {
+				cout << " " << se[i].zerodur[j]->getName();
+				cout << "(";
+				cout << se[i].zerodur[j]->getPartNumber();
+				cout << ",";
+				cout << se[i].zerodur[j]->getStaffNumber();
+				cout << ",";
+				cout << se[i].zerodur[j]->getVoiceNumber();
+				cout << ")";
+			}
+			cout << endl;
+		}
+		if (se[i].nonzerodur.size() > 0) {
+			cout << se[i].starttime << "\t";
+			for (j=0; j<(int)se[i].nonzerodur.size(); j++) {
+				cout << " " << se[i].nonzerodur[j]->getName();
+				cout << "(";
+				cout << se[i].nonzerodur[j]->getPartNumber();
+				cout << ",";
+				cout << se[i].nonzerodur[j]->getStaffNumber();
+				cout << ",";
+				cout << se[i].nonzerodur[j]->getVoiceNumber();
+				cout << ")";
+			}
+			cout << endl;
+		}
+	}
+	*/
+
+}
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::receiveStaffNumberFromChild -- Receive a staff number
+//    placement for a note or rest and pass it along to the part class
+//    so that it can keep track of the maximum staff number used in 
+//    the part.
+//
+
+void MxmlMeasure::receiveStaffNumberFromChild(int staffnum) {
+	reportStaffNumberToOwner(staffnum);
+}
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::reportStaffNumberToOwner -- Send a staff number
+//    placement for a note or rest and pass it along to the part class
+//    so that it can keep track of the maximum staff number used in 
+//    the part.
+//
+
+void MxmlMeasure::reportStaffNumberToOwner(int staffnum) {
+	if (m_owner != NULL) {
+		m_owner->receiveStaffNumberFromChild(staffnum);
+	}
+}
+
+
 
 
 } // end namespace hum

@@ -32,6 +32,8 @@ using namespace std;
 
 namespace hum {
 
+class MxmlMeasure;
+class MxmlEvent;
 
 class MxmlPart {
 	public:
@@ -52,7 +54,11 @@ class MxmlPart {
 		void          setPartNumber        (int number);
 		int           getPartNumber        (void) const;
 		int           getStaffCount        (void) const;
+		int           getVerseCount        (void) const;
 
+
+	private:
+		void          receiveStaffNumberFromChild (int staffnum);
 
 
 	protected:
@@ -61,6 +67,9 @@ class MxmlPart {
 		int                  m_partnum;
 		int                  m_maxstaff;
 		
+	friend MxmlMeasure;
+	friend MxmlEvent;
+
 };
 
 

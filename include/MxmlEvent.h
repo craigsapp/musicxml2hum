@@ -26,7 +26,7 @@ using namespace std;
 namespace hum {
 
 class MxmlMeasure;
-
+class MxmlPart;
 
 // Event types: These are all of the XML elements which can be children of
 // the measure element in MusicXML.
@@ -60,7 +60,8 @@ class MxmlEvent {
 		void               setTickDur         (long value, long ticks);
 		void               setStartTime       (HumNum value);
 		void               setDuration        (HumNum value);
-		void               setDurationByTicks (long value);
+		void               setDurationByTicks (long value,
+		                                       xml_node el = xml_node(NULL));
 		HumNum             getStartTime       (void) const;
 		HumNum             getDuration        (void) const;
 		void               setOwner           (MxmlMeasure* measure);
@@ -81,8 +82,12 @@ class MxmlEvent {
 		int                getStaffNumber     (void) const;
 		void               setVoice           (int value);
 		void               setStaff           (int value);
+		int                getStaff           (void) const;
 		measure_event_type getType            (void) const;
 		int                getPartNumber      (void) const;
+		string             getRecip           (void) const;
+		string             getKernPitch       (void) const;
+		xml_node           getNode            (void);
 
 	protected:
 		HumNum             m_starttime;  // start time in quarter notes of event
@@ -99,8 +104,15 @@ class MxmlEvent {
       int                m_maxstaff;   // maximum staff number for measure
 
 	private:
-   	void   reportStaffNumberToOwner   (int staffnum);
+   	void   reportStaffNumberToOwner  (int staffnum);
+		int    getDotCount               (void) const;
 
+	public:
+		static HumNum getEmbeddedDuration   (xml_node el = xml_node(NULL));
+		static HumNum getQuarterDurationFromType        (const char* type);
+
+	friend MxmlMeasure;
+	friend MxmlPart;
 
 };
 

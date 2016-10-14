@@ -36,7 +36,8 @@ MusicXmlToHumdrumConverter::MusicXmlToHumdrumConverter(void){
 //     Humdrum content.
 //
 
-bool MusicXmlToHumdrumConverter::convertFile(ostream& out, const char* filename) {
+bool MusicXmlToHumdrumConverter::convertFile(ostream& out,
+		const char* filename) {
 	xml_document doc;
 	auto result = doc.load_file(filename);
 	if (!result) {
@@ -82,7 +83,19 @@ bool MusicXmlToHumdrumConverter::convert(ostream& out, xml_document& doc) {
 	vector<MxmlPart> partdata;
 	partdata.resize(partids.size());
 	fillPartData(partdata, partids, partinfo, partcontent);
-	printPartInfo(partids, partinfo, partcontent, partdata);
+
+	// for debugging:
+	// printPartInfo(partids, partinfo, partcontent, partdata);
+
+	endtimes.resize(partdata.size());
+	for (int i=0; i<(int)partdata.size(); i++) {
+		endtimes[i].resize(partdata[i].getStaffCount());
+		for (int j=0; j<(int)partdata[i].getStaffCount(); j++) {
+			endtimes[i][j].resize(1);
+			endtimes[i][j][0] = 0;
+		}
+	}
+
 	status &= stitchParts(out, partids, partinfo, partcontent, partdata);
 
 	return status;
@@ -168,43 +181,44 @@ bool MusicXmlToHumdrumConverter::fillPartData(MxmlPart& partdata,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printPartInfo --
+// MusicXmlToHumdrumConverter::printPartInfo -- Debug information.
 //
 
-void MusicXmlToHumdrumConverter::printPartInfo(vector<string>& partids, map<string,
-		xml_node>& partinfo, map<string, xml_node>& partcontent,
+void MusicXmlToHumdrumConverter::printPartInfo(vector<string>& partids,
+		map<string, xml_node>& partinfo, map<string, xml_node>& partcontent,
 		vector<MxmlPart>& partdata) {
-	cerr << "\nPart information in the file:" << endl;
+	cout << "\nPart information in the file:" << endl;
 	int maxmeasure = 0;
 	for (int i=0; i<partids.size(); i++) {
-		cerr << "\tPART " << i+1 << " id = " << partids[i] << endl;
-		cerr << "\t\tpart name:\t"
+		cout << "\tPART " << i+1 << " id = " << partids[i] << endl;
+		cout << "\tMAXSTAFF " << partdata[i].getStaffCount() << endl;
+		cout << "\t\tpart name:\t"
 		     << getChildElementText(partinfo[partids[i]], "part-name") << endl;
-		cerr << "\t\tpart abbr:\t"
+		cout << "\t\tpart abbr:\t"
 		     << getChildElementText(partinfo[partids[i]], "part-abbreviation")
 		     << endl;
 		auto node = partcontent[partids[i]];
 		auto measures = node.select_nodes("./measure");
-		cerr << "\t\tMeasure count:\t" << measures.size() << endl;
+		cout << "\t\tMeasure count:\t" << measures.size() << endl;
 		if (maxmeasure < (int)measures.size()) {
 			maxmeasure = (int)measures.size();
 		}
-		cerr << "\t\tTotal duration:\t" << partdata[i].getDuration() << endl;
+		cout << "\t\tTotal duration:\t" << partdata[i].getDuration() << endl;
 	}
 
 	MxmlMeasure* measure;
 	for (int i=0; i<maxmeasure; i++) {
-		cerr << "m" << i+1 << "\t";
+		cout << "m" << i+1 << "\t";
 		for (int j=0; j<(int)partdata.size(); j++) {
 			measure = partdata[j].getMeasure(i);
 			if (measure) {
-				cerr << measure->getDuration();
+				cout << measure->getDuration();
 			}
 			if (j < (int)partdata.size() - 1) {
-				cerr << "\t";
+				cout << "\t";
 			}
 		}
-		cerr << endl;
+		cout << endl;
 	}
 }
 
@@ -218,19 +232,298 @@ bool MusicXmlToHumdrumConverter::stitchParts(ostream& out,
 		vector<string>& partids, map<string, xml_node>& partinfo,
 		map<string, xml_node>& partcontent, vector<MxmlPart>& partdata) {
 
-	vector<int> partstaves(partdata.size(), 0);
+	if (partdata.size() == 0) {
+		return false;
+	}
+
+	printExclusiveInterpretationLine(out, partdata);
+
 	int i;
+	int measurecount = partdata[0].getMeasureCount();
+	for (i=1; i<(int)partdata.size(); i++) {
+		if (measurecount != partdata[i].getMeasureCount()) {
+			cerr << "ERROR: cannot handle parts with different measure\n";
+			cerr << "counts yet. Compare " << measurecount << " to ";
+			cerr << partdata[i].getMeasureCount() << endl;
+			exit(1);
+		}
+	}
+
+	vector<int> partstaves(partdata.size(), 0);
 	for (i=0; i<partstaves.size(); i++) {
 		partstaves[i] = partdata[i].getStaffCount();
 	}
 
-	cout << "\nPARTSTAVES:";
-	for (i=0; i<partstaves.size(); i++) {
-		cout << "\t" << partstaves[i];
+	bool status = true;
+	int m;
+	for (m=0; m<partdata[0].getMeasureCount(); m++) {
+		status &= printMeasure(out, m, partdata, partstaves);
+		// a hack for now:
+		printAllToken(out, partdata, "=");
 	}
-	cout << endl;
+
+	printAllToken(out, partdata, "*-");
+
+	return status;
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printExclusiveInterpretationLine --
+//
+
+void MusicXmlToHumdrumConverter::printExclusiveInterpretationLine(
+		ostream& out, vector<MxmlPart>& partdata) {
+	bool first = true;
+
+	int i, j;
+	for (i=0; i<(int)partdata.size(); i++) {
+		for (j=0; j<(int)partdata[i].getStaffCount(); j++) {
+			if (!first) {
+				out << "\t";
+			}
+			first = false;
+			out << "**kern";
+		}
+		for (j=0; j<(int)partdata[i].getVerseCount(); j++) {
+			out << "\t";
+			out << "**text";
+		}
+	}
+	out << endl;
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printAllToken --
+//
+
+void MusicXmlToHumdrumConverter::printAllToken(ostream& out,
+		vector<MxmlPart>& partdata, const string& common) {
+	bool first = true;
+
+	int i, j;
+	for (i=0; i<(int)partdata.size(); i++) {
+		for (j=0; j<(int)partdata[i].getStaffCount(); j++) {
+			if (!first) {
+				out << "\t";
+			}
+			first = false;
+			out << common;
+		}
+		for (j=0; j<(int)partdata[i].getVerseCount(); j++) {
+			out << "\t";
+			out << common;
+		}
+	}
+	out << endl;
+}
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printMeasure --
+//
+
+bool MusicXmlToHumdrumConverter::printMeasure(ostream& out, int mnum,
+		vector<MxmlPart>& partdata, vector<int> partstaves) {
+	vector<MxmlMeasure*> measuredata;
+	vector<vector<SimultaneousEvents>* > sevents;
+	int i;
+	for (i=0; i<(int)partdata.size(); i++) {
+		measuredata.push_back(partdata[i].getMeasure(mnum));
+		sevents.push_back(measuredata.back()->getSortedEvents());
+	}
+
+	vector<HumNum> curtime(partdata.size());
+	vector<int> curindex(partdata.size(), 0); // assuming data in a measure...
+	HumNum nexttime = -1;
+	for (i=0; i<(int)curtime.size(); i++) {
+		curtime[i] = (*sevents[i])[curindex[i]].starttime;
+		if (nexttime < 0) {
+			nexttime = curtime[i];
+		} else if (curtime[i] < nexttime) {
+			nexttime = curtime[i];
+		}
+	}
+
+	bool allend = false;
+	vector<SimultaneousEvents*> nowevents;
+	vector<int> nowparts;
+	bool status = true;
+	while (!allend) {
+		nowevents.resize(0);
+		nowparts.resize(0);
+		allend = true;
+		HumNum processtime = nexttime;
+		nexttime = -1;
+		for (i = (int)partdata.size()-1; i >= 0; i--) {
+			if (curindex[i] >= (int)(*sevents[i]).size()) {
+				continue;
+			}
+			if ((*sevents[i])[curindex[i]].starttime == processtime) {
+				nowevents.push_back(&(*sevents[i])[curindex[i]]);
+				nowparts.push_back(i);
+				curindex[i]++;
+			}
+			if (curindex[i] < (int)(*sevents[i]).size()) {
+				allend = false;
+				if ((nexttime < 0) ||
+						((*sevents[i])[curindex[i]].starttime < nexttime)) {
+					nexttime = (*sevents[i])[curindex[i]].starttime;
+				}
+			}
+		}
+		status &= printNowEvents(out,
+		                         nowevents,
+		                         nowparts,
+		                         processtime,
+		                         partdata,
+		                         partstaves);
+	}
+
+	return status;
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printNowEvents --
+//
+
+bool MusicXmlToHumdrumConverter::printNowEvents(
+		ostream& out,
+		vector<SimultaneousEvents*>& nowevents,
+		vector<int>& nowparts,
+		HumNum nowtime,
+		vector<MxmlPart>& partdata,
+		vector<int>& partstaves) {
+
+out << "EVENTSIZE " << nowevents.size() << endl;
+out << "NODE NAME" << nowevents[0]->nonzerodurs[0].getNode.name() << endl;
+ggg
+
+	// out << "!!GOING TO PRINT ITEMS AT " << nowtime << endl;
+
+	// print zero-duration items here.
+
+	int nowindex = 0;
+	for (int i = (int)partdata.size()-1; i>=0; i--) {
+		if (i < partdata.size()-1) {
+			out << "\t";
+		}
+		if ((nowindex < (int)nowparts.size()) && (i == nowparts[nowindex])) {
+			printPartTokens(out, *nowevents[nowindex], partdata[i]);
+			nowindex++;
+		} else {
+			printNullTokens(out, partdata[i]);
+		}
+	}
+	out << "Z" << endl;
+
+// ggg
 
 	return true;
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printNullTokens --
+//
+
+void MusicXmlToHumdrumConverter::printNullTokens(ostream& out, MxmlPart& part) {
+	int staffcount = part.getStaffCount();
+	if (staffcount == 0) {
+		staffcount = 1;
+	}
+	int versecount = part.getVerseCount();
+	int i;
+	bool first = true;
+	for (i = staffcount-1; i >= 0; i--) {
+		if (!first) {
+			out << "\t";
+		}
+		first = false;
+		out << ".";
+	}
+	for (i=0; i<versecount; i++) {
+		out << "\t.";
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printPartTokens --
+//
+
+void MusicXmlToHumdrumConverter::printPartTokens(ostream& out,
+		SimultaneousEvents& items, MxmlPart& part) {
+	int i;
+	int staffcount = part.getStaffCount();
+	if (staffcount == 0) {
+		staffcount = 1;
+	}
+	int versecount = 0;
+	bool first = true;
+	for (i = staffcount-1; i >= 0; i--) {
+		if (!first) {
+			out << "\t";
+		}
+		first = false;
+		printNonZeroDurationItems(out, items, i+1);
+	}
+	for (i=0; i<versecount; i++) {
+		out << "\tV";
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printNonZeroDurationItems(ostream& out, 
+//
+
+void MusicXmlToHumdrumConverter::printNonZeroDurationItems(ostream& out,
+		SimultaneousEvents& items, int staffnum) {
+	int i;
+	int staff;
+	bool first = true;
+	for (i=0; i<(int)items.nonzerodur.size(); i++) {
+		if (!first) {
+			cout << "\t";
+		}
+		first = false;
+		staff = items.nonzerodur[i]->getStaff();
+		if (staffnum == staff) {
+			printEvent(out, items.nonzerodur[i]);
+		} else {
+			out << ".";
+		}
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::printEvent --
+//
+
+void MusicXmlToHumdrumConverter::printEvent(ostream& out,
+		MxmlEvent* event) {
+	string recip = event->getRecip();
+	string pitch = event->getKernPitch();
+	out << recip << pitch;
 }
 
 

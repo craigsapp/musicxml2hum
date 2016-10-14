@@ -68,13 +68,34 @@ class MusicXmlToHumdrumConverter {
 		bool   fillPartData         (MxmlPart& partdata, const string& id,
 		                             xml_node partdeclaration,
 		                             xml_node partcontent);
+		void   printNonZeroDurationItems(ostream& out,
+		                             SimultaneousEvents& items,
+		                             int staffnum);
 
 		bool convert          (ostream& out);
 		bool convertPart      (ostream& out, const string& partname,
 		                       int partindex);
+		bool printMeasure     (ostream& out, int mnum,
+		                       vector<MxmlPart>& partdata,
+		                       vector<int> partstaves);
+		bool printNowEvents   (ostream& out, 
+		                       vector<SimultaneousEvents*>& nowevents,
+		                       vector<int>& nowparts, 
+		                       HumNum nowtime,
+		                       vector<MxmlPart>& partdata, 
+		                       vector<int>& partstaves);
+		void printNullTokens  (ostream& out, MxmlPart& part);
+		void printPartTokens  (ostream& out, SimultaneousEvents& items,
+		                       MxmlPart& part);
+		void printEvent       (ostream& out, MxmlEvent* event);
+		void printExclusiveInterpretationLine(ostream& out,
+		                       vector<MxmlPart>& partdata);
+		void printAllToken    (ostream& out, vector<MxmlPart>& partdata,
+		                       const string& common);
 
 	private:
 		Options m_options;
+		vector<vector<vector<HumNum> > > endtimes;
 
 };
 

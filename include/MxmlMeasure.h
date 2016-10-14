@@ -65,6 +65,7 @@ class MxmlMeasure {
 		void          attachToLastEvent  (MxmlEvent* event) const;
 		void          calculateDuration  (void);
 		int           getEventCount      (void) const;
+		vector<SimultaneousEvents>* getSortedEvents(void);
 		MxmlEvent*    getEvent           (int index) const;
 		void          setPreviousMeasure (MxmlMeasure* event);
 		void          setNextMeasure     (MxmlMeasure* event);
@@ -72,7 +73,9 @@ class MxmlMeasure {
 		MxmlMeasure*  getNextMeasure     (void) const;
 
 	private:
-		void          sortEvents         (void);
+		void  sortEvents                  (void);
+		void  receiveStaffNumberFromChild (int staffnum);
+   	void  reportStaffNumberToOwner    (int staffnum);
 
 	protected:
 		HumNum             m_starttime; // start time of measure in quarter notes
@@ -82,6 +85,10 @@ class MxmlMeasure {
 		MxmlMeasure*       m_following; // following measure in part or null
 		vector<MxmlEvent*> m_events;    // list of semi-ordered events in measure
 		vector<SimultaneousEvents> m_sortedevents; // list of time-sorted events
+
+	friend MxmlEvent;
+	friend MxmlPart;
+
 };
 
 

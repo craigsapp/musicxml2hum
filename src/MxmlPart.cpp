@@ -134,7 +134,6 @@ bool MxmlPart::addMeasure(xml_node mel) {
 		m_measures.back()->setNextMeasure(meas);
 	}
 	m_measures.push_back(meas);
-	int maxstaff = 0;
 	return meas->parseMeasure(mel);
 }
 
@@ -234,9 +233,43 @@ int MxmlPart::getPartNumber(void) const {
 //
 
 int MxmlPart::getStaffCount(void) const {
-	return m_maxstaff;
+	if (!m_maxstaff) {
+		return 1;
+	} else {
+		return m_maxstaff;
+	}
 }
 
+
+
+//////////////////////////////
+//
+// MxmlPart::getVerseCount -- Return the number of verses in the part.
+//
+
+int MxmlPart::getVerseCount(void) const {
+	return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// private fuctions --
+//
+
+//////////////////////////////
+//
+// MxmlMeasure::receiveStaffNumberFromChild -- Receive a staff number
+//    placement for a note or rest and pass it along to the part class
+//    so that it can keep track of the maximum staff number used in 
+//    the part.
+//
+
+void MxmlPart::receiveStaffNumberFromChild(int staffnum) {
+	if (m_maxstaff < staffnum) {
+		m_maxstaff = staffnum;
+	}
+}
 
 
 } // end namespace hum
