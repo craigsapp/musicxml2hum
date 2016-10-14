@@ -645,6 +645,166 @@ string MxmlEvent::getKernPitch(void) const {
 
 //////////////////////////////
 //
+// MxmlEvent::getOtherNoteInfo --
+//
+
+string MxmlEvent::getOtherNoteInfo(void) const {
+	int beamstarts   = 0;
+	int beamends     = 0;
+	int beamconts    = 0;
+	int hookbacks    = 0;
+	int hookforwards = 0;
+	int stem         = 0;
+
+	bool rest = false;
+	xml_node child = m_node.first_child();
+	xml_node notations;
+
+	while (child) {
+		if (strcmp(child.name(), "rest") == 0) {
+			rest = true;
+		} else if (strcmp(child.name(), "beam") == 0) {
+			const char* beaminfo = child.child_value();
+			if (strcmp(beaminfo, "begin") == 0) {
+				beamstarts++;
+			} else if (strcmp(beaminfo, "end") == 0) {
+				beamends++;
+			} else if (strcmp(beaminfo, "continue") == 0) {
+				beamconts++;
+			} else if (strcmp(beaminfo, "forward hook") == 0) {
+				hookforwards++;
+			} else if (strcmp(beaminfo, "backward hook") == 0) {
+				hookbacks++;
+			}
+		} else if (strcmp(child.name(), "stem") == 0) {
+			const char* stemdir = child.child_value();
+			if (strcmp(stemdir, "up") == 0) {
+				stem = 1;
+			} else if (strcmp(stemdir, "down") == 0) {
+				stem = -1;
+			}
+		} else if (strcmp(child.name(), "notations") == 0) {
+			notations = child;
+		}
+		child = child.next_sibling();
+	}
+
+	stringstream ss;
+
+	addNotations(ss, notations);
+
+	switch (stem) {
+		case  1:	ss << '/'; break;
+		case -1:	ss << '\\'; break;
+	}
+	int i;
+	for (i=0; i<beamends; i++)     { ss << "J"; }
+	for (i=0; i<hookbacks; i++)    { ss << "k"; }
+	for (i=0; i<hookforwards; i++) { ss << "K"; }
+	for (i=0; i<beamstarts; i++)   { ss << "L"; }
+
+	return ss.str();
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::addNotations --
+// see: http://www.music-cog.ohio-state.edu/Humdrum/representations/kern.html
+//
+// Others to add:
+//   Mordent
+//   Inverted mordent
+//   Turn
+//   Inverted turn (Wagnerian turn)
+//   TrillTurn (TR or tR).
+//
+
+void MxmlEvent::addNotations(stringstream& ss, xml_node notations) const {
+	if (!notations) {
+		return;
+	}
+
+	xml_node child = notations.first_child();
+	xml_node grandchild;
+
+	bool staccato       = false;
+	bool staccatissimo  = false;
+	bool accent         = false;
+	bool tenuto         = false;
+	bool strongaccent   = false;
+	bool fermata        = false;
+	bool trill          = false;
+	bool upbow          = false;
+	bool downbow        = false;
+	bool harmonic       = false;
+
+	while (child) {
+		if (strcmp(child.name(), "articulations") == 0) {
+			grandchild = child.first_child();
+			while (grandchild) {
+				if (strcmp(grandchild.name(), "staccato") == 0) {
+					staccato = true;
+				} else if (strcmp(grandchild.name(), "staccatissimo") == 0) {
+					staccatissimo = true;
+				} else if (strcmp(grandchild.name(), "spiccato") == 0) {
+					staccatissimo = true;
+				} else if (strcmp(grandchild.name(), "accent") == 0) {
+					accent = true;
+				} else if (strcmp(grandchild.name(), "tenuto") == 0) {
+					tenuto = true;
+				} else if (strcmp(grandchild.name(), "strong-accent") == 0) {
+					strongaccent = true;
+				} else if (strcmp(grandchild.name(), "detached-legato") == 0) {
+					tenuto = true;
+					staccato = true;
+				}
+				grandchild = grandchild.next_sibling();
+			}
+		} else if (strcmp(child.name(), "technical") == 0) {
+			// usermanuals.musicxml.com/MusicXML/Content/CT-MusicXML-technical.htm
+			grandchild = child.first_child();
+			while (grandchild) {
+				if (strcmp(grandchild.name(), "up-bow") == 0) {
+					upbow = true;
+				} else if (strcmp(grandchild.name(), "down-bow") == 0) {
+					downbow = true;
+				}
+				grandchild = grandchild.next_sibling();
+			}
+		} else if (strcmp(child.name(), "ornaments") == 0) {
+			grandchild = child.first_child();
+			while (grandchild) {
+				if (strcmp(grandchild.name(), "trill-mark") == 0) {
+					trill = true;
+				}
+				grandchild = grandchild.next_sibling();
+			}
+		} else if (strcmp(child.name(), "fermata") == 0) {
+			fermata = true;
+		}
+
+		child = child.next_sibling();
+	}
+
+	if (staccato)     { ss << "'";  }
+	if (staccatissimo){ ss << "`";  }
+	if (tenuto)       { ss << "~";  }
+	if (accent)       { ss << "^";  }
+	if (strongaccent) { ss << "^^"; }  // might be something else
+	if (harmonic)     { ss << "o";  }
+	if (trill)        { ss << "t";  }  // figure out whole-tone trills later
+	if (fermata)      { ss << ";";  }
+	if (upbow)        { ss << "v";  }
+	if (downbow)      { ss << "u";  }
+
+}
+
+
+
+//////////////////////////////
+//
 // MxmlEvent::getNode --
 //
 

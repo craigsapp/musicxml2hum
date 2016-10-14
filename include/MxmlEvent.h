@@ -19,6 +19,8 @@
 #include "pugiconfig.hpp"
 #include "pugixml.hpp"
 
+#include <sstream>
+
 using namespace pugi;
 using namespace std;
 
@@ -87,7 +89,10 @@ class MxmlEvent {
 		int                getPartNumber      (void) const;
 		string             getRecip           (void) const;
 		string             getKernPitch       (void) const;
+		string             getOtherNoteInfo   (void) const;
 		xml_node           getNode            (void);
+		void               addNotations       (stringstream& ss, 
+		                                       xml_node notations) const;
 
 	protected:
 		HumNum             m_starttime;  // start time in quarter notes of event
@@ -113,8 +118,8 @@ class MxmlEvent {
 
 	friend MxmlMeasure;
 	friend MxmlPart;
-
 };
+
 
 
 } // end namespace hum

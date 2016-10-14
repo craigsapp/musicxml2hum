@@ -51,7 +51,8 @@ class MusicXmlToHumdrumConverter {
 		void   printAttributes      (xml_node node);
 		bool   getPartInfo          (map<string, xml_node>& partinfo,
 		                             vector<string>& partids, xml_document& doc);
-		bool   stitchParts          (ostream& out, vector<string>& partids,
+		bool   stitchParts          (HumdrumFile& outfile,
+		                             vector<string>& partids,
 		                             map<string, xml_node>& partinfo,
 		                             map<string, xml_node>& partcontent,
 		                             vector<MxmlPart>& partdata);
@@ -68,29 +69,29 @@ class MusicXmlToHumdrumConverter {
 		bool   fillPartData         (MxmlPart& partdata, const string& id,
 		                             xml_node partdeclaration,
 		                             xml_node partcontent);
-		void   printNonZeroDurationItems(ostream& out,
+		void   appendNonZeroDurationItems(HumdrumLine* line,
 		                             SimultaneousEvents& items,
 		                             int staffnum);
 
 		bool convert          (ostream& out);
 		bool convertPart      (ostream& out, const string& partname,
 		                       int partindex);
-		bool printMeasure     (ostream& out, int mnum,
+		bool insertMeasure    (HumdrumFile& outfile, int mnum,
 		                       vector<MxmlPart>& partdata,
 		                       vector<int> partstaves);
-		bool printNowEvents   (ostream& out, 
+		bool convertNowEvents (HumdrumFile& outfile, 
 		                       vector<SimultaneousEvents*>& nowevents,
 		                       vector<int>& nowparts, 
 		                       HumNum nowtime,
 		                       vector<MxmlPart>& partdata, 
 		                       vector<int>& partstaves);
-		void printNullTokens  (ostream& out, MxmlPart& part);
-		void printPartTokens  (ostream& out, SimultaneousEvents& items,
+		void appendNullTokens (HumdrumLine* line, MxmlPart& part);
+		void appendPartTokens (HumdrumLine* line, SimultaneousEvents& items,
 		                       MxmlPart& part);
-		void printEvent       (ostream& out, MxmlEvent* event);
-		void printExclusiveInterpretationLine(ostream& out,
+		void appendEvent      (HumdrumLine* line, MxmlEvent* event);
+		void insertExclusiveInterpretationLine(HumdrumFile& outfile,
 		                       vector<MxmlPart>& partdata);
-		void printAllToken    (ostream& out, vector<MxmlPart>& partdata,
+		void insertAllToken   (HumdrumFile& outfile, vector<MxmlPart>& partdata,
 		                       const string& common);
 
 	private:

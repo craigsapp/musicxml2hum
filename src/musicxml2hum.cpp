@@ -96,7 +96,12 @@ bool MusicXmlToHumdrumConverter::convert(ostream& out, xml_document& doc) {
 		}
 	}
 
-	status &= stitchParts(out, partids, partinfo, partcontent, partdata);
+	HumdrumFile outfile;
+	status &= stitchParts(outfile, partids, partinfo, partcontent, partdata);
+	for (int i=0; i<outfile.getLineCount(); i++) {
+		outfile[i].createLineFromTokens();
+	}
+	out << outfile;
 
 	return status;
 }
@@ -223,12 +228,13 @@ void MusicXmlToHumdrumConverter::printPartInfo(vector<string>& partids,
 }
 
 
+
 //////////////////////////////
 //
 // stitchParts -- Merge individual parts into a single score sequence.
 //
 
-bool MusicXmlToHumdrumConverter::stitchParts(ostream& out,
+bool MusicXmlToHumdrumConverter::stitchParts(HumdrumFile& outfile,
 		vector<string>& partids, map<string, xml_node>& partinfo,
 		map<string, xml_node>& partcontent, vector<MxmlPart>& partdata) {
 
@@ -236,7 +242,7 @@ bool MusicXmlToHumdrumConverter::stitchParts(ostream& out,
 		return false;
 	}
 
-	printExclusiveInterpretationLine(out, partdata);
+	insertExclusiveInterpretationLine(outfile, partdata);
 
 	int i;
 	int measurecount = partdata[0].getMeasureCount();
@@ -257,12 +263,12 @@ bool MusicXmlToHumdrumConverter::stitchParts(ostream& out,
 	bool status = true;
 	int m;
 	for (m=0; m<partdata[0].getMeasureCount(); m++) {
-		status &= printMeasure(out, m, partdata, partstaves);
+		status &= insertMeasure(outfile, m, partdata, partstaves);
 		// a hack for now:
-		printAllToken(out, partdata, "=");
+		insertAllToken(outfile, partdata, "=");
 	}
 
-	printAllToken(out, partdata, "*-");
+	insertAllToken(outfile, partdata, "*-");
 
 	return status;
 }
@@ -271,65 +277,64 @@ bool MusicXmlToHumdrumConverter::stitchParts(ostream& out,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printExclusiveInterpretationLine --
+// MusicXmlToHumdrumConverter::insertExclusiveInterpretationLine --
 //
 
-void MusicXmlToHumdrumConverter::printExclusiveInterpretationLine(
-		ostream& out, vector<MxmlPart>& partdata) {
-	bool first = true;
+void MusicXmlToHumdrumConverter::insertExclusiveInterpretationLine(
+		HumdrumFile& outfile, vector<MxmlPart>& partdata) {
+
+	HumdrumLine* line = new HumdrumLine;
+	HumdrumToken* token;
 
 	int i, j;
 	for (i=0; i<(int)partdata.size(); i++) {
 		for (j=0; j<(int)partdata[i].getStaffCount(); j++) {
-			if (!first) {
-				out << "\t";
-			}
-			first = false;
-			out << "**kern";
+			token = new HumdrumToken("**kern");
+			line->appendToken(token);
 		}
 		for (j=0; j<(int)partdata[i].getVerseCount(); j++) {
-			out << "\t";
-			out << "**text";
+			token = new HumdrumToken("**kern");
+			line->appendToken(token);
 		}
 	}
-	out << endl;
+	outfile.appendLine(line);
 }
 
 
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printAllToken --
+// MusicXmlToHumdrumConverter::insertAllToken --
 //
 
-void MusicXmlToHumdrumConverter::printAllToken(ostream& out,
+void MusicXmlToHumdrumConverter::insertAllToken(HumdrumFile& outfile,
 		vector<MxmlPart>& partdata, const string& common) {
-	bool first = true;
+
+	HumdrumLine* line = new HumdrumLine;
+	HumdrumToken* token;
 
 	int i, j;
 	for (i=0; i<(int)partdata.size(); i++) {
 		for (j=0; j<(int)partdata[i].getStaffCount(); j++) {
-			if (!first) {
-				out << "\t";
-			}
-			first = false;
-			out << common;
+			token = new HumdrumToken(common);
+			line->appendToken(token);
 		}
 		for (j=0; j<(int)partdata[i].getVerseCount(); j++) {
-			out << "\t";
-			out << common;
+			token = new HumdrumToken(common);
+			line->appendToken(token);
 		}
 	}
-	out << endl;
+	outfile.appendLine(line);
 }
+
 
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printMeasure --
+// MusicXmlToHumdrumConverter::insertMeasure --
 //
 
-bool MusicXmlToHumdrumConverter::printMeasure(ostream& out, int mnum,
+bool MusicXmlToHumdrumConverter::insertMeasure(HumdrumFile& outfile, int mnum,
 		vector<MxmlPart>& partdata, vector<int> partstaves) {
 	vector<MxmlMeasure*> measuredata;
 	vector<vector<SimultaneousEvents>* > sevents;
@@ -378,7 +383,7 @@ bool MusicXmlToHumdrumConverter::printMeasure(ostream& out, int mnum,
 				}
 			}
 		}
-		status &= printNowEvents(out,
+		status &= convertNowEvents(outfile,
 		                         nowevents,
 		                         nowparts,
 		                         processtime,
@@ -393,40 +398,48 @@ bool MusicXmlToHumdrumConverter::printMeasure(ostream& out, int mnum,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printNowEvents --
+// MusicXmlToHumdrumConverter::convertNowEvents --
 //
 
-bool MusicXmlToHumdrumConverter::printNowEvents(
-		ostream& out,
+bool MusicXmlToHumdrumConverter::convertNowEvents(
+		HumdrumFile& outfile,
 		vector<SimultaneousEvents*>& nowevents,
 		vector<int>& nowparts,
 		HumNum nowtime,
 		vector<MxmlPart>& partdata,
 		vector<int>& partstaves) {
 
-out << "EVENTSIZE " << nowevents.size() << endl;
-out << "NODE NAME" << nowevents[0]->nonzerodurs[0].getNode.name() << endl;
-ggg
+	if (nowevents.size() == 0) {
+		// cout << "NOW EVENTS ARE EMPTY" << endl;
+		return true;
+	}
+
+	if (nowevents[0]->nonzerodur.size() == 0) {
+		// no duration events (should be a terminal barline)
+		// ignore and deal with in calling function.
+		return true;
+	}
+
+//ggg
 
 	// out << "!!GOING TO PRINT ITEMS AT " << nowtime << endl;
 
 	// print zero-duration items here.
 
+	HumdrumLine* line = new HumdrumLine;
+
 	int nowindex = 0;
 	for (int i = (int)partdata.size()-1; i>=0; i--) {
-		if (i < partdata.size()-1) {
-			out << "\t";
-		}
 		if ((nowindex < (int)nowparts.size()) && (i == nowparts[nowindex])) {
-			printPartTokens(out, *nowevents[nowindex], partdata[i]);
+			appendPartTokens(line, *nowevents[nowindex], partdata[i]);
 			nowindex++;
 		} else {
-			printNullTokens(out, partdata[i]);
+			appendNullTokens(line, partdata[i]);
 		}
 	}
-	out << "Z" << endl;
 
-// ggg
+	// line->createLineFromTokens();
+	outfile.appendLine(line);
 
 	return true;
 }
@@ -435,26 +448,19 @@ ggg
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printNullTokens --
+// MusicXmlToHumdrumConverter::appendNullTokens --
 //
 
-void MusicXmlToHumdrumConverter::printNullTokens(ostream& out, MxmlPart& part) {
-	int staffcount = part.getStaffCount();
-	if (staffcount == 0) {
-		staffcount = 1;
-	}
-	int versecount = part.getVerseCount();
+void MusicXmlToHumdrumConverter::appendNullTokens(HumdrumLine* line,
+		MxmlPart& part) {
 	int i;
-	bool first = true;
-	for (i = staffcount-1; i >= 0; i--) {
-		if (!first) {
-			out << "\t";
-		}
-		first = false;
-		out << ".";
+	int staffcount = part.getStaffCount();
+	int versecount = part.getVerseCount();
+	for (i=staffcount-1; i>=0; i--) {
+		line->appendToken(".");
 	}
 	for (i=0; i<versecount; i++) {
-		out << "\t.";
+		line->appendToken(".");
 	}
 }
 
@@ -462,27 +468,19 @@ void MusicXmlToHumdrumConverter::printNullTokens(ostream& out, MxmlPart& part) {
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printPartTokens --
+// MusicXmlToHumdrumConverter::appendPartTokens --
 //
 
-void MusicXmlToHumdrumConverter::printPartTokens(ostream& out,
+void MusicXmlToHumdrumConverter::appendPartTokens(HumdrumLine* line,
 		SimultaneousEvents& items, MxmlPart& part) {
 	int i;
 	int staffcount = part.getStaffCount();
-	if (staffcount == 0) {
-		staffcount = 1;
-	}
-	int versecount = 0;
-	bool first = true;
+	int versecount = part.getVerseCount();
 	for (i = staffcount-1; i >= 0; i--) {
-		if (!first) {
-			out << "\t";
-		}
-		first = false;
-		printNonZeroDurationItems(out, items, i+1);
+		appendNonZeroDurationItems(line, items, i+1);
 	}
 	for (i=0; i<versecount; i++) {
-		out << "\tV";
+		line->append("V");
 	}
 }
 
@@ -490,11 +488,11 @@ void MusicXmlToHumdrumConverter::printPartTokens(ostream& out,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printNonZeroDurationItems(ostream& out, 
+// MusicXmlToHumdrumConverter::appendNonZeroDurationItems --
 //
 
-void MusicXmlToHumdrumConverter::printNonZeroDurationItems(ostream& out,
-		SimultaneousEvents& items, int staffnum) {
+void MusicXmlToHumdrumConverter::appendNonZeroDurationItems(
+		HumdrumLine* line, SimultaneousEvents& items, int staffnum) {
 	int i;
 	int staff;
 	bool first = true;
@@ -505,9 +503,9 @@ void MusicXmlToHumdrumConverter::printNonZeroDurationItems(ostream& out,
 		first = false;
 		staff = items.nonzerodur[i]->getStaff();
 		if (staffnum == staff) {
-			printEvent(out, items.nonzerodur[i]);
+			appendEvent(line, items.nonzerodur[i]);
 		} else {
-			out << ".";
+			line->appendToken(".");
 		}
 	}
 }
@@ -516,14 +514,17 @@ void MusicXmlToHumdrumConverter::printNonZeroDurationItems(ostream& out,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printEvent --
+// MusicXmlToHumdrumConverter::appendEvent --
 //
 
-void MusicXmlToHumdrumConverter::printEvent(ostream& out,
+void MusicXmlToHumdrumConverter::appendEvent(HumdrumLine* line,
 		MxmlEvent* event) {
 	string recip = event->getRecip();
 	string pitch = event->getKernPitch();
-	out << recip << pitch;
+	string other = event->getOtherNoteInfo();
+	stringstream ss;
+	ss << recip << pitch << other;
+	line->appendToken(ss.str());
 }
 
 
