@@ -11,6 +11,7 @@
 //
 
 #include "musicxml2hum.h"
+#include "HumGrid.h"
 
 using namespace std;
 using namespace pugi;
@@ -91,13 +92,16 @@ bool MusicXmlToHumdrumConverter::convert(ostream& out, xml_document& doc) {
 	for (int i=0; i<(int)partdata.size(); i++) {
 		endtimes[i].resize(partdata[i].getStaffCount());
 		for (int j=0; j<(int)partdata[i].getStaffCount(); j++) {
-			endtimes[i][j].resize(1);
-			endtimes[i][j][0] = 0;
+			endtimes.at(i).at(j).resize(1);
+			endtimes.at(i).at(j).at(0) = 0;
 		}
 	}
 
+	HumGrid outdata;
+	status &= stitchParts(outdata, partids, partinfo, partcontent, partdata);
+
 	HumdrumFile outfile;
-	status &= stitchParts(outfile, partids, partinfo, partcontent, partdata);
+	outdata.transferTokens(outfile);
 	for (int i=0; i<outfile.getLineCount(); i++) {
 		outfile[i].createLineFromTokens();
 	}
@@ -234,7 +238,7 @@ void MusicXmlToHumdrumConverter::printPartInfo(vector<string>& partids,
 // stitchParts -- Merge individual parts into a single score sequence.
 //
 
-bool MusicXmlToHumdrumConverter::stitchParts(HumdrumFile& outfile,
+bool MusicXmlToHumdrumConverter::stitchParts(HumGrid& outdata,
 		vector<string>& partids, map<string, xml_node>& partinfo,
 		map<string, xml_node>& partcontent, vector<MxmlPart>& partdata) {
 
@@ -242,7 +246,7 @@ bool MusicXmlToHumdrumConverter::stitchParts(HumdrumFile& outfile,
 		return false;
 	}
 
-	insertExclusiveInterpretationLine(outfile, partdata);
+//	insertExclusiveInterpretationLine(outfile, partdata);
 
 	int i;
 	int measurecount = partdata[0].getMeasureCount();
@@ -260,17 +264,49 @@ bool MusicXmlToHumdrumConverter::stitchParts(HumdrumFile& outfile,
 		partstaves[i] = partdata[i].getStaffCount();
 	}
 
+	// vector<HumdrumLine*> measures;
+
 	bool status = true;
 	int m;
 	for (m=0; m<partdata[0].getMeasureCount(); m++) {
-		status &= insertMeasure(outfile, m, partdata, partstaves);
+		status &= insertMeasure(outdata, m, partdata, partstaves);
 		// a hack for now:
-		insertAllToken(outfile, partdata, "=");
+		// insertSingleMeasure(outfile);
+		// measures.push_back(&outfile[outfile.getLineCount()-1]);
 	}
 
-	insertAllToken(outfile, partdata, "*-");
+// Do this later, maybe in another class:
+//	insertAllToken(outfile, partdata, "*-");
+//	cleanupMeasures(outfile, measures);
 
 	return status;
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::cleanupMeasures --
+//     Also add barlines here (keeping track of the 
+//     duration of each measure).
+//
+
+void MusicXmlToHumdrumConverter::cleanupMeasures(HumdrumFile& outfile,
+		vector<HumdrumLine*> measures) {
+
+   HumdrumToken* token;
+	for (int i=0; i<outfile.getLineCount(); i++) {
+		if (!outfile[i].isBarline()) {
+			continue;
+		}
+		if (!outfile[i+1].isInterpretation()) {
+			int fieldcount = outfile[i+1].getFieldCount();
+			for (int j=1; j<fieldcount; j++) {
+				token = new HumdrumToken("=");
+				outfile[i].appendToken(token);
+			}
+		}
+	}
 }
 
 
@@ -297,6 +333,22 @@ void MusicXmlToHumdrumConverter::insertExclusiveInterpretationLine(
 			line->appendToken(token);
 		}
 	}
+	outfile.appendLine(line);
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::insertSingleMeasure --
+//
+
+void MusicXmlToHumdrumConverter::insertSingleMeasure(HumdrumFile& outfile) {
+	HumdrumLine* line = new HumdrumLine;
+	HumdrumToken* token;
+	token = new HumdrumToken("=");
+	line->appendToken(token);
+	line->createLineFromTokens();
 	outfile.appendLine(line);
 }
 
@@ -334,8 +386,12 @@ void MusicXmlToHumdrumConverter::insertAllToken(HumdrumFile& outfile,
 // MusicXmlToHumdrumConverter::insertMeasure --
 //
 
-bool MusicXmlToHumdrumConverter::insertMeasure(HumdrumFile& outfile, int mnum,
+bool MusicXmlToHumdrumConverter::insertMeasure(HumGrid& outdata, int mnum,
 		vector<MxmlPart>& partdata, vector<int> partstaves) {
+
+	GridMeasure* gm = new GridMeasure;
+	outdata.push_back(gm);
+
 	vector<MxmlMeasure*> measuredata;
 	vector<vector<SimultaneousEvents>* > sevents;
 	int i;
@@ -355,6 +411,7 @@ bool MusicXmlToHumdrumConverter::insertMeasure(HumdrumFile& outfile, int mnum,
 			nexttime = curtime[i];
 		}
 	}
+
 
 	bool allend = false;
 	vector<SimultaneousEvents*> nowevents;
@@ -383,7 +440,7 @@ bool MusicXmlToHumdrumConverter::insertMeasure(HumdrumFile& outfile, int mnum,
 				}
 			}
 		}
-		status &= convertNowEvents(outfile,
+		status &= convertNowEvents(*outdata.back(),
 		                         nowevents,
 		                         nowparts,
 		                         processtime,
@@ -402,7 +459,7 @@ bool MusicXmlToHumdrumConverter::insertMeasure(HumdrumFile& outfile, int mnum,
 //
 
 bool MusicXmlToHumdrumConverter::convertNowEvents(
-		HumdrumFile& outfile,
+		GridMeasure& outdata,
 		vector<SimultaneousEvents*>& nowevents,
 		vector<int>& nowparts,
 		HumNum nowtime,
@@ -414,34 +471,242 @@ bool MusicXmlToHumdrumConverter::convertNowEvents(
 		return true;
 	}
 
+	appendZeroEvents(outdata, nowevents, nowparts, nowtime, partdata, 
+			partstaves);
+
 	if (nowevents[0]->nonzerodur.size() == 0) {
 		// no duration events (should be a terminal barline)
 		// ignore and deal with in calling function.
 		return true;
 	}
 
-//ggg
+	appendNonZeroEvents(outdata, nowevents, nowparts, nowtime, partdata, 
+			partstaves);
 
-	// out << "!!GOING TO PRINT ITEMS AT " << nowtime << endl;
+	return true;
+}
 
-	// print zero-duration items here.
 
-	HumdrumLine* line = new HumdrumLine;
 
-	int nowindex = 0;
-	for (int i = (int)partdata.size()-1; i>=0; i--) {
-		if ((nowindex < (int)nowparts.size()) && (i == nowparts[nowindex])) {
-			appendPartTokens(line, *nowevents[nowindex], partdata[i]);
-			nowindex++;
-		} else {
-			appendNullTokens(line, partdata[i]);
+/////////////////////////////
+//
+// MusicXmlToHumdrumConverter::appendNonZeroEvents --
+//
+
+void MusicXmlToHumdrumConverter::appendNonZeroEvents(
+		GridMeasure& outdata,
+		vector<SimultaneousEvents*>& nowevents,
+		vector<int>& nowparts,
+		HumNum nowtime,
+		vector<MxmlPart>& partdata,
+		vector<int>& partstaves) {
+
+	GridSlice* slice = new GridSlice(nowtime, SliceType::Notes);
+	outdata.push_back(slice);
+	slice->initializePartStaves(partdata);
+
+	for (int i=0; i<(int)nowevents.size(); i++) {
+		vector<MxmlEvent*>& events = nowevents[i]->nonzerodur;
+		for (int j=0; j<(int)events.size(); j++) {
+			addEvent(*slice, events[j]);
+		}
+
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::addEvent --
+//
+
+void MusicXmlToHumdrumConverter::addEvent(GridSlice& slice,
+		MxmlEvent* event) {
+
+	int partindex;  // which part the event occurs in
+	int staffindex; // which staff the event occurs in (need to fix)
+	int voiceindex; // which voice the event occurs in (use for staff)
+
+	partindex  = event->getPartIndex();
+	staffindex = event->getStaffIndex();
+	voiceindex = event->getVoiceIndex();
+
+
+	string recip = event->getRecip();
+	string pitch = event->getKernPitch();
+	string other = event->getOtherNoteInfo();
+	stringstream ss;
+	ss << recip << pitch << other;
+
+	HTp token = new HumdrumToken(ss.str());
+	slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token);
+}
+
+
+
+/////////////////////////////
+//
+// MusicXmlToHumdrumConverter::appendZeroEvents --
+//
+
+void MusicXmlToHumdrumConverter::appendZeroEvents(
+		GridMeasure& outdata,
+		vector<SimultaneousEvents*>& nowevents,
+		vector<int>& nowparts,
+		HumNum nowtime,
+		vector<MxmlPart>& partdata,
+		vector<int>& partstaves) {
+
+/* 
+	for (int i=0; i<nowevents.size(); i++) {
+		if (nowevents[i]->zerodur.size()) {
+			cout << "found zerodur events " << nowevents[i]->zerodur.size() << " ";
+			for (int j=0; j<nowevents[i]->zerodur.size(); j++) {
+				cout << nowevents[i]->zerodur[j]->getNode().name() << " ";
+			}
+		}
+		cout << endl;
+	}
+*/
+
+	bool hasclef    = false;
+	// bool haskeysig  = false;
+	// bool hastimesig = false;
+
+	vector<xml_node> clefs(partdata.size(), xml_node(NULL));
+	int pindex = 0;
+	xml_node child;
+
+	for (int i=0; i<nowevents.size(); i++) {
+		for (int j=0; j<nowevents[i]->zerodur.size(); j++) {
+			xml_node element = nowevents[i]->zerodur[j]->getNode();
+			if (nodeType(element, "attributes")) {
+				child = element.first_child();
+				while (child) {
+					if (nodeType(child, "clef") && !clefs[pindex]) {
+						pindex = nowevents[i]->zerodur[j]->getPartIndex();
+						clefs[pindex] = child;
+						hasclef = true;
+					}
+					child = child.next_sibling();
+				}
+			}
 		}
 	}
 
-	// line->createLineFromTokens();
-	outfile.appendLine(line);
+	if (hasclef) {
+		addClefLine(outdata, clefs, partdata, nowtime);
+	}
 
-	return true;
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::addClefLine --
+//
+
+void MusicXmlToHumdrumConverter::addClefLine(GridMeasure& outdata, 
+		vector<xml_node>& clefs, vector<MxmlPart>& partdata, HumNum nowtime) {
+
+	GridSlice* slice = new GridSlice(nowtime, SliceType::Clefs);
+	outdata.push_back(slice);
+	slice->initializePartStaves(partdata);
+
+	for (int i=0; i<(int)partdata.size(); i++) {
+		if (clefs[i]) {
+			insertPartClefs(clefs[i], *slice->at(i));
+		}
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::insertPartClefs --
+//
+
+void MusicXmlToHumdrumConverter::insertPartClefs(xml_node clef, GridPart& part) {
+	if (!clef) {
+		// no clef for some reason.
+		return;
+	}
+
+	HTp token;
+	int staffnum = 0;
+	while (clef) {
+		clef = convertClefToHumdrum(clef, token, staffnum);
+		part[staffnum]->setTokenLayer(0, token);
+	}
+}
+
+
+
+//////////////////////////////
+//
+//	MusicXmlToHumdrumConverter::convertClefToHumdrum --
+//
+
+xml_node MusicXmlToHumdrumConverter::convertClefToHumdrum(xml_node clef,
+		HTp& token, int& staffindex) {
+
+	if (!clef) {
+		// no clef for some reason.
+		return clef;
+	}
+
+	staffindex = 0;
+	xml_attribute sn = clef.attribute("number");
+	if (sn) {
+		staffindex = atoi(sn.value()) - 1;
+	}
+
+	string sign;
+	int line = 0;
+
+	xml_node child = clef.first_child();
+	while (child) {
+		if (nodeType(child, "sign")) {
+			sign = child.child_value();
+		} else if (nodeType(child, "line")) {
+			line = atoi(child.child_value());
+		}
+		child = child.next_sibling();
+	}
+
+	// Check for percussion clefs, etc., here.
+	stringstream ss;
+	ss << "*clef" << sign << line;
+	token = new HumdrumToken(ss.str());
+
+	clef = clef.next_sibling();
+	if (!clef) {
+		return clef;
+	}
+	if (nodeType(clef, "clef")) {
+		return clef;
+	} else {
+		return xml_node(NULL);
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::nodeType -- return true if node type matches
+//     string.
+//
+
+bool MusicXmlToHumdrumConverter::nodeType(xml_node node, const char* testname) {
+	if (strcmp(node.name(), testname) == 0) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 
@@ -462,69 +727,6 @@ void MusicXmlToHumdrumConverter::appendNullTokens(HumdrumLine* line,
 	for (i=0; i<versecount; i++) {
 		line->appendToken(".");
 	}
-}
-
-
-
-//////////////////////////////
-//
-// MusicXmlToHumdrumConverter::appendPartTokens --
-//
-
-void MusicXmlToHumdrumConverter::appendPartTokens(HumdrumLine* line,
-		SimultaneousEvents& items, MxmlPart& part) {
-	int i;
-	int staffcount = part.getStaffCount();
-	int versecount = part.getVerseCount();
-	for (i = staffcount-1; i >= 0; i--) {
-		appendNonZeroDurationItems(line, items, i+1);
-	}
-	for (i=0; i<versecount; i++) {
-		line->append("V");
-	}
-}
-
-
-
-//////////////////////////////
-//
-// MusicXmlToHumdrumConverter::appendNonZeroDurationItems --
-//
-
-void MusicXmlToHumdrumConverter::appendNonZeroDurationItems(
-		HumdrumLine* line, SimultaneousEvents& items, int staffnum) {
-	int i;
-	int staff;
-	bool first = true;
-	for (i=0; i<(int)items.nonzerodur.size(); i++) {
-		if (!first) {
-			cout << "\t";
-		}
-		first = false;
-		staff = items.nonzerodur[i]->getStaff();
-		if (staffnum == staff) {
-			appendEvent(line, items.nonzerodur[i]);
-		} else {
-			line->appendToken(".");
-		}
-	}
-}
-
-
-
-//////////////////////////////
-//
-// MusicXmlToHumdrumConverter::appendEvent --
-//
-
-void MusicXmlToHumdrumConverter::appendEvent(HumdrumLine* line,
-		MxmlEvent* event) {
-	string recip = event->getRecip();
-	string pitch = event->getKernPitch();
-	string other = event->getOtherNoteInfo();
-	stringstream ss;
-	ss << recip << pitch << other;
-	line->appendToken(ss.str());
 }
 
 

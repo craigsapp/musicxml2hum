@@ -53,13 +53,12 @@ class MxmlPart {
 		void          allocateSortedEvents (void);
 		void          setPartNumber        (int number);
 		int           getPartNumber        (void) const;
+		int           getPartIndex         (void) const;
 		int           getStaffCount        (void) const;
 		int           getVerseCount        (void) const;
 
-
 	private:
 		void          receiveStaffNumberFromChild (int staffnum);
-
 
 	protected:
 		vector<MxmlMeasure*> m_measures;

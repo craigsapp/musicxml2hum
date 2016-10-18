@@ -60,6 +60,7 @@ class MxmlMeasure {
 		void          setOwner           (MxmlPart* part);
 		MxmlPart*     getOwner           (void) const;
 		int           getPartNumber      (void) const;
+		int           getPartIndex       (void) const;
 		int           setQTicks          (long value);
 		long          getQTicks          (void) const;
 		void          attachToLastEvent  (MxmlEvent* event) const;

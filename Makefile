@@ -28,7 +28,8 @@ LIBDIRS  += -Lexternal/pugixml
 HUMLIB    = humlib
 PUGIXML   = pugixml
 COMPILER  = g++
-PREFLAGS  = -O3 -Wall $(INCDIRS)
+#PREFLAGS  = -O3 -Wall $(INCDIRS)
+PREFLAGS  = -Wall $(INCDIRS)
 POSTFLAGS = $(LIBDIRS) -l$(HUMLIB) -l$(PUGIXML)
 
 # Humlib needs C++11:
@@ -45,8 +46,8 @@ OBJS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%,$(patsubst %.cpp,%.o,$(wildcard $(SRC
 
 all: objdir bindir external $(OBJS)
 	@echo [CC] $(BINDIR)/$(TARGET)
-	@$(COMPILER) $(PREFLAGS) -o $(BINDIR)/$(TARGET) $(OBJS) $(POSTFLAGS) \
-		&& strip $(BINDIR)/$(TARGET)
+	@$(COMPILER) $(PREFLAGS) -o $(BINDIR)/$(TARGET) $(OBJS) $(POSTFLAGS) 
+#		&& strip $(BINDIR)/$(TARGET)
 
 objdir:
 	mkdir -p $(OBJDIR)

@@ -1,0 +1,67 @@
+//
+// Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
+// Creation Date: Sun Oct 16 16:08:05 PDT 2016
+// Last Modified: Sun Oct 16 16:08:08 PDT 2016
+// Filename:      GridSlice.h
+// URL:           https://github.com/craigsapp/hum2ly/blob/master/include/GridSlice.h
+// Syntax:        C++11
+// vim:           ts=3 noexpandtab
+//
+// Description:   HumGrid is an intermediate container for converting from
+//                MusicXML syntax into Humdrum syntax. GridSlice is a
+//                time instance which contains all notes in all parts
+//                that should be played at that time.
+//
+
+#ifndef _GRIDSLICE_H
+#define _GRIDSLICE_H
+
+#include "humlib.h"
+#include "GridPart.h"
+#include "MxmlPart.h"
+
+#include <vector>
+#include <list>
+
+using namespace std;
+
+
+namespace hum {
+
+enum class SliceType {
+	Notes,
+	GraceNotes,
+	Clefs,
+	KeySigs,
+	TimeSigs,
+	MeterSigs
+};
+
+
+class GridSlice : public vector<GridPart*> {
+	public:
+		GridSlice(HumNum timestamp, SliceType type);
+		~GridSlice();
+
+		bool isNoteSlice(void)     { return m_type == SliceType::Notes; }
+		bool isGraceSlice(void)    { return m_type == SliceType::GraceNotes; }
+		bool isClefSlice(void)     { return m_type == SliceType::Clefs; }
+		bool isTimeSigSlice(void)  { return m_type == SliceType::TimeSigs; }
+		bool isMeterSigSlice(void) { return m_type == SliceType::MeterSigs; }
+
+		void transferTokens(HumdrumFile& outfile);
+		void initializePartStaves(vector<MxmlPart>& partdata);
+
+	private:
+		HumNum     m_timestamp;
+		SliceType  m_type;
+
+};
+
+
+} // end namespace hum
+
+#endif /* _GRIDSLICE_H */
+
+
+

@@ -24,7 +24,6 @@
 using namespace pugi;
 using namespace std;
 
-
 namespace hum {
 
 class MxmlMeasure;
@@ -81,12 +80,14 @@ class MxmlEvent {
 		void               printEvent         (void) const;
 		int                getSequenceNumber  (void) const;
 		int                getVoiceNumber     (void) const;
+		int                getVoiceIndex      (void) const;
+		void               setVoiceNumber     (int value);
 		int                getStaffNumber     (void) const;
-		void               setVoice           (int value);
-		void               setStaff           (int value);
-		int                getStaff           (void) const;
+		int                getStaffIndex      (void) const;
+		void               setStaffNumber     (int value);
 		measure_event_type getType            (void) const;
 		int                getPartNumber      (void) const;
+		int                getPartIndex       (void) const;
 		string             getRecip           (void) const;
 		string             getKernPitch       (void) const;
 		string             getOtherNoteInfo   (void) const;

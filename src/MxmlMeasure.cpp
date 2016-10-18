@@ -233,6 +233,20 @@ int MxmlMeasure::getPartNumber(void) const {
 
 //////////////////////////////
 //
+// MxmlMeasure::getPartIndex --
+//
+
+int MxmlMeasure::getPartIndex(void) const {
+	if (!m_owner) {
+		return -1;
+	}
+	return m_owner->getPartIndex();
+}
+
+
+
+//////////////////////////////
+//
 // MxmlMeasure::setQTicks -- Set the number of ticks per quarter note.
 //     Returns the number of times that the ticks has been set.
 //

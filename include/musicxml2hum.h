@@ -14,6 +14,7 @@
 #define _MUSICXML2HUM_H
 
 #define _USE_HUMLIB_OPTIONS_
+
 #include "humlib.h"
 
 #include "pugiconfig.hpp"
@@ -22,6 +23,8 @@
 #include "MxmlPart.h"
 #include "MxmlMeasure.h"
 #include "MxmlEvent.h"
+#include "HumGrid.h"
+
 
 using namespace std;
 using namespace pugi;
@@ -51,7 +54,7 @@ class MusicXmlToHumdrumConverter {
 		void   printAttributes      (xml_node node);
 		bool   getPartInfo          (map<string, xml_node>& partinfo,
 		                             vector<string>& partids, xml_document& doc);
-		bool   stitchParts          (HumdrumFile& outfile,
+		bool   stitchParts          (HumGrid& outdata,
 		                             vector<string>& partids,
 		                             map<string, xml_node>& partinfo,
 		                             map<string, xml_node>& partcontent,
@@ -69,30 +72,49 @@ class MusicXmlToHumdrumConverter {
 		bool   fillPartData         (MxmlPart& partdata, const string& id,
 		                             xml_node partdeclaration,
 		                             xml_node partcontent);
-		void   appendNonZeroDurationItems(HumdrumLine* line,
-		                             SimultaneousEvents& items,
-		                             int staffnum);
+		void   appendZeroEvents     (GridMeasure& outfile,
+		                             vector<SimultaneousEvents*>& nowevents,
+		                             vector<int>& nowparts,
+		                             HumNum nowtime,
+		                             vector<MxmlPart>& partdata,
+		                             vector<int>& partstaves);
+		void   appendNonZeroEvents   (GridMeasure& outdata,
+		                              vector<SimultaneousEvents*>& nowevents,
+		                              vector<int>& nowparts,
+		                              HumNum nowtime,
+		                              vector<MxmlPart>& partdata,
+		                              vector<int>& partstaves);
 
 		bool convert          (ostream& out);
 		bool convertPart      (ostream& out, const string& partname,
 		                       int partindex);
-		bool insertMeasure    (HumdrumFile& outfile, int mnum,
+		bool insertMeasure    (HumGrid& outdata, int mnum,
 		                       vector<MxmlPart>& partdata,
 		                       vector<int> partstaves);
-		bool convertNowEvents (HumdrumFile& outfile, 
+		bool convertNowEvents (GridMeasure& outdata, 
 		                       vector<SimultaneousEvents*>& nowevents,
 		                       vector<int>& nowparts, 
 		                       HumNum nowtime,
 		                       vector<MxmlPart>& partdata, 
 		                       vector<int>& partstaves);
 		void appendNullTokens (HumdrumLine* line, MxmlPart& part);
-		void appendPartTokens (HumdrumLine* line, SimultaneousEvents& items,
-		                       MxmlPart& part);
 		void appendEvent      (HumdrumLine* line, MxmlEvent* event);
 		void insertExclusiveInterpretationLine(HumdrumFile& outfile,
 		                       vector<MxmlPart>& partdata);
 		void insertAllToken   (HumdrumFile& outfile, vector<MxmlPart>& partdata,
 		                       const string& common);
+		void insertSingleMeasure(HumdrumFile& outfile);
+		void cleanupMeasures   (HumdrumFile& outfile,
+		                        vector<HumdrumLine*> measures);
+		void addClefLine       (GridMeasure& outdata, vector<xml_node>& clefs,
+		                        vector<MxmlPart>& partdata, HumNum nowtime);
+		void insertPartClefs   (xml_node clef, GridPart& part);
+		xml_node convertClefToHumdrum(xml_node clef, HTp& token, int& staffindex);
+		void addEvent          (GridSlice& slice, MxmlEvent* event);
+
+	public:
+
+	static bool nodeType      (xml_node node, const char* testname);
 
 	private:
 		Options m_options;

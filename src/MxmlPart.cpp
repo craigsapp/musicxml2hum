@@ -228,6 +228,18 @@ int MxmlPart::getPartNumber(void) const {
 
 //////////////////////////////
 //
+// MxmlPart::getPartIndex -- Return the part number for the part.  Typically
+//     starts at "0" for the top part in a system.
+//
+
+int MxmlPart::getPartIndex(void) const { 
+	return m_partnum - 1;
+}
+
+
+
+//////////////////////////////
+//
 // MxmlPart::getStaffCount -- Return the number of staves which the part
 //   contains, such as 2 for piano parts.
 //

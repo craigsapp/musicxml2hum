@@ -168,6 +168,20 @@ int MxmlEvent::getPartNumber(void) const {
 
 //////////////////////////////
 //
+// MxmlEvent::getPartIndex --
+//
+
+int MxmlEvent::getPartIndex(void) const {
+	if (!m_owner) {
+		return 0;
+	}
+	return m_owner->getPartIndex();
+}
+
+
+
+//////////////////////////////
+//
 // MxmlEvent::getName --
 //
 
@@ -379,28 +393,37 @@ int MxmlEvent::getSequenceNumber(void) const {
 //
 
 int MxmlEvent::getVoiceNumber(void) const {
-	return m_voice;
+	if (m_voice) {
+		return m_voice;
+	} else {
+		return 1;
+	}
 }
 
 
 
 //////////////////////////////
 //
-// MxmlEvent::getStaffNumber -- Return the staff number of the event.
+// MxmlEvent::getVoiceIndex -- Return the voice number of the event.
+//    But mod 4 which presumably sets the voice number on a staff.
 //
 
-int MxmlEvent::getStaffNumber(void) const {
-	return m_staff;
+int MxmlEvent::getVoiceIndex(void) const {
+	if (m_voice) {
+		return (m_voice - 1) % 4;
+	} else {
+		return 0;
+	}
 }
 
 
 
 //////////////////////////////
 //
-// MxmlEvent::setVoice --
+// MxmlEvent::setVoiceNumber --
 //
 
-void MxmlEvent::setVoice(int value) {
+void MxmlEvent::setVoiceNumber(int value) {
 	m_voice = (short)value;
 }
 
@@ -408,10 +431,10 @@ void MxmlEvent::setVoice(int value) {
 
 //////////////////////////////
 //
-// MxmlEvent::setStaff --
+// MxmlEvent::setStaffNumber --
 //
 
-void MxmlEvent::setStaff(int value) {
+void MxmlEvent::setStaffNumber(int value) {
 	m_staff = (short)value;
 }
 
@@ -419,14 +442,29 @@ void MxmlEvent::setStaff(int value) {
 
 //////////////////////////////
 //
-// MxmlEvent::getStaff -- 
+// MxmlEvent::getStaffNumber -- 
 //
 
-int MxmlEvent::getStaff(void) const {
+int MxmlEvent::getStaffNumber(void) const {
 	if (!m_staff) {
 		return 1;
 	} else {
 		return m_staff;
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::getStaffIndex -- 
+//
+
+int MxmlEvent::getStaffIndex(void) const {
+	if (!m_staff) {
+		return 0;
+	} else {
+		return m_staff - 1;
 	}
 }
 
