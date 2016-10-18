@@ -36,6 +36,8 @@ class HumGrid : public vector<GridMeasure*> {
 		void insertDataTerminationLine         (HumdrumFile& outfile);
 		void appendMeasureLine						(HumdrumFile& outfile,
 		                                        GridSlice& slice);
+		void insertPartIndications             (HumdrumFile& outfile);
+		void insertStaffIndications            (HumdrumFile& outfile);
 
 };
 

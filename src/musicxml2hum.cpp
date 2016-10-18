@@ -584,8 +584,8 @@ void MusicXmlToHumdrumConverter::appendZeroEvents(
 			if (nodeType(element, "attributes")) {
 				child = element.first_child();
 				while (child) {
+					pindex = nowevents[i]->zerodur[j]->getPartIndex();
 					if (nodeType(child, "clef") && !clefs[pindex]) {
-						pindex = nowevents[i]->zerodur[j]->getPartIndex();
 						clefs[pindex] = child;
 						hasclef = true;
 					}

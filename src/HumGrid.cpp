@@ -51,6 +51,8 @@ HumGrid::~HumGrid(void) {
 //
 
 void HumGrid::transferTokens(HumdrumFile& outfile) {
+	insertStaffIndications(outfile);
+	insertPartIndications(outfile);
 	insertExclusiveInterpretationLine(outfile);
 	int m; // measure index
 	for (m=0; m<(int)this->size(); m++) {
@@ -109,6 +111,83 @@ void HumGrid::insertExclusiveInterpretationLine(HumdrumFile& outfile) {
 		GridPart& part = *slice[p];
 		for (s=(int)part.size()-1; s>=0; s--) {
 			token = new HumdrumToken("**kern");
+			line->appendToken(token);
+		}
+	}
+	outfile.insertLine(0, line);
+}
+
+
+
+//////////////////////////////
+//
+// HumGrid::insertPartIndications -- Currently presumes
+//    that the first entry contains spines.  And the first measure
+//    in the HumGrid object must contain a slice.  This is the
+//    MusicXML Part number. (Some parts will contain more than one
+//    staff).
+//
+
+void HumGrid::insertPartIndications(HumdrumFile& outfile) {
+	if (this->size() == 0) {
+		return;
+	}
+	if (this->at(0)->empty()) {
+		return;
+	}
+	HumdrumLine* line = new HumdrumLine;
+	HTp token;
+	string text;
+	GridSlice& slice = *this->at(0)->front();
+	int p; // part index
+	int s; // staff index
+	for (p=(int)slice.size()-1; p>=0; p--) {
+		GridPart& part = *slice[p];
+		for (s=(int)part.size()-1; s>=0; s--) {
+			text = "*part" + to_string(p+1);
+			token = new HumdrumToken(text);
+			line->appendToken(token);
+		}
+	}
+	outfile.insertLine(0, line);
+}
+
+
+
+//////////////////////////////
+//
+// HumGrid::insertStaffIndications -- Currently presumes
+//    that the first entry contains spines.  And the first measure
+//    in the HumGrid object must contain a slice.  This is the
+//    MusicXML Part number. (Some parts will contain more than one
+//    staff).
+//
+
+void HumGrid::insertStaffIndications(HumdrumFile& outfile) {
+	if (this->size() == 0) {
+		return;
+	}
+	if (this->at(0)->empty()) {
+		return;
+	}
+	HumdrumLine* line = new HumdrumLine;
+	HTp token;
+	string text;
+	GridSlice& slice = *this->at(0)->front();
+	int p; // part index
+	int s; // staff index
+
+	int staffcount = 0;
+	for (p=0; p<(int)slice.size(); p++) {
+		GridPart& part = *slice[p];
+		staffcount += (int)part.size();
+	}
+
+	for (p=(int)slice.size()-1; p>=0; p--) {
+		GridPart& part = *slice[p];
+		for (s=(int)part.size()-1; s>=0; s--) {
+			text = "*staff" + to_string(staffcount--);
+			token = new HumdrumToken(text);
 			line->appendToken(token);
 		}
 	}
