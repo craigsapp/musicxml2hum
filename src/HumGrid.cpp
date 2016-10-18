@@ -56,7 +56,7 @@ void HumGrid::transferTokens(HumdrumFile& outfile) {
 	insertExclusiveInterpretationLine(outfile);
 	int m; // measure index
 	for (m=0; m<(int)this->size(); m++) {
-		at(m)->transferTokens(outfile);
+		at(m)->transferTokens(outfile, m_recip);
 		appendMeasureLine(outfile, *at(m)->back());
 	}
 	insertDataTerminationLine(outfile);
@@ -74,8 +74,15 @@ void HumGrid::transferTokens(HumdrumFile& outfile) {
 void HumGrid::appendMeasureLine(HumdrumFile& outfile, GridSlice& slice) {
 	HumdrumLine* line = new HumdrumLine;
 	HTp token;
+
+	if (m_recip) {
+		token = new HumdrumToken("=");
+		line->appendToken(token);
+	}
+
 	int p; // part index
 	int s; // staff index
+
 	for (p=(int)slice.size()-1; p>=0; p--) {
 		GridPart& part = *slice[p];
 		for (s=(int)part.size()-1; s>=0; s--) {
@@ -102,8 +109,15 @@ void HumGrid::insertExclusiveInterpretationLine(HumdrumFile& outfile) {
 	if (this->at(0)->empty()) {
 		return;
 	}
+
 	HumdrumLine* line = new HumdrumLine;
 	HTp token;
+
+	if (m_recip) {
+		token = new HumdrumToken("**recip");
+		line->appendToken(token);
+	}
+
 	GridSlice& slice = *this->at(0)->front();
 	int p; // part index
 	int s; // staff index
@@ -137,6 +151,12 @@ void HumGrid::insertPartIndications(HumdrumFile& outfile) {
 	}
 	HumdrumLine* line = new HumdrumLine;
 	HTp token;
+
+	if (m_recip) {
+		token = new HumdrumToken("*");
+		line->appendToken(token);
+	}
+
 	string text;
 	GridSlice& slice = *this->at(0)->front();
 	int p; // part index
@@ -170,8 +190,15 @@ void HumGrid::insertStaffIndications(HumdrumFile& outfile) {
 	if (this->at(0)->empty()) {
 		return;
 	}
+
 	HumdrumLine* line = new HumdrumLine;
 	HTp token;
+
+	if (m_recip) {
+		token = new HumdrumToken("*");
+		line->appendToken(token);
+	}
+
 	string text;
 	GridSlice& slice = *this->at(0)->front();
 	int p; // part index
@@ -213,6 +240,12 @@ void HumGrid::insertDataTerminationLine(HumdrumFile& outfile) {
 	}
 	HumdrumLine* line = new HumdrumLine;
 	HTp token;
+
+	if (m_recip) {
+		token = new HumdrumToken("*-");
+		line->appendToken(token);
+	}
+
 	GridSlice& slice = *this->at(0)->back();
 	int p; // part index
 	int s; // staff index

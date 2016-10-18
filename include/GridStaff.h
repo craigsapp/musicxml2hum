@@ -19,6 +19,7 @@
 
 #include "humlib.h"
 #include "GridSide.h"
+#include "GridToken.h"
 
 #include <vector>
 
@@ -28,12 +29,12 @@ using namespace std;
 namespace hum {
 
 
-class GridStaff : public vector<HTp> {
+class GridStaff : public vector<GridToken*> {
 	public:
 		GridStaff(void);
 		~GridStaff();
-		void setTokenLayer(int layerindex, HTp token);
-		void appendTokenLayer(int layerindex, HTp token,
+		void setTokenLayer(int layerindex, HTp token, HumNum duration);
+		void appendTokenLayer(int layerindex, HTp token, HumNum duration,
 		                      const string& spacer = " ");
 
 	private:

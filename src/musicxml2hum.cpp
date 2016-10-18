@@ -532,7 +532,6 @@ void MusicXmlToHumdrumConverter::addEvent(GridSlice& slice,
 	staffindex = event->getStaffIndex();
 	voiceindex = event->getVoiceIndex();
 
-
 	string recip = event->getRecip();
 	string pitch = event->getKernPitch();
 	string other = event->getOtherNoteInfo();
@@ -540,7 +539,8 @@ void MusicXmlToHumdrumConverter::addEvent(GridSlice& slice,
 	ss << recip << pitch << other;
 
 	HTp token = new HumdrumToken(ss.str());
-	slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token);
+	slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
+		event->getDuration());
 }
 
 
@@ -639,7 +639,7 @@ void MusicXmlToHumdrumConverter::insertPartClefs(xml_node clef, GridPart& part) 
 	int staffnum = 0;
 	while (clef) {
 		clef = convertClefToHumdrum(clef, token, staffnum);
-		part[staffnum]->setTokenLayer(0, token);
+		part[staffnum]->setTokenLayer(0, token, 0);
 	}
 }
 

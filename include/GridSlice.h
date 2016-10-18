@@ -17,8 +17,8 @@
 #define _GRIDSLICE_H
 
 #include "humlib.h"
-#include "GridPart.h"
 #include "MxmlPart.h"
+#include "GridPart.h"
 
 #include <vector>
 #include <list>
@@ -49,8 +49,11 @@ class GridSlice : public vector<GridPart*> {
 		bool isTimeSigSlice(void)  { return m_type == SliceType::TimeSigs; }
 		bool isMeterSigSlice(void) { return m_type == SliceType::MeterSigs; }
 
-		void transferTokens(HumdrumFile& outfile);
-		void initializePartStaves(vector<MxmlPart>& partdata);
+		void transferTokens    (HumdrumFile& outfile, bool recip, HumNum linedur);
+		void initializePartStaves (vector<MxmlPart>& partdata);
+
+	protected:
+		HTp  createRecipTokenFromDuration  (HumNum duration);
 
 	private:
 		HumNum     m_timestamp;

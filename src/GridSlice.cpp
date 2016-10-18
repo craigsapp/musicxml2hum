@@ -12,6 +12,7 @@
 //
 
 #include "HumGrid.h"
+#include "GridPart.h"
 
 using namespace std;
 
@@ -48,18 +49,56 @@ GridSlice::~GridSlice(void) {
 
 //////////////////////////////
 //
+// GridSlice::createRecipTokenFromDuration --
+//
+
+HTp GridSlice::createRecipTokenFromDuration(HumNum duration) {
+	HTp token;
+	if (duration.getNumerator() == 0) {
+		token = new HumdrumToken("g");
+		return token;
+	} else if (duration.getNumerator() == 1) {
+		token = new HumdrumToken(to_string(duration.getDenominator()));
+		return token;
+	}
+	string str = to_string(duration.getDenominator()) + "%" +
+	         to_string(duration.getNumerator());
+	token = new HumdrumToken(str);
+	return token;
+
+	// try to fit to one dot:
+
+}
+
+
+
+//////////////////////////////
+//
 // GridSlice::transferTokens -- Create a HumdrumLine and append it to
 //    the data.
 //
 
-void GridSlice::transferTokens(HumdrumFile& outfile) {
+void GridSlice::transferTokens(HumdrumFile& outfile, bool recip,
+		HumNum linedur) {
+
+	HTp token;
 	HumdrumLine* line = new HumdrumLine;
+
+	if (recip) {
+		if (isNoteSlice()) {
+			token = createRecipTokenFromDuration(linedur);
+		} else if (isClefSlice()) {
+			token = new HumdrumToken("*");
+		} else {
+			token = new HumdrumToken("55");
+		}
+		line->appendToken(token);
+	}
 
 	// extract the Tokens from each part/staff
 	int p; // part index
 	int s; // staff index
 	int v; // voice index
-	HTp token;
 
 	for (p=(int)size()-1; p>=0; p--) {
 		GridPart& part = *this->at(p);
@@ -73,8 +112,8 @@ void GridSlice::transferTokens(HumdrumFile& outfile) {
 				line->appendToken(token);
 			} else {
 				for (v=0; v<staff.size(); v++) {
-					if (staff.at(v)) {
-						line->appendToken(staff.at(v));
+					if (staff.at(v)->getToken()) {
+						line->appendToken(staff.at(v)->getToken());
 					} else {
 						token = new HumdrumToken(".");
 						line->appendToken(token);

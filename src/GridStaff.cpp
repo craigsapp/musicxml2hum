@@ -24,7 +24,7 @@ namespace hum {
 // GridStaff::GridStaff -- Constructor.
 //
 
-GridStaff::GridStaff(void) : vector<HTp>(0) {
+GridStaff::GridStaff(void) : vector<GridToken*>(0) {
 	// do nothing;
 }
 
@@ -34,11 +34,14 @@ GridStaff::GridStaff(void) : vector<HTp>(0) {
 //
 
 GridStaff::~GridStaff(void) {
-	// do nothing: for the moment;
-	// all HumdrumTokens* stored in this
-	// structure should be transferred into
-	// a HumdrumFile structure.
+	for (int i=0; i<(int)this->size(); i++) {
+		if (this->at(i)) {
+			delete this->at(i);
+			this->at(i) = NULL;
+		}
+	}
 }
+
 
 
 //////////////////////////////
@@ -49,7 +52,7 @@ GridStaff::~GridStaff(void) {
 //    other new ones with NULLs.
 //
 
-void GridStaff::setTokenLayer(int layerindex, HTp token) {
+void GridStaff::setTokenLayer(int layerindex, HTp token, HumNum duration) {
 	if (layerindex > (int)this->size()-1) {
 		int oldsize = this->size();
 		this->resize(layerindex+1);
@@ -60,7 +63,8 @@ void GridStaff::setTokenLayer(int layerindex, HTp token) {
 	if (this->at(layerindex) != NULL) {
 		delete this->at(layerindex);
 	}
-	this->at(layerindex) = token;
+	GridToken* gt = new GridToken(token, duration);
+	this->at(layerindex) = gt;
 }
 
 
@@ -73,9 +77,10 @@ void GridStaff::setTokenLayer(int layerindex, HTp token) {
 //   chords normally.
 //
 
-void GridStaff::appendTokenLayer(int layerindex, HTp token,
+void GridStaff::appendTokenLayer(int layerindex, HTp token, HumNum duration,
 		const string& spacer) {
 
+	GridToken* gt;
 	if (layerindex > (int)this->size()-1) {
 		int oldsize = this->size();
 		this->resize(layerindex+1);
@@ -85,12 +90,13 @@ void GridStaff::appendTokenLayer(int layerindex, HTp token,
 	}
 	if (this->at(layerindex) != NULL) {
 		string newtoken;
-		newtoken = (string)*this->at(layerindex);
+		newtoken = (string)*this->at(layerindex)->getToken();
 		newtoken += spacer;
 		newtoken += (string)*token;
-		(string)*(this->at(layerindex)) = newtoken;
+		(string)*(this->at(layerindex)->getToken()) = newtoken;
 	} else {
-		this->at(layerindex) = token;
+		gt = new GridToken(token, duration);
+		this->at(layerindex) = gt;
 	}
 }
 

@@ -50,9 +50,16 @@ GridMeasure::~GridMeasure(void) {
 // GridMeasure::transferTokens --
 //
 
-void GridMeasure::transferTokens(HumdrumFile& outfile) {
-	for (auto it : (list<GridSlice*>)*this) {
-		it->transferTokens(outfile);
+void GridMeasure::transferTokens(HumdrumFile& outfile, bool recip) {
+	HumNum linedur;
+ggg do iteration over list rather than vector here...
+	for (int i=0; i<(int)this->size(); i++) {
+		if (i < (int)this->size() - 1) {
+			linedur = this->at(i+1).starttime - this->at(i).starttime;
+		} else {
+			linedur = 55;
+		}
+		this->at(i)->transferTokens(outfile, recip, linedur);
 	}
 }
 

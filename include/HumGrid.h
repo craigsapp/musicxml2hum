@@ -39,6 +39,9 @@ class HumGrid : public vector<GridMeasure*> {
 		void insertPartIndications             (HumdrumFile& outfile);
 		void insertStaffIndications            (HumdrumFile& outfile);
 
+	private:
+		bool m_recip = true;
+
 };
 
 

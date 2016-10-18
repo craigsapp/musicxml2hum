@@ -32,7 +32,8 @@ class GridMeasure : public list<GridSlice*> {
 	public:
 		GridMeasure(void);
 		~GridMeasure();
-		void transferTokens(HumdrumFile& outfile);
+
+		void transferTokens    (HumdrumFile& outfile, bool recip);
 };
 
 
