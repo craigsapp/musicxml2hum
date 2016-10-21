@@ -74,16 +74,12 @@ class MusicXmlToHumdrumConverter {
 		                             xml_node partcontent);
 		void   appendZeroEvents     (GridMeasure& outfile,
 		                             vector<SimultaneousEvents*>& nowevents,
-		                             vector<int>& nowparts,
 		                             HumNum nowtime,
-		                             vector<MxmlPart>& partdata,
-		                             vector<int>& partstaves);
+		                             vector<MxmlPart>& partdata);
 		void   appendNonZeroEvents   (GridMeasure& outdata,
 		                              vector<SimultaneousEvents*>& nowevents,
-		                              vector<int>& nowparts,
 		                              HumNum nowtime,
-		                              vector<MxmlPart>& partdata,
-		                              vector<int>& partstaves);
+		                              vector<MxmlPart>& partdata);
 
 		bool convert          (ostream& out);
 		bool convertPart      (ostream& out, const string& partname,
@@ -118,7 +114,6 @@ class MusicXmlToHumdrumConverter {
 
 	private:
 		Options m_options;
-		vector<vector<vector<HumNum> > > endtimes;
 
 };
 

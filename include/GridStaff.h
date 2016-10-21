@@ -18,6 +18,7 @@
 #define _GRIDSTAFF_H
 
 #include "humlib.h"
+#include "grid.h"
 #include "GridSide.h"
 #include "GridToken.h"
 
@@ -33,9 +34,11 @@ class GridStaff : public vector<GridToken*> {
 	public:
 		GridStaff(void);
 		~GridStaff();
-		void setTokenLayer(int layerindex, HTp token, HumNum duration);
-		void appendTokenLayer(int layerindex, HTp token, HumNum duration,
-		                      const string& spacer = " ");
+		GridToken* setTokenLayer (int layerindex, HTp token, HumNum duration);
+		void setNullTokenLayer   (int layerindex, SliceType type, HumNum nextdur,
+		                          HumNum prevdur);
+		void appendTokenLayer    (int layerindex, HTp token, HumNum duration,
+		                          const string& spacer = " ");
 
 	private:
 		GridSide m_staffsides;

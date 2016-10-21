@@ -16,6 +16,7 @@
 
 #include "humlib.h"
 #include "GridMeasure.h"
+#include "GridSlice.h"
 
 #include <vector>
 
@@ -32,15 +33,27 @@ class HumGrid : public vector<GridMeasure*> {
 		void transferTokens(HumdrumFile& outfile);
 
 	protected:
+		void calculateGridDurations            (void);
 		void insertExclusiveInterpretationLine (HumdrumFile& outfile);
 		void insertDataTerminationLine         (HumdrumFile& outfile);
 		void appendMeasureLine						(HumdrumFile& outfile,
 		                                        GridSlice& slice);
 		void insertPartIndications             (HumdrumFile& outfile);
 		void insertStaffIndications            (HumdrumFile& outfile);
+		void addNullTokens                     (void);
+		void buildSingleList                   (void);
+		void extendDurationToken               (int slicei, int parti,
+		                                        int staffi, int voicei);
+		GridToken* getGridToken(int slicei, int parti, int staffi, int voicei);
+		void addMeasureLines                   (void);
+		void addLastMeasure                    (void);
+		bool manipulatorCheck                  (void);
+		GridSlice* manipulatorCheck            (GridSlice* ice1, GridSlice* ice2);
+		void cleanupManipulators               (void);
 
 	private:
 		bool m_recip = true;
+		vector<GridSlice*> m_allslices;
 
 };
 

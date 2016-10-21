@@ -17,6 +17,7 @@
 #define _GRIDSLICE_H
 
 #include "humlib.h"
+#include "grid.h"
 #include "MxmlPart.h"
 #include "GridPart.h"
 
@@ -28,16 +29,6 @@ using namespace std;
 
 namespace hum {
 
-enum class SliceType {
-	Notes,
-	GraceNotes,
-	Clefs,
-	KeySigs,
-	TimeSigs,
-	MeterSigs
-};
-
-
 class GridSlice : public vector<GridPart*> {
 	public:
 		GridSlice(HumNum timestamp, SliceType type);
@@ -45,18 +36,27 @@ class GridSlice : public vector<GridPart*> {
 
 		bool isNoteSlice(void)     { return m_type == SliceType::Notes; }
 		bool isGraceSlice(void)    { return m_type == SliceType::GraceNotes; }
+		bool isMeasureSlice(void)  { return m_type == SliceType::Measures; }
 		bool isClefSlice(void)     { return m_type == SliceType::Clefs; }
 		bool isTimeSigSlice(void)  { return m_type == SliceType::TimeSigs; }
 		bool isMeterSigSlice(void) { return m_type == SliceType::MeterSigs; }
+		bool isInterpretationSlice(void);
+		SliceType getType(void)    { return m_type; }
 
-		void transferTokens    (HumdrumFile& outfile, bool recip, HumNum linedur);
+		void transferTokens    (HumdrumFile& outfile, bool recip);
 		void initializePartStaves (vector<MxmlPart>& partdata);
+
+		HumNum getDuration        (void);
+		void   setDuration        (HumNum duration);
+		HumNum getTimestamp       (void);
+		void   setTimestamp       (HumNum timestamp);
 
 	protected:
 		HTp  createRecipTokenFromDuration  (HumNum duration);
 
 	private:
 		HumNum     m_timestamp;
+		HumNum     m_duration;
 		SliceType  m_type;
 
 };

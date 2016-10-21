@@ -589,6 +589,7 @@ bool MxmlEvent::parseEvent(xml_node el) {
 //////////////////////////////
 //
 // MxmlEvent::getRecip -- return **recip value for note/rest.
+//   Units are whole notes.
 //
 
 string MxmlEvent::getRecip(void) const {

@@ -49,25 +49,59 @@ GridSlice::~GridSlice(void) {
 
 //////////////////////////////
 //
-// GridSlice::createRecipTokenFromDuration --
+// GridSlice::createRecipTokenFromDuration --  Will not be able to 
+//   distinguish between triplet notes and dotted normal equivalents,
+//   this can be changed later by checking neighboring durations in the
+//   list for the presence of triplets.
 //
 
 HTp GridSlice::createRecipTokenFromDuration(HumNum duration) {
+	duration /= 4;  // convert to quarter note units.
 	HTp token;
+	string str;
+	HumNum dotdur;
 	if (duration.getNumerator() == 0) {
 		token = new HumdrumToken("g");
 		return token;
 	} else if (duration.getNumerator() == 1) {
 		token = new HumdrumToken(to_string(duration.getDenominator()));
 		return token;
+	} else if (duration.getNumerator() % 3 == 0) {
+		dotdur = ((duration * 2) / 3);
+		if (dotdur.getNumerator() == 1) {
+			token = new HumdrumToken(to_string(dotdur.getDenominator()) + ".");
+			return token;
+		}
 	}
-	string str = to_string(duration.getDenominator()) + "%" +
+
+	// try to fit to two dots
+	// try to fit to three dots
+
+
+	str = to_string(duration.getDenominator()) + "%" +
 	         to_string(duration.getNumerator());
 	token = new HumdrumToken(str);
 	return token;
 
-	// try to fit to one dot:
 
+}
+
+
+
+//////////////////////////////
+//
+// GridSlice::isInterpretationSlice --
+//
+
+bool GridSlice::isInterpretationSlice(void) {
+	SliceType type = getType();
+	if (type < SliceType::_Measure) {
+		return false;
+	}
+	if (type > SliceType::_Interpretation) {
+		return false;
+	}
+	return true;
 }
 
 
@@ -78,16 +112,19 @@ HTp GridSlice::createRecipTokenFromDuration(HumNum duration) {
 //    the data.
 //
 
-void GridSlice::transferTokens(HumdrumFile& outfile, bool recip,
-		HumNum linedur) {
+void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 
 	HTp token;
 	HumdrumLine* line = new HumdrumLine;
 
 	if (recip) {
 		if (isNoteSlice()) {
-			token = createRecipTokenFromDuration(linedur);
+			token = createRecipTokenFromDuration(getDuration());
 		} else if (isClefSlice()) {
+			token = new HumdrumToken("*");
+		} else if (isMeasureSlice()) {
+			token = new HumdrumToken("=");
+		} else if (isInterpretationSlice()) {
 			token = new HumdrumToken("*");
 		} else {
 			token = new HumdrumToken("55");
@@ -108,14 +145,14 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip,
 				// fix this later.  For now if there are no notes
 				// on the staff, add a null token.  Fix so that 
 				// all open voices are given null tokens.
-				token = new HumdrumToken(".");
+				token = new HumdrumToken(".a");
 				line->appendToken(token);
 			} else {
 				for (v=0; v<staff.size(); v++) {
 					if (staff.at(v)->getToken()) {
 						line->appendToken(staff.at(v)->getToken());
 					} else {
-						token = new HumdrumToken(".");
+						token = new HumdrumToken(".b");
 						line->appendToken(token);
 					}
 				}
@@ -157,6 +194,50 @@ void GridSlice::initializePartStaves(vector<MxmlPart>& partdata) {
 
 }
 
+
+
+//////////////////////////////
+//
+// GridSlice::getDuration -- Return the duration of the slice in
+//      quarter notes.
+//
+
+HumNum GridSlice::getDuration(void) {
+	return m_duration;
+}
+
+
+
+//////////////////////////////
+//
+// GridSlice::setDuration --
+//
+
+void GridSlice::setDuration(HumNum duration) {
+	m_duration = duration;
+}
+
+
+
+//////////////////////////////
+//
+// GridSlice::getTimestamp --
+//
+
+HumNum GridSlice::getTimestamp(void) {
+	return m_timestamp;
+}
+
+
+
+//////////////////////////////
+//
+// GridSlice::setTimestamp --
+//
+
+void GridSlice::setTimestamp(HumNum timestamp) {
+	m_timestamp = timestamp;
+}
 
 
 } // end namespace hum

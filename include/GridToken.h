@@ -39,11 +39,13 @@ class GridToken {
 		void   setToken           (HTp token);
 		void   setToken           (const string& token);
 		void   setToken           (const char* token);
+		bool   isNull             (void) const;
 
 		void   setDuration        (HumNum duration);
 		HumNum getDuration        (void) const;
 		HumNum getDurationToNext  (void) const;
 		HumNum getDurationToPrev  (void) const;
+		void   setDurationToPrev  (HumNum dur);
 		void   incrementDuration  (HumNum duration);
 
 	protected:

@@ -121,12 +121,40 @@ void GridToken::setToken(const char* token) {
 
 //////////////////////////////
 //
+// GridToken::isNull -- returns true if token is NULL or ".".
+//
+
+bool GridToken::isNull(void) const {
+	if (getToken() == NULL) {
+		return true;
+	} else if (getToken()->isNull()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+//////////////////////////////
+//
 // GridToken::setDuration --
 //
 
 void GridToken::setDuration(HumNum duration) {
 	m_nextdur = duration;
 	m_prevdur = 0;
+}
+
+
+
+//////////////////////////////
+//
+// GridToken::setDurationToPrev --
+//
+
+void GridToken::setDurationToPrev(HumNum dur) {
+	m_prevdur = dur;
 }
 
 

@@ -88,15 +88,6 @@ bool MusicXmlToHumdrumConverter::convert(ostream& out, xml_document& doc) {
 	// for debugging:
 	// printPartInfo(partids, partinfo, partcontent, partdata);
 
-	endtimes.resize(partdata.size());
-	for (int i=0; i<(int)partdata.size(); i++) {
-		endtimes[i].resize(partdata[i].getStaffCount());
-		for (int j=0; j<(int)partdata[i].getStaffCount(); j++) {
-			endtimes.at(i).at(j).resize(1);
-			endtimes.at(i).at(j).at(0) = 0;
-		}
-	}
-
 	HumGrid outdata;
 	status &= stitchParts(outdata, partids, partinfo, partcontent, partdata);
 
@@ -471,8 +462,7 @@ bool MusicXmlToHumdrumConverter::convertNowEvents(
 		return true;
 	}
 
-	appendZeroEvents(outdata, nowevents, nowparts, nowtime, partdata, 
-			partstaves);
+	appendZeroEvents(outdata, nowevents, nowtime, partdata);
 
 	if (nowevents[0]->nonzerodur.size() == 0) {
 		// no duration events (should be a terminal barline)
@@ -480,8 +470,7 @@ bool MusicXmlToHumdrumConverter::convertNowEvents(
 		return true;
 	}
 
-	appendNonZeroEvents(outdata, nowevents, nowparts, nowtime, partdata, 
-			partstaves);
+	appendNonZeroEvents(outdata, nowevents, nowtime, partdata);
 
 	return true;
 }
@@ -496,10 +485,8 @@ bool MusicXmlToHumdrumConverter::convertNowEvents(
 void MusicXmlToHumdrumConverter::appendNonZeroEvents(
 		GridMeasure& outdata,
 		vector<SimultaneousEvents*>& nowevents,
-		vector<int>& nowparts,
 		HumNum nowtime,
-		vector<MxmlPart>& partdata,
-		vector<int>& partstaves) {
+		vector<MxmlPart>& partdata) {
 
 	GridSlice* slice = new GridSlice(nowtime, SliceType::Notes);
 	outdata.push_back(slice);
@@ -510,7 +497,6 @@ void MusicXmlToHumdrumConverter::appendNonZeroEvents(
 		for (int j=0; j<(int)events.size(); j++) {
 			addEvent(*slice, events[j]);
 		}
-
 	}
 }
 
@@ -553,22 +539,8 @@ void MusicXmlToHumdrumConverter::addEvent(GridSlice& slice,
 void MusicXmlToHumdrumConverter::appendZeroEvents(
 		GridMeasure& outdata,
 		vector<SimultaneousEvents*>& nowevents,
-		vector<int>& nowparts,
 		HumNum nowtime,
-		vector<MxmlPart>& partdata,
-		vector<int>& partstaves) {
-
-/* 
-	for (int i=0; i<nowevents.size(); i++) {
-		if (nowevents[i]->zerodur.size()) {
-			cout << "found zerodur events " << nowevents[i]->zerodur.size() << " ";
-			for (int j=0; j<nowevents[i]->zerodur.size(); j++) {
-				cout << nowevents[i]->zerodur[j]->getNode().name() << " ";
-			}
-		}
-		cout << endl;
-	}
-*/
+		vector<MxmlPart>& partdata) {
 
 	bool hasclef    = false;
 	// bool haskeysig  = false;

@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 	}
 	cout << out.str();
 
-	exit(0);
+	return 0;
 }
 
 
