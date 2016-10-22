@@ -50,6 +50,9 @@ class HumGrid : public vector<GridMeasure*> {
 		bool manipulatorCheck                  (void);
 		GridSlice* manipulatorCheck            (GridSlice* ice1, GridSlice* ice2);
 		void cleanupManipulators               (void);
+		void cleanManipulator                  (vector<GridSlice*> newslices, 
+		                                        GridSlice* curr);
+		GridSlice* checkManipulatorContract    (GridSlice* curr);
 
 	private:
 		bool m_recip = true;

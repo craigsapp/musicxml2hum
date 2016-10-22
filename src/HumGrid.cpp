@@ -80,17 +80,80 @@ void HumGrid::transferTokens(HumdrumFile& outfile) {
 
 void HumGrid::cleanupManipulators(void) {
 	int m;
+	vector<GridSlice*> newslices;
 	for (m=0; m<(int)this->size(); m++) {
 		for (auto it = this->at(m)->begin(); it != this->at(m)->end(); it++) {
 			if ((*it)->getType() != SliceType::Manipulators) {
 				continue;
 			}
 			// check to see if manipulator needs to be split into
-			// multipe lines.
-			cerr << "CHECKING MANIPULATOR" << endl;
-//ggg
+			// multiple lines.
+			newslices.resize(0);
+			cleanManipulator(newslices, *it);
+			if (newslices.size()) {
+cerr << "ADDING NEW SLICES" << endl;
+				for (int j=0; j<(int)newslices.size(); j++) {
+					this->at(m)->insert(it, newslices.at(j));
+				}
+			}
 		}
 	}
+}
+
+
+
+//////////////////////////////
+//
+// HumGrid::cleanManipulator --
+//
+
+void HumGrid::cleanManipulator(vector<GridSlice*> newslices, GridSlice* curr) {
+	newslices.resize(0);
+	GridSlice* output;
+
+// ggg implement later:
+//	while (output = checkManipulatorExpand(curr)) {
+//		newslices.push_back(output);
+//	}
+
+	while ((output = checkManipulatorContract(curr))) {
+		newslices.push_back(output);
+	}
+
+ggg
+}
+
+
+
+//////////////////////////////
+//
+// HumGrid::checkManipulatorContract -- Will only check for adjacent
+//    *v records across adjacent staves.  Will not check within a staff,
+//    but this should not occur within MusicXML input data due to the
+//    was it is being processed.
+//
+
+GridSlice* HumGrid::checkManipulatorContract(GridSlice* curr) {
+	int p;
+	int s;
+	int partcount = (int)curr->size();
+	int staffcount;
+	GridStaff* laststaff = NULL;
+	bool neednew = false;
+
+	for (p=0; p<partcount; p++) {
+		GridPart* part = curr->at(p);
+		staffcount = (int)part->size();
+		for (s=0; s<staffcount; s++) {
+			GridStaff* staff = part->at(s);
+			if (laststaff != NULL) {
+            if (staff->last()
+			}
+			laststaff = staff;
+		}
+	}
+	
+
 }
 
 
