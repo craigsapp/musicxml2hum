@@ -13,6 +13,7 @@
 //
 
 #include "HumGrid.h"
+#include <string.h>
 
 using namespace std;
 
@@ -91,7 +92,6 @@ void HumGrid::cleanupManipulators(void) {
 			newslices.resize(0);
 			cleanManipulator(newslices, *it);
 			if (newslices.size()) {
-cerr << "ADDING NEW SLICES" << endl;
 				for (int j=0; j<(int)newslices.size(); j++) {
 					this->at(m)->insert(it, newslices.at(j));
 				}
@@ -107,20 +107,20 @@ cerr << "ADDING NEW SLICES" << endl;
 // HumGrid::cleanManipulator --
 //
 
-void HumGrid::cleanManipulator(vector<GridSlice*> newslices, GridSlice* curr) {
+void HumGrid::cleanManipulator(vector<GridSlice*>& newslices, GridSlice* curr) {
 	newslices.resize(0);
 	GridSlice* output;
 
+	// deal with *^ manipulators:
 // ggg implement later:
 //	while (output = checkManipulatorExpand(curr)) {
 //		newslices.push_back(output);
 //	}
 
+	// deal with *v manipulators:
 	while ((output = checkManipulatorContract(curr))) {
 		newslices.push_back(output);
 	}
-
-ggg
 }
 
 
@@ -128,32 +128,171 @@ ggg
 //////////////////////////////
 //
 // HumGrid::checkManipulatorContract -- Will only check for adjacent
-//    *v records across adjacent staves.  Will not check within a staff,
-//    but this should not occur within MusicXML input data due to the
-//    was it is being processed.
+//    *v records across adjacent staves, which should be good enough.
+//    Will not check within a staff, but this should not occur within
+//    MusicXML input data due to the way it is being processed.
+//    The return value is a newly created GridSlice pointer which contains
+//    a new manipulator to add to the file (and the current manipultor
+//    slice will also be modified if the return value is not NULL).
 //
 
 GridSlice* HumGrid::checkManipulatorContract(GridSlice* curr) {
-	int p;
-	int s;
+	GridToken* lastvoice = NULL;
+	GridToken* voice     = NULL;
+	GridStaff* staff     = NULL;
+	GridPart*  part      = NULL;
+	bool       neednew   = false;
+
+	int p, s;
 	int partcount = (int)curr->size();
 	int staffcount;
-	GridStaff* laststaff = NULL;
-	bool neednew = false;
-
 	for (p=0; p<partcount; p++) {
-		GridPart* part = curr->at(p);
+		part  = curr->at(p);
 		staffcount = (int)part->size();
 		for (s=0; s<staffcount; s++) {
-			GridStaff* staff = part->at(s);
-			if (laststaff != NULL) {
-            if (staff->last()
+			staff = part->at(p);
+			voice = staff->front();
+			if (lastvoice != NULL) {
+           	if ((*voice->getToken() == "*v") &&
+						(*lastvoice->getToken() == "*v")) {
+					neednew = true;
+					break;
+				}
 			}
-			laststaff = staff;
+			lastvoice = staff->back();
+		}
+		if (neednew) {
+			break;
 		}
 	}
-	
 
+	if (neednew == false) {
+		return NULL;
+	}
+
+	// need to split *v's from different adjacent staves onto separate lines.
+
+	GridSlice* newmanip = new GridSlice(curr->getTimestamp(), curr->getType(),
+		curr);
+
+	lastvoice = NULL;
+	GridStaff* laststaff    = NULL;
+	GridStaff* newstaff     = NULL;
+	GridStaff* newlaststaff = NULL;
+	bool foundnew = false;
+	partcount = (int)curr->size();
+	int lastp = 0;
+	int lasts = 0;
+	for (p=0; p<partcount; p++) {
+		part  = curr->at(p);
+		staffcount = (int)part->size();
+		for (s=0; s<staffcount; s++) {
+			staff = part->at(s);
+			voice = staff->front();
+			if (lastvoice != NULL) {
+           	if ((*voice->getToken() == "*v") &&
+						(*lastvoice->getToken() == "*v")) {
+               // splitting the slices at this staff boundary
+					newstaff     = newmanip->at(p)->at(s);
+					newlaststaff = newmanip->at(lastp)->at(lasts);
+
+					transferMerges(staff, laststaff, newstaff, newlaststaff);
+					foundnew = true;
+					break;
+				}
+			}
+			laststaff = staff;
+			lastvoice = staff->back();
+			lastp = p;
+			lasts = s;
+		}
+		if (foundnew) {
+			break;
+		}
+	}
+
+	return newmanip;
+}
+
+
+
+//////////////////////////////
+//
+// HumGrid::transferMerges -- Move *v spines from one staff to last staff,
+//   and re-adjust staff "*v" tokens to a single "*" token.
+// Example:
+//                 laststaff      staff
+// old:            *v   *v        *v   *v
+// converts to:
+// new:            *v   *v        *    *
+// old:            *              *v   *v
+// 
+//
+
+void HumGrid::transferMerges(GridStaff* oldstaff, GridStaff* oldlaststaff,
+		GridStaff* newstaff, GridStaff* newlaststaff) {
+
+	if ((oldstaff == NULL) || (oldlaststaff == NULL)) {
+		cerr << "Weird error in HumGrid::transferMerges()" << endl;
+		return;
+	}
+	// New staves are presumed to be totally empty.
+
+	GridToken* gt;
+
+	// First create "*" tokens for newstaff slice where there are
+	// "*v" in old staff.  All other tokens should be set to "*".
+	int tcount = (int)oldstaff->size();
+	int t;
+	for (t=0; t<tcount; t++) {
+		if (*oldstaff->at(t)->getToken() == "*v") {
+			gt = new GridToken("*", 0);
+			newstaff->push_back(gt);
+		} else {
+			gt = new GridToken("*", 0);
+			newstaff->push_back(gt);
+		}
+	}
+
+	// Next, all "*v" tokens at end of old previous staff should be
+	// transferred to the new previous staff and replaced with
+	// a single "*" token.  Non "*v" tokens in the old last staff should
+	// be converted to "*" tokens in the new last staff.
+	//
+	// It may be possible for *v tokens to not be only at the end of
+	// the list of oldlaststaff tokens, but does not seem possible.
+
+	tcount = (int)oldlaststaff->size();
+	bool addednull = false;
+	for (t=0; t<tcount; t++) {
+		if (*oldlaststaff->at(t)->getToken() == "*v") {
+			newlaststaff->push_back(oldlaststaff->at(t));
+			if (addednull == false) {
+				gt = new GridToken("*", 0);
+				oldlaststaff->at(t) = gt;
+				addednull = true;
+			} else {
+				oldlaststaff->at(t) = NULL;
+			}
+		} else {
+			gt = new GridToken("*", 0);
+			newlaststaff->push_back(gt);
+		}
+	}
+
+	// Go back to the oldlaststaff and chop off all ending NULLs
+	// * t should never get to zero (there should be at least one "*" left.
+	// In theory intermediate NULLs should be checked for, and if they
+	// exist, then something bad will happen.  But it does not seem
+	// possible to have intermediate NULLs.
+	tcount = (int)oldlaststaff->size();
+	for (t=tcount-1; t>=0; t--) {
+		if (oldlaststaff->at(t) == NULL) {
+			int newsize = (int)oldlaststaff->size() - 1;
+			oldlaststaff->resize(newsize);
+		} else {
+		}
+	}
 }
 
 
@@ -521,7 +660,7 @@ void HumGrid::extendDurationToken(int slicei, int parti, int staffi,
 	int s = slicei+1;
 	HumNum lastdur = gt->getDurationToNext();
  	HTp token = gt->getToken();
-	if (strcmp(token->c_str(), ".") == 0) {
+	if (*token == ".") {
 		// null data token so ignore;
 		return;
 	}

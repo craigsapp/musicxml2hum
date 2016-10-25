@@ -44,6 +44,7 @@ class GridStaff : public vector<GridToken*> {
 		GridSide m_staffsides;
 };
 
+ostream& operator<<(ostream& output, GridStaff* staff);
 
 } // end namespace hum
 

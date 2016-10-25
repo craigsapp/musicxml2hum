@@ -682,18 +682,60 @@ string MxmlEvent::getKernPitch(void) const {
 
 
 
+
 //////////////////////////////
 //
-// MxmlEvent::getOtherNoteInfo --
+// MxmlEvent::getPrefixNoteInfo --
 //
 
-string MxmlEvent::getOtherNoteInfo(void) const {
+string MxmlEvent::getPrefixNoteInfo(void) const {
+	int tiestart = 0;
+	int tiestop  = 0;
+	bool rest    = false;
+
+	xml_node child = m_node.first_child();
+
+	while (child) {
+		if (strcmp(child.name(), "rest") == 0) {
+			rest = true;
+		} else if (strcmp(child.name(), "tie") == 0) {
+			xml_attribute tietype = child.attribute("type");
+			if (tietype) {
+				if (strcmp(tietype.value(), "start") == 0) {
+					tiestart = 1;
+				} else if (strcmp(tietype.value(), "stop") == 0) {
+					tiestop = 1;
+				}
+			}
+		}
+		child = child.next_sibling();
+	}
+
+	stringstream ss;
+
+	if (tiestart && !tiestop) {
+		ss << "[";
+	}
+
+	return ss.str();
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::getPostfixNoteInfo --
+//
+
+string MxmlEvent::getPostfixNoteInfo(void) const {
 	int beamstarts   = 0;
 	int beamends     = 0;
 	int beamconts    = 0;
 	int hookbacks    = 0;
 	int hookforwards = 0;
 	int stem         = 0;
+	int tiestart     = 0;
+	int tiestop      = 0;
 
 	bool rest = false;
 	xml_node child = m_node.first_child();
@@ -724,6 +766,15 @@ string MxmlEvent::getOtherNoteInfo(void) const {
 			}
 		} else if (strcmp(child.name(), "notations") == 0) {
 			notations = child;
+		} else if (strcmp(child.name(), "tie") == 0) {
+			xml_attribute tietype = child.attribute("type");
+			if (tietype) {
+				if (strcmp(tietype.value(), "start") == 0) {
+					tiestart = 1;
+				} else if (strcmp(tietype.value(), "stop") == 0) {
+					tiestop = 1;
+				}
+			}
 		}
 		child = child.next_sibling();
 	}
@@ -741,6 +792,12 @@ string MxmlEvent::getOtherNoteInfo(void) const {
 	for (i=0; i<hookbacks; i++)    { ss << "k"; }
 	for (i=0; i<hookforwards; i++) { ss << "K"; }
 	for (i=0; i<beamstarts; i++)   { ss << "L"; }
+
+	if (tiestart && tiestop) {
+		ss << "_";
+	} else if (tiestop) {
+		ss << "]";
+	}
 
 	return ss.str();
 }

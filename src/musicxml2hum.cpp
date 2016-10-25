@@ -518,11 +518,12 @@ void MusicXmlToHumdrumConverter::addEvent(GridSlice& slice,
 	staffindex = event->getStaffIndex();
 	voiceindex = event->getVoiceIndex();
 
-	string recip = event->getRecip();
-	string pitch = event->getKernPitch();
-	string other = event->getOtherNoteInfo();
+	string recip   = event->getRecip();
+	string pitch   = event->getKernPitch();
+	string prefix  = event->getPrefixNoteInfo();
+	string postfix = event->getPostfixNoteInfo();
 	stringstream ss;
-	ss << recip << pitch << other;
+	ss << prefix << recip << pitch << postfix;
 
 	HTp token = new HumdrumToken(ss.str());
 	slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
@@ -543,10 +544,12 @@ void MusicXmlToHumdrumConverter::appendZeroEvents(
 		vector<MxmlPart>& partdata) {
 
 	bool hasclef    = false;
-	// bool haskeysig  = false;
-	// bool hastimesig = false;
+	bool haskeysig  = false;
+	bool hastimesig = false;
 
 	vector<xml_node> clefs(partdata.size(), xml_node(NULL));
+	vector<xml_node> keysigs(partdata.size(), xml_node(NULL));
+	vector<xml_node> timesigs(partdata.size(), xml_node(NULL));
 	int pindex = 0;
 	xml_node child;
 
@@ -557,10 +560,22 @@ void MusicXmlToHumdrumConverter::appendZeroEvents(
 				child = element.first_child();
 				while (child) {
 					pindex = nowevents[i]->zerodur[j]->getPartIndex();
+
 					if (nodeType(child, "clef") && !clefs[pindex]) {
 						clefs[pindex] = child;
 						hasclef = true;
 					}
+
+					if (nodeType(child, "key") && !keysigs[pindex]) {
+						keysigs[pindex] = child;
+						haskeysig = true;
+					}
+
+					if (nodeType(child, "time") && !timesigs[pindex]) {
+						timesigs[pindex] = child;
+						hastimesig = true;
+					}
+
 					child = child.next_sibling();
 				}
 			}
@@ -569,6 +584,14 @@ void MusicXmlToHumdrumConverter::appendZeroEvents(
 
 	if (hasclef) {
 		addClefLine(outdata, clefs, partdata, nowtime);
+	}
+
+	if (haskeysig) {
+		addKeySigLine(outdata, keysigs, partdata, nowtime);
+	}
+
+	if (hastimesig) {
+		addTimeSigLine(outdata, timesigs, partdata, nowtime);
 	}
 
 }
@@ -598,6 +621,48 @@ void MusicXmlToHumdrumConverter::addClefLine(GridMeasure& outdata,
 
 //////////////////////////////
 //
+// MusicXmlToHumdrumConverter::addTimeSigLine --
+//
+
+void MusicXmlToHumdrumConverter::addTimeSigLine(GridMeasure& outdata, 
+		vector<xml_node>& timesigs, vector<MxmlPart>& partdata, HumNum nowtime) {
+
+	GridSlice* slice = new GridSlice(nowtime, SliceType::TimeSigs);
+	outdata.push_back(slice);
+	slice->initializePartStaves(partdata);
+
+	for (int i=0; i<(int)partdata.size(); i++) {
+		if (timesigs[i]) {
+			insertPartTimeSigs(timesigs[i], *slice->at(i));
+		}
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::addKeySigLine --
+//
+
+void MusicXmlToHumdrumConverter::addKeySigLine(GridMeasure& outdata, 
+		vector<xml_node>& keysigs, vector<MxmlPart>& partdata, HumNum nowtime) {
+
+	GridSlice* slice = new GridSlice(nowtime, SliceType::KeySigs);
+	outdata.push_back(slice);
+	slice->initializePartStaves(partdata);
+
+	for (int i=0; i<(int)partdata.size(); i++) {
+		if (keysigs[i]) {
+			insertPartKeySigs(keysigs[i], *slice->at(i));
+		}
+	}
+}
+
+
+
+//////////////////////////////
+//
 // MusicXmlToHumdrumConverter::insertPartClefs --
 //
 
@@ -612,6 +677,194 @@ void MusicXmlToHumdrumConverter::insertPartClefs(xml_node clef, GridPart& part) 
 	while (clef) {
 		clef = convertClefToHumdrum(clef, token, staffnum);
 		part[staffnum]->setTokenLayer(0, token, 0);
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::insertPartKeySigs --
+//
+
+void MusicXmlToHumdrumConverter::insertPartKeySigs(xml_node keysig, GridPart& part) {
+	if (!keysig) {
+		return;
+	}
+
+	HTp token;
+	int staffnum = 0;
+	while (keysig) {
+		keysig = convertKeySigToHumdrum(keysig, token, staffnum);
+		if (staffnum < 0) {
+			// key signature applies to all staves in part (most common case)
+			for (int s=0; s<(int)part.size(); s++) {
+				if (s==0) {
+					part[s]->setTokenLayer(0, token, 0);
+				} else {
+					HTp token2 = new HumdrumToken(*token);
+					part[s]->setTokenLayer(0, token2, 0);
+				}
+			}
+		} else {
+			part[staffnum]->setTokenLayer(0, token, 0);
+		}
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MusicXmlToHumdrumConverter::insertPartTimeSigs --
+//
+
+void MusicXmlToHumdrumConverter::insertPartTimeSigs(xml_node timesig, GridPart& part) {
+	if (!timesig) {
+		// no timesig
+		return;
+	}
+
+	HTp token;
+	int staffnum = 0;
+	while (timesig) {
+		timesig = convertTimeSigToHumdrum(timesig, token, staffnum);
+		if (staffnum < 0) {
+			// time signature applies to all staves in part (most common case)
+			for (int s=0; s<(int)part.size(); s++) {
+				if (s==0) {
+					part[s]->setTokenLayer(0, token, 0);
+				} else {
+					HTp token2 = new HumdrumToken(*token);
+					part[s]->setTokenLayer(0, token2, 0);
+				}
+			}
+		} else {
+			part[staffnum]->setTokenLayer(0, token, 0);
+		}
+	}
+}
+
+
+
+//////////////////////////////
+//
+//	MusicXmlToHumdrumConverter::convertKeySigToHumdrum --
+//
+//  <key>
+//     <fifths>4</fifths>
+//
+
+xml_node MusicXmlToHumdrumConverter::convertKeySigToHumdrum(xml_node keysig,
+		HTp& token, int& staffindex) {
+
+	if (!keysig) {
+		return keysig;
+	}
+
+	staffindex = -1;
+	xml_attribute sn = keysig.attribute("number");
+	if (sn) {
+		staffindex = atoi(sn.value()) - 1;
+	}
+
+	int fifths = 0;
+
+	xml_node child = keysig.first_child();
+	while (child) {
+		if (nodeType(child, "fifths")) {
+			fifths = atoi(child.child_value());
+		} 
+		child = child.next_sibling();
+	}
+
+	stringstream ss;
+	ss << "*k[";
+	if (fifths > 0) {
+		switch (fifths) {
+			case 7: ss << "b#";
+			case 6: ss << "e#";
+			case 5: ss << "a#";
+			case 4: ss << "d#";
+			case 3: ss << "g#";
+			case 2: ss << "c#";
+			case 1: ss << "f#";
+		}
+	} else if (fifths < 0) {
+		switch (fifths) {
+			case 7: ss << "f-";
+			case 6: ss << "g#";
+			case 5: ss << "c#";
+			case 4: ss << "d#";
+			case 3: ss << "a#";
+			case 2: ss << "e#";
+			case 1: ss << "b#";
+		}
+	}
+	ss << "]";
+
+	token = new HumdrumToken(ss.str());
+
+	keysig = keysig.next_sibling();
+	if (!keysig) {
+		return keysig;
+	}
+	if (nodeType(keysig, "key")) {
+		return keysig;
+	} else {
+		return xml_node(NULL);
+	}
+}
+
+
+
+//////////////////////////////
+//
+//	MusicXmlToHumdrumConverter::convertTimeSigToHumdrum --
+//
+//  <time symbol="common">
+//     <beats>4</beats>
+//     <beat-type>4</beat-type>
+//
+
+xml_node MusicXmlToHumdrumConverter::convertTimeSigToHumdrum(xml_node timesig,
+		HTp& token, int& staffindex) {
+
+	if (!timesig) {
+		return timesig;
+	}
+
+	staffindex = -1;
+	xml_attribute sn = timesig.attribute("number");
+	if (sn) {
+		staffindex = atoi(sn.value()) - 1;
+	}
+
+	int beats = -1;
+	int beattype = -1;
+
+	xml_node child = timesig.first_child();
+	while (child) {
+		if (nodeType(child, "beats")) {
+			beats = atoi(child.child_value());
+		} else if (nodeType(child, "beat-type")) {
+			beattype = atoi(child.child_value());
+		}
+		child = child.next_sibling();
+	}
+
+	stringstream ss;
+	ss << "*M" << beats<< "/" << beattype;
+	token = new HumdrumToken(ss.str());
+
+	timesig = timesig.next_sibling();
+	if (!timesig) {
+		return timesig;
+	}
+	if (nodeType(timesig, "time")) {
+		return timesig;
+	} else {
+		return xml_node(NULL);
 	}
 }
 

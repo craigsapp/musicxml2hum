@@ -90,7 +90,8 @@ class MxmlEvent {
 		int                getPartIndex       (void) const;
 		string             getRecip           (void) const;
 		string             getKernPitch       (void) const;
-		string             getOtherNoteInfo   (void) const;
+		string             getPrefixNoteInfo  (void) const;
+		string             getPostfixNoteInfo (void) const;
 		xml_node           getNode            (void);
 		void               addNotations       (stringstream& ss, 
 		                                       xml_node notations) const;

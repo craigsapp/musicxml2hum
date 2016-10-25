@@ -30,15 +30,30 @@ namespace hum {
 //
 
 GridToken::GridToken(void) {
-	m_token = NULL;
+	m_token      = NULL;
 	m_transfered = false;
 }
 
 GridToken::GridToken(HTp token, HumNum duration) {
-	m_token = token;
-	m_nextdur = duration;
+	m_token      = token;
+	m_nextdur    = duration;
 	m_transfered = false;
 }
+
+
+GridToken::GridToken(const char* token, HumNum duration) {
+	m_token      = new HumdrumToken(token);
+	m_nextdur    = duration;
+	m_transfered = false;
+}
+
+
+GridToken::GridToken(const string& token, HumNum duration) {
+	m_token      = new HumdrumToken(token);
+	m_nextdur    = duration;
+	m_transfered = false;
+}
+
 
 
 //////////////////////////////

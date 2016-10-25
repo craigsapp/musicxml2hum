@@ -102,10 +102,24 @@ class MusicXmlToHumdrumConverter {
 		void insertSingleMeasure(HumdrumFile& outfile);
 		void cleanupMeasures   (HumdrumFile& outfile,
 		                        vector<HumdrumLine*> measures);
+
 		void addClefLine       (GridMeasure& outdata, vector<xml_node>& clefs,
 		                        vector<MxmlPart>& partdata, HumNum nowtime);
 		void insertPartClefs   (xml_node clef, GridPart& part);
 		xml_node convertClefToHumdrum(xml_node clef, HTp& token, int& staffindex);
+
+		void addKeySigLine    (GridMeasure& outdata, vector<xml_node>& keysigs,
+		                        vector<MxmlPart>& partdata, HumNum nowtime);
+		void insertPartKeySigs (xml_node keysig, GridPart& part);
+		xml_node convertKeySigToHumdrum(xml_node keysig, 
+		                        HTp& token, int& staffindex);
+
+		void addTimeSigLine    (GridMeasure& outdata, vector<xml_node>& timesigs,
+		                        vector<MxmlPart>& partdata, HumNum nowtime);
+		void insertPartTimeSigs (xml_node timesig, GridPart& part);
+		xml_node convertTimeSigToHumdrum(xml_node timesig, 
+		                        HTp& token, int& staffindex);
+
 		void addEvent          (GridSlice& slice, MxmlEvent* event);
 
 	public:

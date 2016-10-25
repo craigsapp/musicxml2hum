@@ -31,7 +31,9 @@ namespace hum {
 
 class GridSlice : public vector<GridPart*> {
 	public:
-		GridSlice(HumNum timestamp, SliceType type);
+		GridSlice(HumNum timestamp, SliceType type, int partcount = 0);
+		GridSlice(HumNum timestamp, SliceType type, const GridSlice& slice);
+		GridSlice(HumNum timestamp, SliceType type, GridSlice* slice);
 		~GridSlice();
 
 		bool isNoteSlice(void)     { return m_type == SliceType::Notes; }
@@ -60,6 +62,9 @@ class GridSlice : public vector<GridPart*> {
 		SliceType  m_type;
 
 };
+
+
+ostream& operator<<(ostream& output, GridSlice* slice);
 
 
 } // end namespace hum

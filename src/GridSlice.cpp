@@ -21,12 +21,67 @@ namespace hum {
 
 //////////////////////////////
 //
-// GridSlice::GridSlice -- Constructor.
+// GridSlice::GridSlice -- Constructor.  If partcount is positive, then
+//    allocate the desired number of parts (still have to allocate staves
+//    in part before using).
+// default value: partcount = 0
 //
 
-GridSlice::GridSlice(HumNum timestamp, SliceType type) {
+GridSlice::GridSlice(HumNum timestamp, SliceType type, int partcount) {
 	m_timestamp = timestamp;
 	m_type = type;
+	if (partcount > 0) {
+		this->resize(partcount);
+		for (int p=0; p<partcount; p++) {
+			this->at(p) = new GridPart;
+		}
+	}
+}
+
+
+//
+// This constructor allocates the matching part and staff count of the
+// input slice parameter.  There will be no GridTokens allocated inside the
+// GridStaffs (they will be required to have at least one).
+//
+
+GridSlice::GridSlice(HumNum timestamp, SliceType type, const GridSlice& slice) {
+	m_timestamp = timestamp;
+	m_type = type;
+	int partcount = (int)slice.size();
+	int staffcount;
+	if (partcount > 0) {
+		this->resize(partcount);
+		for (int p=0; p<partcount; p++) {
+			this->at(p) = new GridPart;
+			GridPart* part = this->at(p);
+			staffcount = (int)slice.at(p)->size();
+			part->resize(staffcount);
+			for (int s=0; s<staffcount; s++) {
+				part->at(s) = new GridStaff;
+			}
+		}
+	}
+}
+
+
+GridSlice::GridSlice(HumNum timestamp, SliceType type, GridSlice* slice) {
+	m_timestamp = timestamp;
+	m_type = type;
+	int partcount = (int)slice->size();
+	int staffcount;
+	if (partcount > 0) {
+		this->resize(partcount);
+		for (int p=0; p<partcount; p++) {
+			this->at(p) = new GridPart;
+			GridPart* part = this->at(p);
+			staffcount = (int)slice->at(p)->size();
+			part->resize(staffcount);
+			for (int s=0; s<staffcount; s++) {
+				part->at(s) = new GridStaff;
+			}
+		}
+	}
 }
 
 
@@ -238,6 +293,53 @@ HumNum GridSlice::getTimestamp(void) {
 void GridSlice::setTimestamp(HumNum timestamp) {
 	m_timestamp = timestamp;
 }
+
+
+//////////////////////////////
+//
+// operator<< -- print token content of a slice
+//
+
+ostream& operator<<(ostream& output, GridSlice* slice) {
+	if (slice == NULL) {
+		output << "{n}";
+		return output;
+	}
+	for (int p=0; p<(int)slice->size(); p++) {
+		GridPart* part = slice->at(p);
+		cout << "(p" << p << ":)";
+		if (part == NULL) {
+			cout << "{n}";
+			continue;
+		}
+		for (int s=0; s<(int)part->size(); s++) {
+			GridStaff* staff = part->at(s);
+			cout << "(s" << s << ":)";
+			if (staff == NULL) {
+				cout << "{n}";
+				continue;
+			}
+			for (int t=0; t<(int)staff->size(); t++) {
+				GridToken* gt = staff->at(t);
+				cout << "(v" << t << ":)";
+				if (gt == NULL) {
+					cout << "{n}";
+					continue;
+				} else {
+					HTp token = gt->getToken();
+					if (token == NULL) {
+						cout << "{n}";
+					} else {
+						cout << " \"" << *token << "\" ";
+					}
+				}
+			
+			}
+		}
+	}
+	return output;
+}
+
 
 
 } // end namespace hum

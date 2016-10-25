@@ -31,6 +31,8 @@ class GridToken {
 	public:
 		GridToken(void);
 		GridToken(HTp token, HumNum duration);
+		GridToken(const char* token, HumNum duration);
+		GridToken(const string& token, HumNum duration);
 		~GridToken();
 
 		bool   isTransfered       (void);
