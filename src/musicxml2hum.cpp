@@ -21,10 +21,10 @@ namespace hum {
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::MusicXmlToHumdrumConverter --
+// musicxml2hum_interface::musicxml2hum_interface --
 //
 
-MusicXmlToHumdrumConverter::MusicXmlToHumdrumConverter(void){
+musicxml2hum_interface::musicxml2hum_interface(void){
 	// Options& options = m_options;
 	// options.define("k|kern=b","display corresponding **kern data");
 }
@@ -33,11 +33,11 @@ MusicXmlToHumdrumConverter::MusicXmlToHumdrumConverter(void){
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::convert -- Convert a MusicXML file into
+// musicxml2hum_interface::convert -- Convert a MusicXML file into
 //     Humdrum content.
 //
 
-bool MusicXmlToHumdrumConverter::convertFile(ostream& out,
+bool musicxml2hum_interface::convertFile(ostream& out,
 		const char* filename) {
 	xml_document doc;
 	auto result = doc.load_file(filename);
@@ -52,13 +52,13 @@ bool MusicXmlToHumdrumConverter::convertFile(ostream& out,
 }
 
 
-bool MusicXmlToHumdrumConverter::convert(ostream& out, istream& input) {
+bool musicxml2hum_interface::convert(ostream& out, istream& input) {
 	string s(istreambuf_iterator<char>(input), {});
 	return convert(out, s.c_str());
 }
 
 
-bool MusicXmlToHumdrumConverter::convert(ostream& out, const char* input) {
+bool musicxml2hum_interface::convert(ostream& out, const char* input) {
 	xml_document doc;
 	auto result = doc.load(input);
 	if (!result) {
@@ -72,7 +72,7 @@ bool MusicXmlToHumdrumConverter::convert(ostream& out, const char* input) {
 }
 
 
-bool MusicXmlToHumdrumConverter::convert(ostream& out, xml_document& doc) {
+bool musicxml2hum_interface::convert(ostream& out, xml_document& doc) {
 	bool status = true; // for keeping track of problems in conversion process.
 
 	vector<string> partids;            // list of part IDs
@@ -105,15 +105,15 @@ bool MusicXmlToHumdrumConverter::convert(ostream& out, xml_document& doc) {
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::setOptions --
+// musicxml2hum_interface::setOptions --
 //
 
-void MusicXmlToHumdrumConverter::setOptions(int argc, char** argv) {
+void musicxml2hum_interface::setOptions(int argc, char** argv) {
 	m_options.process(argc, argv);
 }
 
 
-void MusicXmlToHumdrumConverter::setOptions(const vector<string>& argvlist) {
+void musicxml2hum_interface::setOptions(const vector<string>& argvlist) {
 	int tempargc = (int)argvlist.size();
 	char* tempargv[tempargc+1];
 	tempargv[tempargc] = NULL;
@@ -137,11 +137,11 @@ void MusicXmlToHumdrumConverter::setOptions(const vector<string>& argvlist) {
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::getOptionDefinitions -- Used to avoid
+// musicxml2hum_interface::getOptionDefinitions -- Used to avoid
 //     duplicating the definitions in the test main() function.
 //
 
-Options MusicXmlToHumdrumConverter::getOptionDefinitions(void) {
+Options musicxml2hum_interface::getOptionDefinitions(void) {
 	return m_options;
 }
 
@@ -151,10 +151,10 @@ Options MusicXmlToHumdrumConverter::getOptionDefinitions(void) {
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::fillPartData --
+// musicxml2hum_interface::fillPartData --
 //
 
-bool MusicXmlToHumdrumConverter::fillPartData(vector<MxmlPart>& partdata,
+bool musicxml2hum_interface::fillPartData(vector<MxmlPart>& partdata,
 		const vector<string>& partids, map<string, xml_node>& partinfo,
 		map<string, xml_node>& partcontent) {
 
@@ -168,7 +168,7 @@ bool MusicXmlToHumdrumConverter::fillPartData(vector<MxmlPart>& partdata,
 }
 
 
-bool MusicXmlToHumdrumConverter::fillPartData(MxmlPart& partdata,
+bool musicxml2hum_interface::fillPartData(MxmlPart& partdata,
 		const string& id, xml_node partdeclaration, xml_node partcontent) {
 	auto measures = partcontent.select_nodes("./measure");
 	for (int i=0; i<(int)measures.size(); i++) {
@@ -181,10 +181,10 @@ bool MusicXmlToHumdrumConverter::fillPartData(MxmlPart& partdata,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printPartInfo -- Debug information.
+// musicxml2hum_interface::printPartInfo -- Debug information.
 //
 
-void MusicXmlToHumdrumConverter::printPartInfo(vector<string>& partids,
+void musicxml2hum_interface::printPartInfo(vector<string>& partids,
 		map<string, xml_node>& partinfo, map<string, xml_node>& partcontent,
 		vector<MxmlPart>& partdata) {
 	cout << "\nPart information in the file:" << endl;
@@ -229,7 +229,7 @@ void MusicXmlToHumdrumConverter::printPartInfo(vector<string>& partids,
 // stitchParts -- Merge individual parts into a single score sequence.
 //
 
-bool MusicXmlToHumdrumConverter::stitchParts(HumGrid& outdata,
+bool musicxml2hum_interface::stitchParts(HumGrid& outdata,
 		vector<string>& partids, map<string, xml_node>& partinfo,
 		map<string, xml_node>& partcontent, vector<MxmlPart>& partdata) {
 
@@ -277,12 +277,12 @@ bool MusicXmlToHumdrumConverter::stitchParts(HumGrid& outdata,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::cleanupMeasures --
+// musicxml2hum_interface::cleanupMeasures --
 //     Also add barlines here (keeping track of the 
 //     duration of each measure).
 //
 
-void MusicXmlToHumdrumConverter::cleanupMeasures(HumdrumFile& outfile,
+void musicxml2hum_interface::cleanupMeasures(HumdrumFile& outfile,
 		vector<HumdrumLine*> measures) {
 
    HumdrumToken* token;
@@ -304,10 +304,10 @@ void MusicXmlToHumdrumConverter::cleanupMeasures(HumdrumFile& outfile,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::insertExclusiveInterpretationLine --
+// musicxml2hum_interface::insertExclusiveInterpretationLine --
 //
 
-void MusicXmlToHumdrumConverter::insertExclusiveInterpretationLine(
+void musicxml2hum_interface::insertExclusiveInterpretationLine(
 		HumdrumFile& outfile, vector<MxmlPart>& partdata) {
 
 	HumdrumLine* line = new HumdrumLine;
@@ -331,10 +331,10 @@ void MusicXmlToHumdrumConverter::insertExclusiveInterpretationLine(
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::insertSingleMeasure --
+// musicxml2hum_interface::insertSingleMeasure --
 //
 
-void MusicXmlToHumdrumConverter::insertSingleMeasure(HumdrumFile& outfile) {
+void musicxml2hum_interface::insertSingleMeasure(HumdrumFile& outfile) {
 	HumdrumLine* line = new HumdrumLine;
 	HumdrumToken* token;
 	token = new HumdrumToken("=");
@@ -347,10 +347,10 @@ void MusicXmlToHumdrumConverter::insertSingleMeasure(HumdrumFile& outfile) {
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::insertAllToken --
+// musicxml2hum_interface::insertAllToken --
 //
 
-void MusicXmlToHumdrumConverter::insertAllToken(HumdrumFile& outfile,
+void musicxml2hum_interface::insertAllToken(HumdrumFile& outfile,
 		vector<MxmlPart>& partdata, const string& common) {
 
 	HumdrumLine* line = new HumdrumLine;
@@ -374,10 +374,10 @@ void MusicXmlToHumdrumConverter::insertAllToken(HumdrumFile& outfile,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::insertMeasure --
+// musicxml2hum_interface::insertMeasure --
 //
 
-bool MusicXmlToHumdrumConverter::insertMeasure(HumGrid& outdata, int mnum,
+bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 		vector<MxmlPart>& partdata, vector<int> partstaves) {
 
 	GridMeasure* gm = new GridMeasure;
@@ -446,10 +446,10 @@ bool MusicXmlToHumdrumConverter::insertMeasure(HumGrid& outdata, int mnum,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::convertNowEvents --
+// musicxml2hum_interface::convertNowEvents --
 //
 
-bool MusicXmlToHumdrumConverter::convertNowEvents(
+bool musicxml2hum_interface::convertNowEvents(
 		GridMeasure& outdata,
 		vector<SimultaneousEvents*>& nowevents,
 		vector<int>& nowparts,
@@ -479,10 +479,10 @@ bool MusicXmlToHumdrumConverter::convertNowEvents(
 
 /////////////////////////////
 //
-// MusicXmlToHumdrumConverter::appendNonZeroEvents --
+// musicxml2hum_interface::appendNonZeroEvents --
 //
 
-void MusicXmlToHumdrumConverter::appendNonZeroEvents(
+void musicxml2hum_interface::appendNonZeroEvents(
 		GridMeasure& outdata,
 		vector<SimultaneousEvents*>& nowevents,
 		HumNum nowtime,
@@ -504,10 +504,10 @@ void MusicXmlToHumdrumConverter::appendNonZeroEvents(
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::addEvent --
+// musicxml2hum_interface::addEvent --
 //
 
-void MusicXmlToHumdrumConverter::addEvent(GridSlice& slice,
+void musicxml2hum_interface::addEvent(GridSlice& slice,
 		MxmlEvent* event) {
 
 	int partindex;  // which part the event occurs in
@@ -534,10 +534,10 @@ void MusicXmlToHumdrumConverter::addEvent(GridSlice& slice,
 
 /////////////////////////////
 //
-// MusicXmlToHumdrumConverter::appendZeroEvents --
+// musicxml2hum_interface::appendZeroEvents --
 //
 
-void MusicXmlToHumdrumConverter::appendZeroEvents(
+void musicxml2hum_interface::appendZeroEvents(
 		GridMeasure& outdata,
 		vector<SimultaneousEvents*>& nowevents,
 		HumNum nowtime,
@@ -600,10 +600,10 @@ void MusicXmlToHumdrumConverter::appendZeroEvents(
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::addClefLine --
+// musicxml2hum_interface::addClefLine --
 //
 
-void MusicXmlToHumdrumConverter::addClefLine(GridMeasure& outdata, 
+void musicxml2hum_interface::addClefLine(GridMeasure& outdata, 
 		vector<xml_node>& clefs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
 	GridSlice* slice = new GridSlice(nowtime, SliceType::Clefs);
@@ -621,10 +621,10 @@ void MusicXmlToHumdrumConverter::addClefLine(GridMeasure& outdata,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::addTimeSigLine --
+// musicxml2hum_interface::addTimeSigLine --
 //
 
-void MusicXmlToHumdrumConverter::addTimeSigLine(GridMeasure& outdata, 
+void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata, 
 		vector<xml_node>& timesigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
 	GridSlice* slice = new GridSlice(nowtime, SliceType::TimeSigs);
@@ -642,10 +642,10 @@ void MusicXmlToHumdrumConverter::addTimeSigLine(GridMeasure& outdata,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::addKeySigLine --
+// musicxml2hum_interface::addKeySigLine --
 //
 
-void MusicXmlToHumdrumConverter::addKeySigLine(GridMeasure& outdata, 
+void musicxml2hum_interface::addKeySigLine(GridMeasure& outdata, 
 		vector<xml_node>& keysigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
 	GridSlice* slice = new GridSlice(nowtime, SliceType::KeySigs);
@@ -663,10 +663,10 @@ void MusicXmlToHumdrumConverter::addKeySigLine(GridMeasure& outdata,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::insertPartClefs --
+// musicxml2hum_interface::insertPartClefs --
 //
 
-void MusicXmlToHumdrumConverter::insertPartClefs(xml_node clef, GridPart& part) {
+void musicxml2hum_interface::insertPartClefs(xml_node clef, GridPart& part) {
 	if (!clef) {
 		// no clef for some reason.
 		return;
@@ -684,10 +684,10 @@ void MusicXmlToHumdrumConverter::insertPartClefs(xml_node clef, GridPart& part) 
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::insertPartKeySigs --
+// musicxml2hum_interface::insertPartKeySigs --
 //
 
-void MusicXmlToHumdrumConverter::insertPartKeySigs(xml_node keysig, GridPart& part) {
+void musicxml2hum_interface::insertPartKeySigs(xml_node keysig, GridPart& part) {
 	if (!keysig) {
 		return;
 	}
@@ -716,10 +716,10 @@ void MusicXmlToHumdrumConverter::insertPartKeySigs(xml_node keysig, GridPart& pa
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::insertPartTimeSigs --
+// musicxml2hum_interface::insertPartTimeSigs --
 //
 
-void MusicXmlToHumdrumConverter::insertPartTimeSigs(xml_node timesig, GridPart& part) {
+void musicxml2hum_interface::insertPartTimeSigs(xml_node timesig, GridPart& part) {
 	if (!timesig) {
 		// no timesig
 		return;
@@ -749,13 +749,13 @@ void MusicXmlToHumdrumConverter::insertPartTimeSigs(xml_node timesig, GridPart& 
 
 //////////////////////////////
 //
-//	MusicXmlToHumdrumConverter::convertKeySigToHumdrum --
+//	musicxml2hum_interface::convertKeySigToHumdrum --
 //
 //  <key>
 //     <fifths>4</fifths>
 //
 
-xml_node MusicXmlToHumdrumConverter::convertKeySigToHumdrum(xml_node keysig,
+xml_node musicxml2hum_interface::convertKeySigToHumdrum(xml_node keysig,
 		HTp& token, int& staffindex) {
 
 	if (!keysig) {
@@ -820,14 +820,14 @@ xml_node MusicXmlToHumdrumConverter::convertKeySigToHumdrum(xml_node keysig,
 
 //////////////////////////////
 //
-//	MusicXmlToHumdrumConverter::convertTimeSigToHumdrum --
+//	musicxml2hum_interface::convertTimeSigToHumdrum --
 //
 //  <time symbol="common">
 //     <beats>4</beats>
 //     <beat-type>4</beat-type>
 //
 
-xml_node MusicXmlToHumdrumConverter::convertTimeSigToHumdrum(xml_node timesig,
+xml_node musicxml2hum_interface::convertTimeSigToHumdrum(xml_node timesig,
 		HTp& token, int& staffindex) {
 
 	if (!timesig) {
@@ -872,10 +872,10 @@ xml_node MusicXmlToHumdrumConverter::convertTimeSigToHumdrum(xml_node timesig,
 
 //////////////////////////////
 //
-//	MusicXmlToHumdrumConverter::convertClefToHumdrum --
+//	musicxml2hum_interface::convertClefToHumdrum --
 //
 
-xml_node MusicXmlToHumdrumConverter::convertClefToHumdrum(xml_node clef,
+xml_node musicxml2hum_interface::convertClefToHumdrum(xml_node clef,
 		HTp& token, int& staffindex) {
 
 	if (!clef) {
@@ -922,11 +922,11 @@ xml_node MusicXmlToHumdrumConverter::convertClefToHumdrum(xml_node clef,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::nodeType -- return true if node type matches
+// musicxml2hum_interface::nodeType -- return true if node type matches
 //     string.
 //
 
-bool MusicXmlToHumdrumConverter::nodeType(xml_node node, const char* testname) {
+bool musicxml2hum_interface::nodeType(xml_node node, const char* testname) {
 	if (strcmp(node.name(), testname) == 0) {
 		return true;
 	} else {
@@ -938,10 +938,10 @@ bool MusicXmlToHumdrumConverter::nodeType(xml_node node, const char* testname) {
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::appendNullTokens --
+// musicxml2hum_interface::appendNullTokens --
 //
 
-void MusicXmlToHumdrumConverter::appendNullTokens(HumdrumLine* line,
+void musicxml2hum_interface::appendNullTokens(HumdrumLine* line,
 		MxmlPart& part) {
 	int i;
 	int staffcount = part.getStaffCount();
@@ -958,11 +958,11 @@ void MusicXmlToHumdrumConverter::appendNullTokens(HumdrumLine* line,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::getPartContent -- Extract the part elements in
+// musicxml2hum_interface::getPartContent -- Extract the part elements in
 //     the file indexed by part ID.
 //
 
-bool MusicXmlToHumdrumConverter::getPartContent(
+bool musicxml2hum_interface::getPartContent(
 		map<string, xml_node>& partcontent,
 		vector<string>& partids, xml_document& doc) {
 
@@ -1004,7 +1004,7 @@ bool MusicXmlToHumdrumConverter::getPartContent(
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::getPartInfo -- Extract a list of the part ids,
+// musicxml2hum_interface::getPartInfo -- Extract a list of the part ids,
 //    and a reverse mapping to the <score-part> element to which is refers.
 //
 //	   part-list structure:
@@ -1015,7 +1015,7 @@ bool MusicXmlToHumdrumConverter::getPartContent(
 //        </part-list>
 //
 
-bool MusicXmlToHumdrumConverter::getPartInfo(map<string, xml_node>& partinfo,
+bool musicxml2hum_interface::getPartInfo(map<string, xml_node>& partinfo,
 		vector<string>& partids, xml_document& doc) {
 	auto scoreparts = doc.select_nodes("/score-partwise/part-list/score-part");
 	partids.reserve(scoreparts.size());
@@ -1037,16 +1037,16 @@ bool MusicXmlToHumdrumConverter::getPartInfo(map<string, xml_node>& partinfo,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::getChildElementText -- Return the (first)
+// musicxml2hum_interface::getChildElementText -- Return the (first)
 //    matching child element's text content.
 //
 
-string MusicXmlToHumdrumConverter::getChildElementText(xml_node root,
+string musicxml2hum_interface::getChildElementText(xml_node root,
 		const char* xpath) {
 	return root.select_single_node(xpath).node().child_value();
 }
 
-string MusicXmlToHumdrumConverter::getChildElementText(xpath_node root,
+string musicxml2hum_interface::getChildElementText(xpath_node root,
 		const char* xpath) {
 	return root.node().select_single_node(xpath).node().child_value();
 }
@@ -1055,11 +1055,11 @@ string MusicXmlToHumdrumConverter::getChildElementText(xpath_node root,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::getAttributeValue -- For an xml_node, return
+// musicxml2hum_interface::getAttributeValue -- For an xml_node, return
 //     the value for the given attribute name.
 //
 
-string MusicXmlToHumdrumConverter::getAttributeValue(xml_node xnode,
+string musicxml2hum_interface::getAttributeValue(xml_node xnode,
 		const string& target) {
 	for (auto at = xnode.first_attribute(); at; at = at.next_attribute()) {
 		if (target == at.name()) {
@@ -1070,7 +1070,7 @@ string MusicXmlToHumdrumConverter::getAttributeValue(xml_node xnode,
 }
 
 
-string MusicXmlToHumdrumConverter::getAttributeValue(xpath_node xnode,
+string musicxml2hum_interface::getAttributeValue(xpath_node xnode,
 		const string& target) {
 	auto node = xnode.node();
 	for (auto at = node.first_attribute(); at; at = at.next_attribute()) {
@@ -1085,11 +1085,11 @@ string MusicXmlToHumdrumConverter::getAttributeValue(xpath_node xnode,
 
 //////////////////////////////
 //
-// MusicXmlToHumdrumConverter::printAttributes -- Print list of all attributes
+// musicxml2hum_interface::printAttributes -- Print list of all attributes
 //     for an xml_node.
 //
 
-void MusicXmlToHumdrumConverter::printAttributes(xml_node node) {
+void musicxml2hum_interface::printAttributes(xml_node node) {
 	int counter = 1;
 	for (auto at = node.first_attribute(); at; at = at.next_attribute()) {
 		cout << "\tattribute " << counter++

@@ -18,7 +18,7 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-	hum::MusicXmlToHumdrumConverter converter;
+	hum::musicxml2hum_interface converter;
 	hum::Options options = converter.getOptionDefinitions();
 	options.process(argc, argv);
 

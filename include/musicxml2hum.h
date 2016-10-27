@@ -1,7 +1,7 @@
 //
 // Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 // Creation Date: Sat Aug  6 10:53:40 CEST 2016
-// Last Modified: Sun Sep 18 13:33:18 PDT 2016
+// Last Modified: Wed Oct 26 18:25:45 PDT 2016 Renamed class
 // Filename:      musicxml2hum.h
 // URL:           https://github.com/craigsapp/musicxml2hum/blob/master/include/musicxml2hum.h
 // Syntax:        C++11
@@ -33,10 +33,10 @@ namespace hum {
 
 
 
-class MusicXmlToHumdrumConverter {
+class musicxml2hum_interface {
 	public:
-		MusicXmlToHumdrumConverter(void);
-		~MusicXmlToHumdrumConverter() {}
+		musicxml2hum_interface       (void);
+		~musicxml2hum_interface      () {}
 
 		bool    convertFile          (ostream& out, const char* filename);
 		bool    convert              (ostream& out, xml_document& infile);
