@@ -63,7 +63,7 @@ class MxmlMeasure {
 		int           getPartIndex       (void) const;
 		int           setQTicks          (long value);
 		long          getQTicks          (void) const;
-		void          attachToLastEvent  (MxmlEvent* event) const;
+		void          attachLastEventToPrevious  (void);
 		void          calculateDuration  (void);
 		int           getEventCount      (void) const;
 		vector<SimultaneousEvents>* getSortedEvents(void);
