@@ -2,13 +2,13 @@
 // Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 // Creation Date: Tue Oct 18 12:01:36 PDT 2016
 // Last Modified: Tue Oct 18 12:01:41 PDT 2016
-// Filename:      GridToken.h
-// URL:           https://github.com/craigsapp/hum2ly/blob/master/include/GridToken.h
+// Filename:      GridVoice.h
+// URL:           https://github.com/craigsapp/hum2ly/blob/master/include/GridVoice.h
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //
 // Description:   HumGrid is an intermediate container for converting from
-//                MusicXML syntax into Humdrum syntax.  GridToken is a class
+//                MusicXML syntax into Humdrum syntax.  GridVoice is a class
 //                which stores all information (notes, dynamics, lyrics, etc)
 //                for a particular part (which may have more than one
 //                staff.
@@ -16,7 +16,7 @@
 //
 
 
-#include "GridToken.h"
+#include "GridVoice.h"
 
 using namespace std;
 
@@ -26,29 +26,29 @@ namespace hum {
 
 //////////////////////////////
 //
-// GridToken::GridToken -- Constructor.
+// GridVoice::GridVoice -- Constructor.
 //
 
-GridToken::GridToken(void) {
+GridVoice::GridVoice(void) {
 	m_token      = NULL;
 	m_transfered = false;
 }
 
-GridToken::GridToken(HTp token, HumNum duration) {
+GridVoice::GridVoice(HTp token, HumNum duration) {
 	m_token      = token;
 	m_nextdur    = duration;
 	m_transfered = false;
 }
 
 
-GridToken::GridToken(const char* token, HumNum duration) {
+GridVoice::GridVoice(const char* token, HumNum duration) {
 	m_token      = new HumdrumToken(token);
 	m_nextdur    = duration;
 	m_transfered = false;
 }
 
 
-GridToken::GridToken(const string& token, HumNum duration) {
+GridVoice::GridVoice(const string& token, HumNum duration) {
 	m_token      = new HumdrumToken(token);
 	m_nextdur    = duration;
 	m_transfered = false;
@@ -58,11 +58,11 @@ GridToken::GridToken(const string& token, HumNum duration) {
 
 //////////////////////////////
 //
-// GridToken::~GridToken -- Deconstructor: delete the token only if it
+// GridVoice::~GridVoice -- Deconstructor: delete the token only if it
 //     has not been transfered to a HumdrumFile object.
 //
 
-GridToken::~GridToken() {
+GridVoice::~GridVoice() {
 	if (m_token && !m_transfered) {
 		delete m_token;
 	}
@@ -73,11 +73,11 @@ GridToken::~GridToken() {
 
 //////////////////////////////
 //
-// GridToken::isTransfered -- True if token was copied to a HumdrumFile
+// GridVoice::isTransfered -- True if token was copied to a HumdrumFile
 //      object.
 //
 
-bool GridToken::isTransfered(void) { 
+bool GridVoice::isTransfered(void) { 
 	return m_transfered;
 }
 
@@ -85,12 +85,12 @@ bool GridToken::isTransfered(void) {
 
 //////////////////////////////
 //
-// GridToken::setTransfered -- True if the object should not be
+// GridVoice::setTransfered -- True if the object should not be
 //    deleted with the object is destroyed.  False if the token
 //    is not NULL and should be deleted when object is destroyed.
 //
 
-void GridToken::setTransfered(bool state) {
+void GridVoice::setTransfered(bool state) {
 	m_transfered = state;
 }
 
@@ -98,10 +98,10 @@ void GridToken::setTransfered(bool state) {
 
 //////////////////////////////
 //
-// GridToken::getToken --
+// GridVoice::getToken --
 //
 
-HTp GridToken::getToken(void) const {
+HTp GridVoice::getToken(void) const {
 	return m_token;
 }
 
@@ -109,10 +109,10 @@ HTp GridToken::getToken(void) const {
 
 //////////////////////////////
 //
-// GridToken::setToken --
+// GridVoice::setToken --
 //
 
-void GridToken::setToken(HTp token) {
+void GridVoice::setToken(HTp token) {
 	if (!m_transfered && m_token) {
 		delete m_token;
 	}
@@ -121,13 +121,13 @@ void GridToken::setToken(HTp token) {
 }
 
 
-void GridToken::setToken(const string& token) {
+void GridVoice::setToken(const string& token) {
 	HTp realtoken = new HumdrumToken(token);
 	setToken(realtoken);
 }
 
 
-void GridToken::setToken(const char* token) {
+void GridVoice::setToken(const char* token) {
 	HTp realtoken = new HumdrumToken(token);
 	setToken(realtoken);
 }
@@ -136,10 +136,10 @@ void GridToken::setToken(const char* token) {
 
 //////////////////////////////
 //
-// GridToken::isNull -- returns true if token is NULL or ".".
+// GridVoice::isNull -- returns true if token is NULL or ".".
 //
 
-bool GridToken::isNull(void) const {
+bool GridVoice::isNull(void) const {
 	if (getToken() == NULL) {
 		return true;
 	} else if (getToken()->isNull()) {
@@ -153,10 +153,10 @@ bool GridToken::isNull(void) const {
 
 //////////////////////////////
 //
-// GridToken::setDuration --
+// GridVoice::setDuration --
 //
 
-void GridToken::setDuration(HumNum duration) {
+void GridVoice::setDuration(HumNum duration) {
 	m_nextdur = duration;
 	m_prevdur = 0;
 }
@@ -165,10 +165,10 @@ void GridToken::setDuration(HumNum duration) {
 
 //////////////////////////////
 //
-// GridToken::setDurationToPrev --
+// GridVoice::setDurationToPrev --
 //
 
-void GridToken::setDurationToPrev(HumNum dur) {
+void GridVoice::setDurationToPrev(HumNum dur) {
 	m_prevdur = dur;
 }
 
@@ -176,10 +176,10 @@ void GridToken::setDurationToPrev(HumNum dur) {
 
 //////////////////////////////
 //
-// GridToken::getDurationToNext --
+// GridVoice::getDurationToNext --
 //
 
-HumNum GridToken::getDurationToNext(void) const {
+HumNum GridVoice::getDurationToNext(void) const {
 	return m_nextdur;
 }
 
@@ -187,10 +187,10 @@ HumNum GridToken::getDurationToNext(void) const {
 
 //////////////////////////////
 //
-// GridToken::getDurationToPrev --
+// GridVoice::getDurationToPrev --
 //
 
-HumNum GridToken::getDurationToPrev(void) const {
+HumNum GridVoice::getDurationToPrev(void) const {
 	return m_nextdur;
 }
 
@@ -198,10 +198,10 @@ HumNum GridToken::getDurationToPrev(void) const {
 
 //////////////////////////////
 //
-// GridToken::incrementDuration -- 
+// GridVoice::incrementDuration -- 
 //
 
-void GridToken::incrementDuration(HumNum duration) {
+void GridVoice::incrementDuration(HumNum duration) {
 	m_nextdur -= duration;
 	m_prevdur += duration;
 }
@@ -210,12 +210,12 @@ void GridToken::incrementDuration(HumNum duration) {
 
 //////////////////////////////
 //
-// GridToken::forgetToken -- The HumdrumToken was passed off
+// GridVoice::forgetToken -- The HumdrumToken was passed off
 //      to some other object which is now responsible for 
 //      deleting it.
 //
 
-void GridToken::forgetToken(void) {
+void GridVoice::forgetToken(void) {
 	setTransfered(true);
 	m_token = NULL;
 }
@@ -224,12 +224,38 @@ void GridToken::forgetToken(void) {
 
 //////////////////////////////
 //
-// GridToken::getDuration -- Return the total duration of the
+// GridVoice::getDuration -- Return the total duration of the
 //   durational item, the sum of the nextdur and prevdur.
 //
 
-HumNum GridToken::getDuration(void) const {
+HumNum GridVoice::getDuration(void) const {
 	return m_nextdur + m_prevdur;
+}
+
+
+//////////////////////////////
+//
+// operator<< -- print token content of a voice
+//
+
+ostream& operator<<(ostream& output, GridVoice* voice) {
+	if (voice == NULL) {
+		output << "{n}";
+		return output;
+	}
+
+	HTp token = voice->getToken();
+	if (token == NULL) {
+		cout << "{n}";
+	} else {
+		cout << " \"" << *token << "\" ";
+	}
+	return output;
+}
+
+ostream& operator<<(ostream& output, GridVoice& voice) {
+	output << &voice;
+	return output;
 }
 
 

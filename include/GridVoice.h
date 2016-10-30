@@ -2,21 +2,21 @@
 // Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 // Creation Date: Tue Oct 18 12:01:36 PDT 2016
 // Last Modified: Tue Oct 18 12:01:41 PDT 2016
-// Filename:      GridToken.h
-// URL:           https://github.com/craigsapp/hum2ly/blob/master/include/GridToken.h
+// Filename:      GridVoice.h
+// URL:           https://github.com/craigsapp/hum2ly/blob/master/include/GridVoice.h
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //
 // Description:   HumGrid is an intermediate container for converting from
-//                MusicXML syntax into Humdrum syntax.  GridToken is a class
+//                MusicXML syntax into Humdrum syntax.  GridVoice is a class
 //                which stores all information (notes, dynamics, lyrics, etc)
 //                for a particular part (which may have more than one
 //                staff.
 //
 //
 
-#ifndef _GRIDTOKEN_H
-#define _GRIDTOKEN_H
+#ifndef _GRIDVOICE_H
+#define _GRIDVOICE_H
 
 #include "humlib.h"
 
@@ -27,13 +27,13 @@ class GridSlice;
 namespace hum {
 
 
-class GridToken {
+class GridVoice {
 	public:
-		GridToken(void);
-		GridToken(HTp token, HumNum duration);
-		GridToken(const char* token, HumNum duration);
-		GridToken(const string& token, HumNum duration);
-		~GridToken();
+		GridVoice(void);
+		GridVoice(HTp token, HumNum duration);
+		GridVoice(const char* token, HumNum duration);
+		GridVoice(const string& token, HumNum duration);
+		~GridVoice();
 
 		bool   isTransfered       (void);
 
@@ -63,10 +63,12 @@ class GridToken {
 	friend class GridSlice;
 };
 
+ostream& operator<<(ostream& output, GridVoice* voice);
+ostream& operator<<(ostream& output, GridVoice& voice);
 
 } // end namespace hum
 
-#endif /* _GRIDTOKEN_H */
+#endif /* _GRIDVOICE_H */
 
 
 
