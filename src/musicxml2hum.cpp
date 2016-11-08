@@ -90,10 +90,12 @@ bool musicxml2hum_interface::convert(ostream& out, xml_document& doc) {
 
 	// for debugging:
 	// printPartInfo(partids, partinfo, partcontent, partdata);
+cerr << "GOT HERE RRR" << endl;
 
 	HumGrid outdata;
 	status &= stitchParts(outdata, partids, partinfo, partcontent, partdata);
 
+cerr << "GOT HERE OOO" << endl;
 	// tranfer verse counts from parts/staves to HumGrid:
 	// should also do part verse counts here (-1 staffindex).
 	int versecount;
@@ -265,6 +267,7 @@ bool musicxml2hum_interface::stitchParts(HumGrid& outdata,
 	for (i=0; i<(int)partstaves.size(); i++) {
 		partstaves[i] = partdata[i].getStaffCount();
 	}
+cerr << "GOT HERE UUU2" << endl;
 
 	// vector<HumdrumLine*> measures;
 
@@ -276,6 +279,8 @@ bool musicxml2hum_interface::stitchParts(HumGrid& outdata,
 		// insertSingleMeasure(outfile);
 		// measures.push_back(&outfile[outfile.getLineCount()-1]);
 	}
+
+cerr << "GOT HERE VVV" << endl;
 
 // Do this later, maybe in another class:
 //	insertAllToken(outfile, partdata, "*-");
@@ -416,13 +421,16 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 				}
 			}
 		}
+cerr << "GOT HERE INSERTMEASURE GGG" << endl;
 		status &= convertNowEvents(*outdata.back(),
 		                         nowevents,
 		                         nowparts,
 		                         processtime,
 		                         partdata,
 		                         partstaves);
+cerr << "GOT HERE INSERTMEASURE HHH" << endl;
 	}
+cerr << "GOT HERE INSERTMEASURE III" << endl;
 
 	return status;
 }
@@ -455,7 +463,9 @@ bool musicxml2hum_interface::convertNowEvents(
 		return true;
 	}
 
+cerr << "GOT HERE CONVERTNOWEVENTS DDD" << endl;
 	appendNonZeroEvents(outdata, nowevents, nowtime, partdata);
+cerr << "GOT HERE CONVERTNOWEVENTS EEE" << endl;
 
 	return true;
 }
@@ -481,9 +491,13 @@ void musicxml2hum_interface::appendNonZeroEvents(
 	for (int i=0; i<(int)nowevents.size(); i++) {
 		vector<MxmlEvent*>& events = nowevents[i]->nonzerodur;
 		for (int j=0; j<(int)events.size(); j++) {
+cerr << "GOT HERE APPENDNONZEROEVENTS CCC" << endl;
 			addEvent(*slice, events[j]);
+cerr << "GOT HERE APPENDNONZEROEVENTS DDD" << endl;
 		}
+cerr << "GOT HERE APPENDNONZEROEVENTS EEE" << endl;
 	}
+cerr << "GOT HERE APPENDNONZEROEVENTS FFF" << endl;
 }
 
 
@@ -501,6 +515,7 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	int voiceindex; // which voice the event occurs in (use for staff)
 	bool invisible = isInvisible(event);
 
+cerr << "PROCESSING EVENT " << event->getNode().name() << endl;
 	partindex  = event->getPartIndex();
 	staffindex = event->getStaffIndex();
 	voiceindex = event->getVoiceIndex();
@@ -515,19 +530,28 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 		ss << "yy";
 	}
 
+cerr << "ADDING EVENT AAA" << endl;
 	// check for chord notes.
 	if (event->isChord()) {
 		addChordNotes(ss, event, recip);
 	}
+cerr << "ADDING EVENT BBB" << endl;
 
 	HTp token = new HumdrumToken(ss.str());
+cerr << "ADDING EVENT BBB2" << endl;
+cerr << "STAFFINDEX = " << staffindex << endl;
+cerr << "PARTINDEX = " << partindex << endl;
+cerr << "PARTCOUNT = " << slice.size() << endl;
+cerr << "VOICEINDEX = " << voiceindex << endl;
 	slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
 		event->getDuration());
 
+cerr << "ADDING EVENT CCC" << endl;
 	int vcount = addLyrics(slice.at(partindex)->at(staffindex), event);
 	if (vcount > 0) {
 		event->reportVerseCountToOwner(staffindex, vcount);
 	}
+cerr << "ADDING EVENT DDD" << endl;
 }
 
 
@@ -780,7 +804,9 @@ void musicxml2hum_interface::addKeySigLine(GridMeasure& outdata,
 	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime, 
 		SliceType::KeySigs);
 	outdata.push_back(slice);
+cerr << "GOT HERE ABCDEFG" << endl;
 	slice->initializePartStaves(partdata);
+cerr << "GOT HERE ZZZ" << endl;
 
 	for (int i=0; i<(int)partdata.size(); i++) {
 		if (keysigs[i]) {

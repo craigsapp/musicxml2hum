@@ -76,6 +76,7 @@ void MxmlEvent::clear(void) {
 	m_owner = NULL;
 	m_linked = false;
 	m_voice = m_staff = 0;
+cerr << "SETTING STAFF NUMBER TO ZERO " << endl;
 	m_sequence = -1;
 	for (int i=0; i<(int)m_links.size(); i++) {
 		delete m_links[i];
@@ -495,6 +496,7 @@ void MxmlEvent::setVoiceNumber(int value) {
 //
 
 void MxmlEvent::setStaffNumber(int value) {
+cerr << "SETTING STAFF NUMBER TO " << value << endl;
 	m_staff = (short)value;
 }
 
@@ -506,6 +508,7 @@ void MxmlEvent::setStaffNumber(int value) {
 //
 
 int MxmlEvent::getStaffNumber(void) const {
+cerr << "STAFF NUMBER ACCESSING " << m_staff << endl;
 	if (!m_staff) {
 		return 1;
 	} else {
@@ -524,6 +527,7 @@ int MxmlEvent::getStaffIndex(void) const {
 	if (!m_staff) {
 		return 0;
 	} else {
+cerr << ">>>>STAFFINDEX  = " << m_staff -1 << endl;
 		return m_staff - 1;
 	}
 }
@@ -646,7 +650,9 @@ bool MxmlEvent::parseEvent(xml_node el) {
 	if (!lastsib) {
 		return true;
 	}
+cerr << "LASTSIB TYPE " << lastsib.name() << endl;
 	if (nodeType(lastsib, "harmony")) {
+cerr << "LASTSIB HARMONY SET TO " << lastsib.name() << endl;
 		m_harmony = lastsib;
 	}
 
