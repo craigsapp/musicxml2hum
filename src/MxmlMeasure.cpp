@@ -82,9 +82,12 @@ bool MxmlMeasure::parseMeasure(xpath_node mel) {
 bool MxmlMeasure::parseMeasure(xml_node mel) {
 	bool output = true;
 	for (auto el = mel.first_child(); el; el = el.next_sibling()) {
+cerr << "GOT HERE IN MXMLMEASURE PARSEMEASURE " << endl;
 		MxmlEvent* event = new MxmlEvent(this);
+cerr << "GOT HERE IN MXMLMEASURE BBB" << endl;
 		m_events.push_back(event);
 		output &= event->parseEvent(el);
+cerr << "GOT HERE IN MXMLMEASURE CCC" << endl;
 	}
 
 	setStartTimeOfMeasure();

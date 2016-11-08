@@ -113,7 +113,7 @@ class MxmlEvent {
 		short              m_staff;      // staff number in part for event
 		short              m_voice;      // voice number in part for event
       int                m_maxstaff;   // maximum staff number for measure
-		xml_node           m_harmony;    // harmony label starting at note event
+		xml_node           m_hnode;      // harmony label starting at note event
 
 	private:
    	void   reportStaffNumberToOwner  (int staffnum);

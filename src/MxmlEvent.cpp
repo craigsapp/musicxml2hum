@@ -49,7 +49,7 @@ MxmlEvent::MxmlEvent(MxmlMeasure* measure) {
 	clear();
 	m_owner = measure;
 	m_sequence = m_counter++;
-	m_harmony = xml_node(NULL); // maybe not needed?
+	// m_hnode = xml_node(NULL); // maybe not needed?
 }
 
 
@@ -78,6 +78,7 @@ void MxmlEvent::clear(void) {
 	m_voice = m_staff = 0;
 cerr << "SETTING STAFF NUMBER TO ZERO " << endl;
 	m_sequence = -1;
+cerr << "LINKS SIZE " << m_links.size() << endl;
 	for (int i=0; i<(int)m_links.size(); i++) {
 		delete m_links[i];
 		m_links[i] = NULL;
@@ -653,7 +654,7 @@ bool MxmlEvent::parseEvent(xml_node el) {
 cerr << "LASTSIB TYPE " << lastsib.name() << endl;
 	if (nodeType(lastsib, "harmony")) {
 cerr << "LASTSIB HARMONY SET TO " << lastsib.name() << endl;
-		m_harmony = lastsib;
+		m_hnode = lastsib;
 	}
 
 	return true;

@@ -25,6 +25,7 @@ namespace hum {
 //
 
 GridSide::GridSide(void) {
+	cerr << "GRIDSIDE INITIALIZED " << this << endl;
 	m_harmony = NULL;
 }
 
@@ -53,10 +54,10 @@ GridSide::~GridSide(void) {
 	}
 	m_dynamics.resize(0);
 
-	if (m_harmony) {
-		delete m_harmony;
-		m_harmony = NULL;
-	}
+//	if (m_harmony) {
+//		delete m_harmony;
+//		m_harmony = NULL;
+//	}
 }
 
 

@@ -46,8 +46,8 @@ OBJS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%,$(patsubst %.cpp,%.o,$(wildcard $(SRC
 
 all: objdir bindir external $(OBJS)
 	@echo [CC] $(BINDIR)/$(TARGET)
-	@$(COMPILER) $(PREFLAGS) -o $(BINDIR)/$(TARGET) $(OBJS) $(POSTFLAGS) \
-		&& strip $(BINDIR)/$(TARGET)
+	@$(COMPILER) $(PREFLAGS) -o $(BINDIR)/$(TARGET) $(OBJS) $(POSTFLAGS) 
+#		&& strip $(BINDIR)/$(TARGET)
 
 objdir:
 	mkdir -p $(OBJDIR)

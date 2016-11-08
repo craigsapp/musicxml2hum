@@ -24,7 +24,7 @@ namespace hum {
 // GridStaff::GridStaff -- Constructor.
 //
 
-GridStaff::GridStaff(void) : vector<GridVoice*>(0) {
+GridStaff::GridStaff(void) : vector<GridVoice*>(0), GridSide() {
 	// do nothing;
 }
 
