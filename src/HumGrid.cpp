@@ -908,7 +908,7 @@ void HumGrid::insertExclusiveInterpretationLine(HumdrumFile& outfile) {
 //
 
 void HumGrid::insertExInterpSides(HumdrumLine* line, int part, int staff) {
-	int versecount = getVerseCount(part, staff);
+	int versecount = getVerseCount(part, staff); // verses related to staff
 	for (int i=0; i<versecount; i++) {
 		HTp token = new HumdrumToken("**text");
 		line->appendToken(token);
@@ -953,6 +953,7 @@ void HumGrid::insertPartIndications(HumdrumFile& outfile) {
 			line->appendToken(token);
 			insertSidePartInfo(line, p, s);
 		}
+		insertSidePartInfo(line, p, -1);   // insert part sides
 	}
 	outfile.insertLine(0, line);
 }
@@ -1021,6 +1022,7 @@ void HumGrid::insertStaffIndications(HumdrumFile& outfile) {
 			line->appendToken(token);
 			insertSideStaffInfo(line, p, s, staffcount+1);
 		}
+		insertSideStaffInfo(line, p, -1, -1);  // insert part sides
 	}
 	outfile.insertLine(0, line);
 }
@@ -1038,8 +1040,12 @@ void HumGrid::insertSideStaffInfo(HumdrumLine* line, int part, int staff,
 	HTp token;
 	string text;
 	for (int i=0; i<versecount; i++) {
-		text = "*staff" + to_string(staffnum);
-		token = new HumdrumToken(text);
+		if (staffnum > 0) {
+			text = "*staff" + to_string(staffnum);
+			token = new HumdrumToken(text);
+		} else {
+			token = new HumdrumToken("*");
+		}
 		line->appendToken(token);
 	}
 }
@@ -1079,6 +1085,7 @@ void HumGrid::insertDataTerminationLine(HumdrumFile& outfile) {
 			line->appendToken(token);
 			insertSideTerminals(line, p, s);
 		}
+		insertSideTerminals(line, p, -1);   // insert part sides
 	}
 	outfile.appendLine(line);
 }

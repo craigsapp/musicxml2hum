@@ -49,6 +49,7 @@ MxmlEvent::MxmlEvent(MxmlMeasure* measure) {
 	clear();
 	m_owner = measure;
 	m_sequence = m_counter++;
+	m_harmony = xml_node(NULL); // maybe not needed?
 }
 
 
@@ -636,6 +637,17 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		case mevent_unknown:
 			setDuration(tempduration);
 			break;
+	}
+
+	// if the previous sibling was a <harmony>, then store
+	// for later parsing.  May have to check even further back
+	// until another note or barline was found.
+	xml_node lastsib = el.previous_sibling();
+	if (!lastsib) {
+		return true;
+	}
+	if (nodeType(lastsib, "harmony")) {
+		m_harmony = lastsib;
 	}
 
 	return true;

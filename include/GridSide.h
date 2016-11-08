@@ -38,6 +38,7 @@ class GridSide {
 	private:
 		vector<HumdrumToken*> m_verses;
 		vector<HumdrumToken*> m_dynamics;
+		HumdrumToken* m_harmony;
 };
 
 
