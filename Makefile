@@ -70,6 +70,8 @@ ifeq ($(wildcard libpugixml.a),)
 	(cd external && $(MAKE) pugixml)
 endif
 
+install:
+	sudo cp bin/musicxml2hum /usr/local/bin
 
 tests:
 	for i in tests/*.xml; do ./$(TARGET) $$i > tests/`basename $$i .xml`.krn; done
