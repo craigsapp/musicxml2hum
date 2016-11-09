@@ -35,6 +35,11 @@ class GridSide {
 		HTp   getVerse       (int index);
 		void  setVerse       (int index, HTp token);
 
+		int   getHarmonyCount(void);
+		void  setHarmony     (HTp token);
+		void  detachHarmony  (void);
+		HTp   getHarmony     (void);
+
 	private:
 		vector<HumdrumToken*> m_verses;
 		vector<HumdrumToken*> m_dynamics;

@@ -177,6 +177,21 @@ void MxmlEvent::reportVerseCountToOwner(int staffindex, int count) {
 }
 
 
+
+//////////////////////////////
+//
+// MxmlEvent::reportHarmonyCountToOwner --
+//
+
+void MxmlEvent::reportHarmonyCountToOwner(int count) {
+	if (!m_owner) {
+		return;
+	}
+	m_owner->reportHarmonyCountToOwner(count);
+}
+
+
+
 //////////////////////////////
 //
 // MxmlEvent::getPartNumber --
@@ -974,6 +989,17 @@ void MxmlEvent::addNotations(stringstream& ss, xml_node notations) const {
 
 xml_node MxmlEvent::getNode(void) {
 	return m_node;
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::getHNode -- Return <harmony> element.
+//
+
+xml_node MxmlEvent::getHNode(void) {
+	return m_hnode;
 }
 
 

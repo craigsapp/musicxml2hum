@@ -28,6 +28,8 @@ GridStaff::GridStaff(void) : vector<GridVoice*>(0), GridSide() {
 	// do nothing;
 }
 
+
+
 //////////////////////////////
 //
 // GridStaff::~GridStaff -- Deconstructor.
@@ -100,10 +102,6 @@ void GridStaff::setNullTokenLayer(int layerindex, SliceType type,
 	}
 	HumdrumToken* token = new  HumdrumToken(nulltoken);
 	setTokenLayer(layerindex, token, nextdur);
-	
-	
-	
-
 
 }
 

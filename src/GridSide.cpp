@@ -53,10 +53,10 @@ GridSide::~GridSide(void) {
 	}
 	m_dynamics.resize(0);
 
-//	if (m_harmony) {
-//		delete m_harmony;
-//		m_harmony = NULL;
-//	}
+	if (m_harmony) {
+		delete m_harmony;
+		m_harmony = NULL;
+	}
 }
 
 
@@ -110,6 +110,57 @@ int GridSide::getVerseCount(void) {
  	return (int)m_verses.size();
 }
 
+
+
+//////////////////////////////
+//
+// GridSide::getHarmonyCount --
+//
+
+int GridSide::getHarmonyCount(void) { 
+	if (m_harmony == NULL) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+
+
+//////////////////////////////
+//
+// GridSide::setHarmony --
+//
+
+void GridSide::setHarmony(HTp token) { 
+	if (m_harmony) {
+		delete m_harmony;
+		m_harmony = NULL;
+	}
+	m_harmony = token;
+}
+
+
+
+///////////////////////////
+//
+// GridSide::detachHarmony --
+//
+
+void GridSide::detachHarmony(void) { 
+	m_harmony = NULL;
+}
+
+
+
+//////////////////////////////
+//
+// GridSide::getHarmony --
+//
+
+HTp GridSide::getHarmony(void) { 
+	return m_harmony;
+}
 
 
 } // end namespace hum

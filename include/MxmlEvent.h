@@ -95,10 +95,12 @@ class MxmlEvent {
 		string             getPrefixNoteInfo  (void) const;
 		string             getPostfixNoteInfo (void) const;
 		xml_node           getNode            (void);
+		xml_node           getHNode           (void);
 		void               addNotations       (stringstream& ss, 
 		                                       xml_node notations) const;
 		void               reportVerseCountToOwner (int count);
 		void               reportVerseCountToOwner (int staffnum, int count);
+		void               reportHarmonyCountToOwner (int count);
 
 	protected:
 		HumNum             m_starttime;  // start time in quarter notes of event
