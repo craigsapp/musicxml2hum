@@ -25,7 +25,6 @@ namespace hum {
 //
 
 GridSide::GridSide(void) {
-	cerr << "GRIDSIDE INITIALIZED " << this << endl;
 	m_harmony = NULL;
 }
 
