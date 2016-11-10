@@ -298,6 +298,12 @@ void MxmlEvent::setDurationByTicks(long value, xml_node el) {
 		setDuration(0);
 		return;
 	}
+
+	if (isGrace()) {
+		setDuration(0);
+		return;
+	}
+
 	HumNum val = value;
 	val /= ticks;
 
@@ -418,6 +424,32 @@ bool MxmlEvent::isChord(void) const {
 	} else {
 		return false;
 	}
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::isGrace -- Returns true if the event is the primary note
+//    in a chord.
+//
+
+bool MxmlEvent::isGrace(void) {
+	xml_node child = this->getNode();
+	if (!nodeType(child, "note")) {
+		return false;
+	}
+	child = child.first_child();
+	while (child) {
+		if (nodeType(child, "grace")) {
+			return true;
+		} else if (nodeType(child, "pitch")) {
+			// grace element has to come before pitch
+			return false;
+		}
+		child = child.first_child();
+	}
+	return false;
 }
 
 
@@ -679,8 +711,32 @@ string MxmlEvent::getRecip(void) const {
 	HumNum dur = m_duration;
 	dur /= 4;  // convert to whole-note units;
 	int n = getDotCount();
-	if (n) {
+	if (n > 0) {
 		dur = dur * (1 << n) / ((1 << (n+1)) - 1);
+	} else if (n < 0) {
+		// calculate a dot count and adjust duration as needed
+		if (dur.getNumerator() == 1) {
+			// do nothing since it won't need dots
+		} else {
+			// otherwise check to three augmentation dots
+			HumNum onedotdur = dur * (1 << 1) / ((1 << 2) - 1);
+			if (onedotdur.getNumerator() == 1) {
+				dur = onedotdur;
+				n = 1;
+			} else {
+				HumNum twodotdur = dur * (1 << 2) / ((1 << 3) - 1);
+				if (twodotdur.getNumerator() == 1) {
+					dur = twodotdur;
+					n = 2;
+				} else {
+					HumNum threedotdur = dur * (1 << 3) / ((1 << 4) - 1);
+					if (threedotdur.getNumerator() == 1) {
+						dur = threedotdur;
+						n = 3;
+					}
+				}
+			}
+		}
 	}
 	stringstream ss;
 	ss << dur.getDenominator();
@@ -1025,14 +1081,20 @@ void MxmlEvent::reportStaffNumberToOwner(int staffnum) {
 //////////////////////////////
 //
 //  MxmlEvent::getDotCount -- return the number of augmentation dots
-//     which are children of the given event element.
+//     which are children of the given event element.  Returns -1
+//     if the dot count should be calculated for a duration (such as whole
+//     measure rests).
 //
 
 int MxmlEvent::getDotCount(void) const {
 	xml_node child = m_node.first_child();
 	int output = 0;
+	bool foundType = false;
 	while (child) {
-		if (output && (strcmp(child.name(), "dot") != 0)) {
+		if (nodeType(child, "type")) {
+			foundType = true;
+		}
+		if (output && !nodeType(child, "dot")) {
 			return output;
 		}
 		if (strcmp(child.name(), "dot") == 0) {
@@ -1040,7 +1102,11 @@ int MxmlEvent::getDotCount(void) const {
 		}
 		child = child.next_sibling();
 	}
-	return output;
+	if (foundType) {
+		return output;
+	} else {
+		return -1;
+	}
 }
 
 

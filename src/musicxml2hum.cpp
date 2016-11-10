@@ -515,6 +515,12 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	string pitch   = event->getKernPitch();
 	string prefix  = event->getPrefixNoteInfo();
 	string postfix = event->getPostfixNoteInfo();
+	bool   grace   = event->isGrace();
+
+if (grace) {
+	cout << "NOTE IS GRACE" << endl;
+}
+
 	stringstream ss;
 	ss << prefix << recip << pitch << postfix;
 	if (invisible) {
@@ -612,7 +618,8 @@ string musicxml2hum_interface::getHarmonyString(xml_node hnode) {
 		ss << "/";
 	}
 	ss << bass;
-	return ss.str();
+	string output = cleanSpaces(ss.str());
+	return output;
 }
 
 
@@ -669,7 +676,16 @@ int musicxml2hum_interface::addLyrics(GridStaff* staff, MxmlEvent* event) {
 				if (nodeType(child, "syllabic")) {
 					syllabic = child.child_value();
 				} else if (nodeType(child, "text")) {
-					text = child.child_value();
+					text = cleanSpaces(child.child_value());
+				}
+				// escape text which would otherwise be reinterpreated
+				// as Humdrum syntax.
+				if (!text.empty()) {
+					if (text[0] == '!') {
+						text.insert(0, 1, '\\');
+					} else if (text[0] == '*') {
+						text.insert(0, 1, '\\');
+					}
 				}
 				child = child.next_sibling();
 			}
@@ -688,6 +704,10 @@ int musicxml2hum_interface::addLyrics(GridStaff* staff, MxmlEvent* event) {
 			}
 		}
 
+		if (finaltext.empty()) {
+			continue;
+		}
+
 		if (verses[i]) {
 			token = new HumdrumToken(finaltext);
 			staff->setVerse(i,token);
@@ -698,6 +718,49 @@ int musicxml2hum_interface::addLyrics(GridStaff* staff, MxmlEvent* event) {
 	}
 
 	return (int)staff->getVerseCount();
+}
+
+
+
+//////////////////////////////
+//
+// cleanSpaces -- remove trailing and leading spaces from text.
+//    Also removed doubled spaces, and converts tabs and newlines
+//    into spaces.
+//
+
+string musicxml2hum_interface::cleanSpaces(const string& input) {
+	int endi = (int)input.size() - 1;
+	while (endi >= 0) {
+		if (isspace(input[endi])) {
+			endi--;
+			continue;
+		}
+		break;
+	}
+	int starti = 0;
+	while (starti <= endi) {
+		if (isspace(input[starti])) {
+			starti++;
+			continue;
+		}
+		break;
+
+	}
+	string output;
+   for (int i=starti; i<=endi; i++) {
+		if (!isspace(input[i])) {
+			output += input[i];
+			continue;
+		}
+		output += " ";
+		i++;
+		while ((i < endi) && isspace(input[i])) {
+			i++;
+		}
+		i--;
+	}
+	return output;
 }
 
 

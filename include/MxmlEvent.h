@@ -75,6 +75,7 @@ class MxmlEvent {
 		void               link               (MxmlEvent* event);
 		bool               isLinked           (void) const;
 		bool               isRest             (void);
+		bool               isGrace            (void);
 		void               setLinked          (void);
 		vector<MxmlEvent*> getLinkedNotes     (void);
 		void               attachToLastEvent  (void);
