@@ -792,27 +792,31 @@ string MxmlEvent::getKernPitch(void) const {
 	int alter  = 0;
 	int octave = 4;
 
-	while (child) {
-		if (nodeType(child, "rest")) {
-			rest = true;
-			break;
-		}
-		if (nodeType(child, "pitch")) {
-			xml_node grandchild = child.first_child();
-			while (grandchild) {
-				if (nodeType(grandchild, "step")) {
-					step = grandchild.child_value();
-				} else if (nodeType(grandchild, "alter")) {
-					alter = atoi(grandchild.child_value());
-				} else if (nodeType(grandchild, "octave")) {
-					octave = atoi(grandchild.child_value());
-				}
-				grandchild = grandchild.next_sibling();
+	if (nodeType(m_node, "forward")) {
+		rest = true;
+	} else {
+		while (child) {
+			if (nodeType(child, "rest")) {
+				rest = true;
+				break;
 			}
+			if (nodeType(child, "pitch")) {
+				xml_node grandchild = child.first_child();
+				while (grandchild) {
+					if (nodeType(grandchild, "step")) {
+						step = grandchild.child_value();
+					} else if (nodeType(grandchild, "alter")) {
+						alter = atoi(grandchild.child_value());
+					} else if (nodeType(grandchild, "octave")) {
+						octave = atoi(grandchild.child_value());
+					}
+					grandchild = grandchild.next_sibling();
+				}
+			}
+			child = child.next_sibling();
 		}
-		child = child.next_sibling();
 	}
-
+	
 	if (rest) {
 		return "r";
 	}

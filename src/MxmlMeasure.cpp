@@ -467,9 +467,16 @@ void MxmlMeasure::sortEvents(void) {
 
 		// skip storing certain types of events:
 		switch (m_events[i]->getType()) {
-			case mevent_forward:
 			case mevent_backup:
 				continue;
+			case mevent_forward:
+            if (m_events[i]->getDuration() == this->getDuration()) {
+                 // forward elements are encoded as whole-measure rests
+                 // if they fill the duration of a measure
+            } else {
+               continue;
+            }
+            break;
 			default:
 				break;
 		}
