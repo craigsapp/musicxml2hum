@@ -669,8 +669,6 @@ string musicxml2hum_interface::getHarmonyString(xml_node hnode) {
 		}
 	}
 
-cerr << "HARMONY " << ss.str() << endl;
-
 	string output = cleanSpaces(ss.str());
 	return output;
 }

@@ -648,6 +648,8 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		m_eventtype = mevent_link;
 	} else if (nodeType(m_node, "note")) {
 		m_eventtype = mevent_note;
+		m_staff = 1;
+		m_voice = 1;
 	} else if (nodeType(m_node, "print")) {
 		m_eventtype = mevent_print;
 	} else if (nodeType(m_node, "sound")) {
@@ -656,8 +658,8 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		m_eventtype = mevent_unknown;
 	}
 
-	int tempvoice    = 0;
-	int tempstaff    = 0;
+	int tempvoice    = m_voice;
+	int tempstaff    = m_staff;
 	int tempduration = 0;
 
 	for (auto el = m_node.first_child(); el; el = el.next_sibling()) {
