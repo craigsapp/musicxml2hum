@@ -512,13 +512,54 @@ int MxmlEvent::getVoiceNumber(void) const {
 //
 // MxmlEvent::getVoiceIndex -- Return the voice number of the event.
 //    But mod 4 which presumably sets the voice number on a staff.
+//    This is not always true: "PrintMusic 2010 for Windows" may
+//    use voice 2 for staff 2. In this case the voice index should
+//    be calculated by %2 rather than %4.
+//    default value: maxvoice = 4.
+//
+//    This function will replace with a query to MxmlPart
+//    as to what the voice on a staff should be.
 //
 
-int MxmlEvent::getVoiceIndex(void) const {
+int MxmlEvent::getVoiceIndex(int maxvoice) const {
+	if (m_owner) {
+		int voiceindex = m_owner->getVoiceIndex(m_voice);
+		if (voiceindex >= 0) {
+			return voiceindex;
+		}
+	}
+
+	// don't know what the voice mapping is, so make one up:
+	if (maxvoice < 1) {
+		maxvoice = 4;
+	}
 	if (m_voice) {
-		return (m_voice - 1) % 4;
+		return (m_voice - 1) % maxvoice;
 	} else {
 		return 0;
+	}
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::getStaffIndex -- 
+//
+
+int MxmlEvent::getStaffIndex(void) const {
+	if (m_owner) {
+		int staffindex = m_owner->getStaffIndex(m_voice);
+		if (staffindex >= 0) {
+			return staffindex;
+		}
+	}
+
+	// don't know what the modified staff is, so give the original staff index:
+	if (!m_staff) {
+		return 0;
+	} else {
+		return m_staff - 1;
 	}
 }
 
@@ -556,21 +597,6 @@ int MxmlEvent::getStaffNumber(void) const {
 		return 1;
 	} else {
 		return m_staff;
-	}
-}
-
-
-
-//////////////////////////////
-//
-// MxmlEvent::getStaffIndex -- 
-//
-
-int MxmlEvent::getStaffIndex(void) const {
-	if (!m_staff) {
-		return 0;
-	} else {
-		return m_staff - 1;
 	}
 }
 
@@ -646,7 +672,7 @@ bool MxmlEvent::parseEvent(xml_node el) {
 
 	m_voice = (short)tempvoice;
 	m_staff = (short)tempstaff;
-   reportStaffNumberToOwner(m_staff);
+   reportStaffNumberToOwner(m_staff, m_voice);
 
 	switch (m_eventtype) {
 		case mevent_note:
@@ -1070,9 +1096,9 @@ xml_node MxmlEvent::getHNode(void) {
 // MxmlEvent::reportStaffNumberToOwner --
 //
 
-void MxmlEvent::reportStaffNumberToOwner(int staffnum) {
+void MxmlEvent::reportStaffNumberToOwner(int staffnum, int voicenum) {
 	if (m_owner != NULL) {
-		m_owner->receiveStaffNumberFromChild(staffnum);
+		m_owner->receiveStaffNumberFromChild(staffnum, voicenum);
 	}
 }
 

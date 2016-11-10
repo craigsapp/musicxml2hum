@@ -399,6 +399,37 @@ MxmlMeasure* MxmlMeasure::getNextMeasure(void) const {
 }
 
 
+
+//////////////////////////////
+//
+// MxmlMeasure::getVoiceIndex --
+//
+
+int MxmlMeasure::getVoiceIndex(int voicenum) {
+   if (m_owner) {
+      return m_owner->getVoiceIndex(voicenum);
+   } else {
+      return -1;
+   }
+}
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::getStaffIndex --
+//
+
+int MxmlMeasure::getStaffIndex(int voicenum) {
+   if (m_owner) {
+      return m_owner->getStaffIndex(voicenum);
+   } else {
+      return -1;
+   }
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////
 //
 // private functions --
@@ -503,8 +534,8 @@ void MxmlMeasure::sortEvents(void) {
 //    the part.
 //
 
-void MxmlMeasure::receiveStaffNumberFromChild(int staffnum) {
-	reportStaffNumberToOwner(staffnum);
+void MxmlMeasure::receiveStaffNumberFromChild(int staffnum, int voicenum) {
+	reportStaffNumberToOwner(staffnum, voicenum);
 }
 
 
@@ -517,9 +548,9 @@ void MxmlMeasure::receiveStaffNumberFromChild(int staffnum) {
 //    the part.
 //
 
-void MxmlMeasure::reportStaffNumberToOwner(int staffnum) {
+void MxmlMeasure::reportStaffNumberToOwner(int staffnum, int voicenum) {
 	if (m_owner != NULL) {
-		m_owner->receiveStaffNumberFromChild(staffnum);
+		m_owner->receiveStaffNumberFromChild(staffnum, voicenum);
 	}
 }
 

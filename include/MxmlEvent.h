@@ -83,10 +83,10 @@ class MxmlEvent {
 		void               printEvent         (void) const;
 		int                getSequenceNumber  (void) const;
 		int                getVoiceNumber     (void) const;
-		int                getVoiceIndex      (void) const;
 		void               setVoiceNumber     (int value);
 		int                getStaffNumber     (void) const;
 		int                getStaffIndex      (void) const;
+		int                getVoiceIndex      (int maxvoice = 4) const;
 		void               setStaffNumber     (int value);
 		measure_event_type getType            (void) const;
 		int                getPartNumber      (void) const;
@@ -119,7 +119,7 @@ class MxmlEvent {
 		xml_node           m_hnode;      // harmony label starting at note event
 
 	private:
-   	void   reportStaffNumberToOwner  (int staffnum);
+   	void   reportStaffNumberToOwner  (int staffnum, int voicenum);
 		int    getDotCount               (void) const;
 
 	public:

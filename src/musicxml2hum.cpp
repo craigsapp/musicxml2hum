@@ -91,6 +91,12 @@ bool musicxml2hum_interface::convert(ostream& out, xml_document& doc) {
 	// for debugging:
 	// printPartInfo(partids, partinfo, partcontent, partdata);
 
+	// check the voice info
+	for (int i=0; i<(int)partdata.size(); i++) {
+		partdata[i].prepareVoiceMapping();
+		partdata[i].printStaffVoiceInfo();
+	}
+
 	HumGrid outdata;
 	status &= stitchParts(outdata, partids, partinfo, partcontent, partdata);
 
@@ -518,7 +524,7 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	bool   grace   = event->isGrace();
 
 if (grace) {
-	cout << "NOTE IS GRACE" << endl;
+	cerr << "!! NOTE IS GRACE" << endl;
 }
 
 	stringstream ss;
@@ -1108,12 +1114,12 @@ xml_node musicxml2hum_interface::convertKeySigToHumdrum(xml_node keysig,
 	} else if (fifths < 0) {
 		switch (fifths) {
 			case 7: ss << "f-";
-			case 6: ss << "g#";
-			case 5: ss << "c#";
-			case 4: ss << "d#";
-			case 3: ss << "a#";
-			case 2: ss << "e#";
-			case 1: ss << "b#";
+			case 6: ss << "g-";
+			case 5: ss << "c-";
+			case 4: ss << "d-";
+			case 3: ss << "a-";
+			case 2: ss << "e-";
+			case 1: ss << "b-";
 		}
 	}
 	ss << "]";
