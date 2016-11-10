@@ -439,9 +439,10 @@ void MxmlPart::prepareVoiceMapping(void) {
 	// a staff without any voices will probably cause problems,
 	// so maybe check for such a case. 0th position in sv is
 	// not used, so maxvoicenum is an index for sv.
+
 	for (i=1; i<(int)sv.size(); i++) {
-		if ((int)sv.size() - 1 > maxvoicenum) {
-			maxvoicenum = (int)sv.size() - 1;
+		if ((int)sv[i].size() - 1 > maxvoicenum) {
+			maxvoicenum = sv[i].size() - 1;
 		}
 	}
 
@@ -453,6 +454,7 @@ void MxmlPart::prepareVoiceMapping(void) {
 	int homestaffnum;
 	int homevoicenum;
 	int newvoiceindex;
+	int count;
 	int maxcount;
 
 	// for each voice number in the MusicXML data, assign
@@ -464,8 +466,9 @@ void MxmlPart::prepareVoiceMapping(void) {
 			if (j >= (int)sv[i].size()) {
 				continue;
 			}
-			if (maxcount < sv[i][j]) {
-				maxcount = sv[i][j];
+			count = sv[i][j];
+			if ((count > 0) && (maxcount < count)) {
+				maxcount = count;
 				homestaffnum = i;
 				homevoicenum = j;
 			}
@@ -550,18 +553,17 @@ int MxmlPart::getStaffIndex(int voicenum) {
 void MxmlPart::printStaffVoiceInfo(void) {
 	vector<vector<int> >& sv = m_staffvoicehist;
 	int i, j;
-	cout << "\nSTAFF-VOICE MAPPING:\n";
+	cout << "\n!!STAFF-VOICE MAPPING:\n";
 	for (i=0; i<(int)sv.size(); i++) {
-		cout << "\tSTAFF " << i << ":";
+		cout << "!!\tSTAFF " << i << ":";
 		for (j=0; j<(int)sv[i].size(); j++) {
 			cout << "\t" << sv[i][j];
 		}
 		cout << endl;
 	}
-	cout << "REMAPPING:\n";
-   cout << "voice mapping size : " << m_voicemapping.size() << endl;
+	cout << "!!REMAPPING:\n";
 	for (i=1; i<(int)m_voicemapping.size(); i++) {
-		cout << "\tvoicenum " << i << ":\t(";
+		cout << "!!\tvoicenum " << i << ":\t(";
 		cout << m_voicemapping[i].first << ", ";
 		cout << m_voicemapping[i].second << ")\n";
 	}
