@@ -94,7 +94,7 @@ bool musicxml2hum_interface::convert(ostream& out, xml_document& doc) {
 	// check the voice info
 	for (int i=0; i<(int)partdata.size(); i++) {
 		partdata[i].prepareVoiceMapping();
-		partdata[i].printStaffVoiceInfo();
+		// partdata[i].printStaffVoiceInfo();
 	}
 
 	HumGrid outdata;
