@@ -16,6 +16,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <algorithm>
+
 using namespace std;
 using namespace pugi;
 
@@ -602,20 +604,52 @@ string musicxml2hum_interface::getHarmonyString(xml_node hnode) {
 	string root;
 	string kind;
 	string bass;
+	int rootalter = 0;
+	int bassalter = 0;
+	xml_node grandchild;
 	while (child) {
 		if (nodeType(child, "root")) {
-			// presuming root-step is first child:
-			root = child.first_child().child_value();
+			grandchild = child.first_child();
+			while (grandchild) {
+				if (nodeType(grandchild, "root-step")) {
+					root = grandchild.child_value();
+				} if (nodeType(grandchild, "root-alter")) {
+					rootalter = atoi(grandchild.child_value());
+				}
+				grandchild = grandchild.next_sibling();
+			}
 		} else if (nodeType(child, "kind")) {
 			kind = child.child_value();
+			if (kind == "") {
+				kind = child.attribute("text").value();
+				transform(kind.begin(), kind.end(), kind.begin(), ::tolower);
+			}
 		} else if (nodeType(child, "bass")) {
-			// presuming bass-step is first child:
-			bass = child.first_child().child_value();
+			grandchild = child.first_child();
+			while (grandchild) {
+				if (nodeType(grandchild, "bass-step")) {
+					bass = grandchild.child_value();
+				} if (nodeType(grandchild, "bass-alter")) {
+					bassalter = atoi(grandchild.child_value());
+				}
+				grandchild = grandchild.next_sibling();
+			}
 		}
 		child = child.next_sibling();
 	}
 	stringstream ss;
 	ss << root;
+
+	if (rootalter > 0) {
+		for (int i=0; i<rootalter; i++) {
+			ss << "#";
+		}
+	} else if (rootalter < 0) {
+		for (int i=0; i<-rootalter; i++) {
+			ss << "-";
+		}
+	}
+
 	if (root.size() && kind.size()) {
 		ss << " ";
 	}
@@ -624,6 +658,19 @@ string musicxml2hum_interface::getHarmonyString(xml_node hnode) {
 		ss << "/";
 	}
 	ss << bass;
+
+	if (bassalter > 0) {
+		for (int i=0; i<bassalter; i++) {
+			ss << "#";
+		}
+	} else if (bassalter < 0) {
+		for (int i=0; i<-bassalter; i++) {
+			ss << "-";
+		}
+	}
+
+cerr << "HARMONY " << ss.str() << endl;
+
 	string output = cleanSpaces(ss.str());
 	return output;
 }
