@@ -696,6 +696,8 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		m_eventtype = mevent_figured_bass;
 	} else if (nodeType(m_node, "forward")) {
 		m_eventtype = mevent_forward;
+		m_staff = 1; // set default staff if not supplied
+		m_voice = 1; // set default staff if not supplied
 	} else if (nodeType(m_node, "grouping")) {
 		m_eventtype = mevent_grouping;
 	} else if (nodeType(m_node, "harmony")) {
