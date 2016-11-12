@@ -292,8 +292,6 @@ bool musicxml2hum_interface::stitchParts(HumGrid& outdata,
 		partstaves[i] = partdata[i].getStaffCount();
 	}
 
-	// vector<HumdrumLine*> measures;
-
 	bool status = true;
 	int m;
 	for (m=0; m<partdata[0].getMeasureCount(); m++) {
@@ -302,10 +300,6 @@ bool musicxml2hum_interface::stitchParts(HumGrid& outdata,
 		// insertSingleMeasure(outfile);
 		// measures.push_back(&outfile[outfile.getLineCount()-1]);
 	}
-
-// Do this later, maybe in another class:
-//	insertAllToken(outfile, partdata, "*-");
-//	cleanupMeasures(outfile, measures);
 
 	return status;
 }
@@ -396,8 +390,10 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 	vector<MxmlMeasure*> measuredata;
 	vector<vector<SimultaneousEvents>* > sevents;
 	int i;
+
 	for (i=0; i<(int)partdata.size(); i++) {
 		measuredata.push_back(partdata[i].getMeasure(mnum));
+		checkForDummyRests(partdata[i].getMeasure(mnum));
 		sevents.push_back(measuredata.back()->getSortedEvents());
 	}
 
@@ -462,6 +458,56 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 	}
 
 	return status;
+}
+
+
+
+//////////////////////////////
+//
+// musicxml2hum_interface::checkForDummyRests --
+//
+
+void musicxml2hum_interface::checkForDummyRests(MxmlMeasure* measure) {
+	vector<MxmlEvent*>& events = measure->getEventList();
+	vector<int> itemcounts;
+	
+	for (int i=0; i<(int)events.size(); i++) {
+     	int voicenum  = events[i]->getVoiceNumber();
+     	int voiceindex = events[i]->getVoiceIndex(voicenum);
+		if (voiceindex < 0) {
+			// not a note, so ignore in counts
+			continue;
+		}
+		
+		if (voiceindex >= (int)itemcounts.size()) {
+			int oldsize = (int)itemcounts.size();
+			int newsize = voiceindex + 1;
+			itemcounts.resize(newsize);
+			for (int j=oldsize; j<newsize; j++) {
+					  itemcounts[j] = 0;
+			}
+		}
+		itemcounts[voiceindex]++;
+  	}
+
+	int voiceindex = -1;
+	bool dummy = false;
+	for (int i=0; i<(int)itemcounts.size(); i++) {
+		if (itemcounts[i]) {
+			continue;
+		}
+		voiceindex++;
+		HumNum mdur = measure->getDuration();
+		HumNum starttime = measure->getStartTime();
+      measure->addDummyRest(starttime, mdur, voiceindex);
+		measure->forceLastInvisible();
+		dummy = true;
+	}
+
+	if (dummy) {
+		measure->sortEvents();
+	}
+
 }
 
 
@@ -537,6 +583,9 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	int staffindex; // which staff the event occurs in (need to fix)
 	int voiceindex; // which voice the event occurs in (use for staff)
 	bool invisible = isInvisible(event);
+	if (event->isInvisible()) {
+		invisible = true;
+	}
 
 	partindex  = event->getPartIndex();
 	staffindex = event->getStaffIndex();

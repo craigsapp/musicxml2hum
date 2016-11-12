@@ -127,6 +127,7 @@ class musicxml2hum_interface {
 		int  addHarmony        (GridPart* oart, MxmlEvent* event);
 		string getHarmonyString(xml_node hnode);
 		string cleanSpaces     (const string& input);
+		void checkForDummyRests(MxmlMeasure* measure);
 
 	public:
 

@@ -103,8 +103,13 @@ class MxmlEvent {
 		void               reportVerseCountToOwner (int count);
 		void               reportVerseCountToOwner (int staffnum, int count);
 		void               reportHarmonyCountToOwner (int count);
-      void               makeDummyRest      (MxmlMeasure* owner, HumNum startime,
-		                                       HumNum duration);
+      void               makeDummyRest      (MxmlMeasure* owner, 
+		                                       HumNum startime,
+		                                       HumNum duration,
+		                                       int voiceindex = 0);
+		void               setVoiceIndex      (int voiceindex);
+		void               forceInvisible     (void);
+		bool               isInvisible        (void);
 
 	protected:
 		HumNum             m_starttime;  // start time in quarter notes of event
@@ -118,8 +123,10 @@ class MxmlEvent {
 		static int         m_counter;    // counter for sequence variable
 		short              m_staff;      // staff number in part for event
 		short              m_voice;      // voice number in part for event
+		int                m_voiceindex; // voice index of item (remapping)
       int                m_maxstaff;   // maximum staff number for measure
 		xml_node           m_hnode;      // harmony label starting at note event
+		bool               m_invisible;  // for forceInvisible();
 
 	private:
    	void   reportStaffNumberToOwner  (int staffnum, int voicenum);

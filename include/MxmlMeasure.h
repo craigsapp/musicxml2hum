@@ -77,9 +77,13 @@ class MxmlMeasure {
 		void          setTimeSignatureDuration(HumNum duration);
 		HumNum        getTimeSignatureDuration(void);
 		void          addDummyRest       (void);
+		void          addDummyRest       (HumNum starttime,
+		                                  HumNum duration, int vindex);
+		vector<MxmlEvent*>& getEventList (void);
+		void  sortEvents                 (void);
+		void  forceLastInvisible         (void);
 
 	private:
-		void  sortEvents                  (void);
 		void  receiveStaffNumberFromChild (int staffnum, int voicenum);
 		void  receiveTimeSigDurFromChild  (HumNum duration);
    	void  reportStaffNumberToOwner    (int staffnum, int voicenum);

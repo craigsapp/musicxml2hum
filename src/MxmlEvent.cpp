@@ -75,6 +75,7 @@ void MxmlEvent::clear(void) {
 	m_owner = NULL;
 	m_linked = false;
 	m_voice = m_staff = 0;
+	m_voiceindex = -1;
 	m_sequence = -1;
 	for (int i=0; i<(int)m_links.size(); i++) {
 		delete m_links[i];
@@ -90,7 +91,8 @@ void MxmlEvent::clear(void) {
 // MxmlEvent::makeDummyRest --
 //
 
-void MxmlEvent::makeDummyRest(MxmlMeasure* owner, HumNum starttime, HumNum duration) {
+void MxmlEvent::makeDummyRest(MxmlMeasure* owner, HumNum starttime,
+		HumNum duration, int voiceindex) {
 	m_starttime = starttime;
 	m_duration = duration;
 	m_eventtype = mevent_forward;
@@ -100,7 +102,8 @@ void MxmlEvent::makeDummyRest(MxmlMeasure* owner, HumNum starttime, HumNum durat
 	m_sequence = -m_counter;
 	m_counter++;
 	m_voice = 1;
-	m_staff = 1;  // need to add multiple events, one for each staff in the part.
+	m_voiceindex = voiceindex;
+	m_staff = 1;  // need to add multiple events, one for each staff in part.
 	m_maxstaff = 1;
 	//	m_hnode remains null
 }
@@ -566,10 +569,35 @@ int MxmlEvent::getVoiceIndex(int maxvoice) const {
 
 //////////////////////////////
 //
+// MxmlEvent::forceInvisible --
+//
+
+void MxmlEvent::forceInvisible(void) {
+	m_invisible = true;
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::isInvisible --
+//
+
+bool MxmlEvent::isInvisible(void) {
+	return m_invisible;
+}
+
+
+
+//////////////////////////////
+//
 // MxmlEvent::getStaffIndex -- 
 //
 
 int MxmlEvent::getStaffIndex(void) const {
+	if (m_voiceindex >= 0) {
+		return m_voiceindex;
+	}
 	if (m_owner) {
 		int staffindex = m_owner->getStaffIndex(m_voice);
 		if (staffindex >= 0) {

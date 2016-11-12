@@ -118,6 +118,14 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
 		addDummyRest();
    }
 
+   // Neeed to check for empty voice/layers occuring lower in the
+   // voice index list than layers which contain notes.  For example
+   // if voice/layer 2 contains notes, but voice/layer 1 does not, then
+   // a dummy full-measure rest should fill voice/layer 1.  The voice
+   // layer 1 should be filled with the duration of the measure accoridng
+   // to the other voice/layers in the measure.  This is done later
+   // after a voice analysis has been done in 
+   // musicxml2hum_interface::insertMeasure().
 
 	sortEvents();
 
@@ -128,16 +136,48 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
 
 //////////////////////////////
 //
+// MxmlMeasure::forceLastInvisible --
+//
+
+void MxmlMeasure::forceLastInvisible(void) {
+   if (!m_events.empty()) {
+      m_events.back()->forceInvisible();
+   }
+}
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::getEventList --
+//
+
+vector<MxmlEvent*>& MxmlMeasure::getEventList(void) {
+   return m_events;
+}
+
+
+
+//////////////////////////////
+//
 // MxmlMeasure::addDummyRest --
 //
 
 void MxmlMeasure::addDummyRest(void) {
-      HumNum measuredur = getTimeSignatureDuration();
-      HumNum starttime = getStartTime();
-		MxmlEvent* event = new MxmlEvent(this);
-		m_events.push_back(event);
-      MxmlMeasure* measure = this;
-      event->makeDummyRest(measure, starttime, measuredur);
+   HumNum measuredur = getTimeSignatureDuration();
+   HumNum starttime = getStartTime();
+   MxmlEvent* event = new MxmlEvent(this);
+   m_events.push_back(event);
+   MxmlMeasure* measure = this;
+   event->makeDummyRest(measure, starttime, measuredur);
+}
+
+
+void MxmlMeasure::addDummyRest(HumNum starttime, HumNum duration, int vindex) {
+	MxmlEvent* event = new MxmlEvent(this);
+	m_events.push_back(event);
+   MxmlMeasure* measure = this;
+   event->makeDummyRest(measure, starttime, duration, vindex);
 }
 
 
