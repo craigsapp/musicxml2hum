@@ -74,7 +74,9 @@ void MxmlEvent::clear(void) {
 	m_eventtype = mevent_unknown;
 	m_owner = NULL;
 	m_linked = false;
-	m_voice = m_staff = 0;
+	m_voice = -1;
+	m_staff = 0;
+	m_invisible = false;
 	m_voiceindex = -1;
 	m_sequence = -1;
 	for (int i=0; i<(int)m_links.size(); i++) {
@@ -547,6 +549,10 @@ int MxmlEvent::getVoiceNumber(void) const {
 //
 
 int MxmlEvent::getVoiceIndex(int maxvoice) const {
+	if (m_voiceindex >= 0) {
+		return m_voiceindex;
+	}
+
 	if (m_owner) {
 		int voiceindex = m_owner->getVoiceIndex(m_voice);
 		if (voiceindex >= 0) {
@@ -698,8 +704,8 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		m_eventtype = mevent_link;
 	} else if (nodeType(m_node, "note")) {
 		m_eventtype = mevent_note;
-		m_staff = 1;
-		m_voice = 1;
+		m_staff = 1; // set default staff if not supplied
+		m_voice = 1; // set default staff if not supplied
 	} else if (nodeType(m_node, "print")) {
 		m_eventtype = mevent_print;
 	} else if (nodeType(m_node, "sound")) {

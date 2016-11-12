@@ -474,8 +474,8 @@ void musicxml2hum_interface::checkForDummyRests(MxmlMeasure* measure) {
 	for (int i=0; i<(int)events.size(); i++) {
      	int voicenum  = events[i]->getVoiceNumber();
      	int voiceindex = events[i]->getVoiceIndex(voicenum);
+
 		if (voiceindex < 0) {
-			// not a note, so ignore in counts
 			continue;
 		}
 		

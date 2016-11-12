@@ -211,9 +211,12 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 				line->appendToken(token);
 			} else {
 				for (v=0; v<(int)staff.size(); v++) {
-					if (staff.at(v)->getToken()) {
+					if (staff.at(v) && staff.at(v)->getToken()) {
 						line->appendToken(staff.at(v)->getToken());
 						staff.at(v)->forgetToken();
+					} else if (!staff.at(v)) {
+						token = new HumdrumToken(".z");
+						line->appendToken(token);
 					} else {
 						token = new HumdrumToken(".b");
 						line->appendToken(token);
