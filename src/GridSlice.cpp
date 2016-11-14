@@ -207,7 +207,7 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 				// fix this later.  For now if there are no notes
 				// on the staff, add a null token.  Fix so that 
 				// all open voices are given null tokens.
-				token = new HumdrumToken(".a");
+				token = new HumdrumToken(".j");
 				line->appendToken(token);
 			} else {
 				for (v=0; v<(int)staff.size(); v++) {

@@ -890,7 +890,7 @@ string MxmlEvent::getRecip(void) const {
 // MxmlEvent::getKernPitch -- return **kern pitch of note/rest.
 //
 
-string MxmlEvent::getKernPitch(void) const {
+string MxmlEvent::getKernPitch(void) {
 	bool rest = false;
 	
 	if (!m_node) {
@@ -907,6 +907,7 @@ string MxmlEvent::getKernPitch(void) const {
 
 	if (nodeType(m_node, "forward")) {
 		rest = true;
+		forceInvisible();
 	} else {
 		while (child) {
 			if (nodeType(child, "rest")) {
@@ -1190,6 +1191,22 @@ void MxmlEvent::addNotations(stringstream& ss, xml_node notations) const {
 
 xml_node MxmlEvent::getNode(void) {
 	return m_node;
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::getElementName --
+//
+
+string MxmlEvent::getElementName(void) {
+	if (m_node) {
+		string name = m_node.name();
+		return name;
+	} else {
+		return "NULL";
+	}
 }
 
 

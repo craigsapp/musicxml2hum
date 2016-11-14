@@ -108,7 +108,6 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
       needdummy = true;
    } 
 
-
    if (needdummy || getEventCount() == 0) {
       // if the duration of the measure is zero, then set the duration
       // of the measure to the duration of the time signature
@@ -550,7 +549,8 @@ void MxmlMeasure::sortEvents(void) {
                  // forward elements are encoded as whole-measure rests
                  // if they fill the duration of a measure
             } else {
-               continue;
+               // Also should probably not skip non-full-measure forwards..
+               // continue;
             }
             break;
 			default:

@@ -121,7 +121,7 @@ class musicxml2hum_interface {
 
 		void addEvent          (GridSlice& slice, MxmlEvent* event);
 		void fillEmpties       (GridPart* part, const char* string);
-		void addChordNotes     (ostream& output, MxmlEvent* head, const string& recip);
+		void addSecondaryChordNotes (ostream& output, MxmlEvent* head, const string& recip);
 		bool isInvisible       (MxmlEvent* event);
 		int  addLyrics         (GridStaff* staff, MxmlEvent* event);
 		int  addHarmony        (GridPart* oart, MxmlEvent* event);
@@ -135,6 +135,8 @@ class musicxml2hum_interface {
 
 	private:
 		Options m_options;
+		bool DebugQ;
+		bool VoiceDebugQ;
 
 };
 

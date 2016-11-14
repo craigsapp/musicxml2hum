@@ -32,6 +32,8 @@ namespace hum {
 musicxml2hum_interface::musicxml2hum_interface(void){
 	// Options& options = m_options;
 	// options.define("k|kern=b","display corresponding **kern data");
+	VoiceDebugQ = false;
+	DebugQ = false;
 }
 
 
@@ -91,12 +93,15 @@ bool musicxml2hum_interface::convert(ostream& out, xml_document& doc) {
 	fillPartData(partdata, partids, partinfo, partcontent);
 
 	// for debugging:
-	// printPartInfo(partids, partinfo, partcontent, partdata);
+	//printPartInfo(partids, partinfo, partcontent, partdata);
 
 	// check the voice info
 	for (int i=0; i<(int)partdata.size(); i++) {
 		partdata[i].prepareVoiceMapping();
-		// partdata[i].printStaffVoiceInfo();
+		// for debugging:
+		if (DebugQ) {
+			partdata[i].printStaffVoiceInfo();
+		}
 	}
 
 	HumGrid outdata;
@@ -203,9 +208,10 @@ bool musicxml2hum_interface::fillPartData(MxmlPart& partdata,
 		partdata.addMeasure(measures[i].node());
 		count = partdata.getMeasureCount();
 		if (count > 1) {
-			HumNum dur = partdata.getMeasure(count - 1)->getTimeSignatureDuration();
+			HumNum dur = partdata.getMeasure(count-1)->getTimeSignatureDuration();
 			if (dur == 0) {
-				HumNum dur = partdata.getMeasure(count - 2)->getTimeSignatureDuration();
+				HumNum dur = partdata.getMeasure(count-2)
+						->getTimeSignatureDuration();
 				if (dur > 0) {
 					partdata.getMeasure(count - 1)->setTimeSignatureDuration(dur);
 				}
@@ -281,7 +287,7 @@ bool musicxml2hum_interface::stitchParts(HumGrid& outdata,
 	for (i=0; i<(int)partdata.size(); i++) {
 		if (measurecount != partdata[i].getMeasureCount()) {
 			cerr << "ERROR: cannot handle parts with different measure\n";
-			cerr << "counts yet. Compare " << measurecount << " to ";
+			cerr << "counts yet. Compare MM" << measurecount << " to MM";
 			cerr << partdata[i].getMeasureCount() << endl;
 			exit(1);
 		}
@@ -408,6 +414,18 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 			tsdur = measuredata[i-1]->getTimeSignatureDuration();
 			measuredata[i]->setTimeSignatureDuration(tsdur);
 		}
+		if (VoiceDebugQ) {
+			vector<MxmlEvent*>& events = measuredata[i]->getEventList();
+			for (int j=0; j<(int)events.size(); j++) {
+				cerr << "!!ELEMENT: " << events[j]->getElementName();
+				cerr << "\tSTi: " << events[j]->getStaffIndex();
+				cerr << "\tVi: " << events[j]->getVoiceIndex();
+				cerr << "\tTS: " << events[j]->getStartTime();
+				cerr << "\tDUR: " << events[j]->getDuration();
+				cerr << "\tPITCH: " << events[j]->getKernPitch();
+				cerr << endl;
+			}
+		}
 		if (!(*sevents[i]).empty()) {
 			curtime[i] = (*sevents[i])[curindex[i]].starttime;
 		} else {
@@ -436,7 +454,8 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 			}
 
 			if ((*sevents[i])[curindex[i]].starttime == processtime) {
-				nowevents.push_back(&(*sevents[i])[curindex[i]]);
+				auto thing = &(*sevents[i])[curindex[i]];
+				nowevents.push_back(thing);
 				nowparts.push_back(i);
 				curindex[i]++;
 			}
@@ -450,11 +469,7 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 			}
 		}
 		status &= convertNowEvents(*outdata.back(),
-		                         nowevents,
-		                         nowparts,
-		                         processtime,
-		                         partdata,
-		                         partstaves);
+				nowevents, nowparts, processtime, partdata, partstaves);
 	}
 
 	return status;
@@ -530,6 +545,17 @@ bool musicxml2hum_interface::convertNowEvents(
 		return true;
 	}
 
+	if (0 && VoiceDebugQ) {
+		for (int j=0; j<(int)nowevents.size(); j++) {
+			vector<MxmlEvent*> nz = nowevents[j]->nonzerodur;
+			for (int i=0; i<(int)nz.size(); i++) {
+				cerr << "NOWEVENT NZ NAME: " << nz[i]->getElementName() 
+				     << "<\t" << nz[i]->getKernPitch() << endl;
+			}
+		}
+	}
+	
+
 	appendZeroEvents(outdata, nowevents, nowtime, partdata);
 
 	if (nowevents[0]->nonzerodur.size() == 0) {
@@ -582,10 +608,6 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	int partindex;  // which part the event occurs in
 	int staffindex; // which staff the event occurs in (need to fix)
 	int voiceindex; // which voice the event occurs in (use for staff)
-	bool invisible = isInvisible(event);
-	if (event->isInvisible()) {
-		invisible = true;
-	}
 
 	partindex  = event->getPartIndex();
 	staffindex = event->getStaffIndex();
@@ -597,9 +619,14 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	string postfix = event->getPostfixNoteInfo();
 	bool   grace   = event->isGrace();
 
-if (grace) {
-	cerr << "!! NOTE IS GRACE" << endl;
-}
+	bool invisible = isInvisible(event);
+	if (event->isInvisible()) {
+		invisible = true;
+	}
+
+	if (grace) {
+		cerr << "!! NOTE IS GRACE" << endl;
+	}
 
 	stringstream ss;
 	ss << prefix << recip << pitch << postfix;
@@ -608,20 +635,35 @@ if (grace) {
 	}
 
 	// check for chord notes.
+	HTp token;
 	if (event->isChord()) {
-		addChordNotes(ss, event, recip);
+		addSecondaryChordNotes(ss, event, recip);
+		token = new HumdrumToken(ss.str());
+		slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
+			event->getDuration());
+	} else {
+		token = new HumdrumToken(ss.str());
+		slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
+			event->getDuration());
 	}
 
-	HTp token = new HumdrumToken(ss.str());
-	slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
-		event->getDuration());
+	if (DebugQ) {
+		cerr << "!!TOKEN: " << ss.str();
+		cerr << "\tTS: "    << event->getStartTime();
+		cerr << "\tDUR: "   << event->getDuration();
+		cerr << "  \tSTi: "   << event->getStaffNumber();
+		cerr << "\tVn: "    << event->getVoiceNumber();
+		cerr << "\tSTi: "   << event->getStaffIndex();
+		cerr << "\tVi: "    << event->getVoiceIndex();
+		cerr << "\teNAME: " << event->getElementName();
+		cerr << endl;
+	}
 
 	int vcount = addLyrics(slice.at(partindex)->at(staffindex), event);
 	if (vcount > 0) {
 		event->reportVerseCountToOwner(staffindex, vcount);
 	}
 
-// ggg
 	int hcount = addHarmony(slice.at(partindex), event);
 	if (hcount > 0) {
 		event->reportHarmonyCountToOwner(hcount);
@@ -909,10 +951,10 @@ bool musicxml2hum_interface::isInvisible(MxmlEvent* event) {
 
 //////////////////////////////
 //
-// musicxml2hum_interface::addChordNotes --
+// musicxml2hum_interface::addSecondaryChordNotes --
 //
 
-void musicxml2hum_interface::addChordNotes(ostream& output, MxmlEvent* head, 
+void musicxml2hum_interface::addSecondaryChordNotes(ostream& output, MxmlEvent* head, 
 		const string& recip) {
 	vector<MxmlEvent*> links = head->getLinkedNotes();
 	MxmlEvent* note;

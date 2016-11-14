@@ -92,12 +92,13 @@ class MxmlEvent {
 		int                getPartNumber      (void) const;
 		int                getPartIndex       (void) const;
 		string             getRecip           (void) const;
-		string             getKernPitch       (void) const;
+		string             getKernPitch       (void);
 		string             getPrefixNoteInfo  (void) const;
 		string             getPostfixNoteInfo (void) const;
 		xml_node           getNode            (void);
 		xml_node           getHNode           (void);
 		HumNum             getTimeSigDur      (void);
+		string             getElementName     (void);
 		void               addNotations       (stringstream& ss, 
 		                                       xml_node notations) const;
 		void               reportVerseCountToOwner (int count);
