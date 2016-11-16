@@ -110,7 +110,7 @@ GridSlice::~GridSlice(void) {
 
 //////////////////////////////
 //
-// GridSlice::createRecipTokenFromDuration --  Will not be able to 
+// GridSlice::createRecipTokenFromDuration --  Will not be able to
 //   distinguish between triplet notes and dotted normal equivalents,
 //   this can be changed later by checking neighboring durations in the
 //   list for the presence of triplets.
@@ -208,7 +208,7 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 			GridStaff& staff = *part.at(s);
 			if (staff.size() == 0) {
 				// fix this later.  For now if there are no notes
-				// on the staff, add a null token.  Fix so that 
+				// on the staff, add a null token.  Fix so that
 				// all open voices are given null tokens.
 				token = new HumdrumToken(empty);
 				line->appendToken(token);
@@ -260,7 +260,7 @@ int GridSlice::getVerseCount(int partindex, int staffindex) {
 //////////////////////////////
 //
 // GridSlice::getHarmonyCount --
-//    default value: staffindex = -1; (currently not looking for 
+//    default value: staffindex = -1; (currently not looking for
 //        harmony data attached directly to staff (only to part.)
 //
 
@@ -323,13 +323,13 @@ void GridSlice::transferSides(HumdrumLine& line, GridPart& sides,
 
 
 // this version is used to transfer Sides from the Staff
-void GridSlice::transferSides(HumdrumLine& line, GridStaff& sides, 
+void GridSlice::transferSides(HumdrumLine& line, GridStaff& sides,
 		const string& empty, int maxvcount, int maxhcount) {
 
 	// existing verses:
 	int vcount = sides.getVerseCount();
 
-	// there should not be any harony attached to staves 
+	// there should not be any harony attached to staves
 	// (only to parts, so hcount should only be zero):
 	int hcount = sides.getHarmonyCount();
 	HTp newtoken;
@@ -510,7 +510,7 @@ ostream& operator<<(ostream& output, GridSlice* slice) {
 						output << " \"" << *token << "\" ";
 					}
 				}
-			
+
 			}
 		}
 	}

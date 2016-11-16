@@ -99,10 +99,13 @@ bool musicxml2hum_interface::convert(ostream& out, xml_document& doc) {
 	for (int i=0; i<(int)partdata.size(); i++) {
 		partdata[i].prepareVoiceMapping();
 		// for debugging:
-		if (DebugQ) {
+		if (VoiceDebugQ) {
 			partdata[i].printStaffVoiceInfo();
 		}
 	}
+
+	// re-index voices to disallow empty intermediate voices.
+	reindexVoices(partdata);
 
 	HumGrid outdata;
 	status &= stitchParts(outdata, partids, partinfo, partcontent, partdata);
@@ -137,6 +140,118 @@ bool musicxml2hum_interface::convert(ostream& out, xml_document& doc) {
 
 //////////////////////////////
 //
+// musicxml2hum_interface::reindexVoices --
+//
+
+void musicxml2hum_interface::reindexVoices(vector<MxmlPart>& partdata) {
+	for (int p=0; p<(int)partdata.size(); p++) {
+		for (int m=0; m<(int)partdata[p].getMeasureCount(); m++) {
+			MxmlMeasure* measure = partdata[p].getMeasure(m);
+			if (!measure) {
+				continue;
+			}
+			reindexMeasure(measure);
+		}
+	}
+}
+
+
+
+//////////////////////////////
+//
+// musicxml2hum_interface::reindexMeasure --
+//
+
+void musicxml2hum_interface::reindexMeasure(MxmlMeasure* measure) {
+	if (!measure) {
+		return;
+	}
+
+	vector<vector<int> > staffVoiceCounts;
+	vector<MxmlEvent*>& elist = measure->getEventList();
+
+	for (int i=0; i<elist.size(); i++) {
+		int staff = elist[i]->getStaffIndex();
+		int voice = elist[i]->getVoiceIndex();
+
+		if ((voice >= 0) && (staff >= 0)) {
+			if (staff >= (int)staffVoiceCounts.size()) {
+				int newsize = staff + 1;
+				staffVoiceCounts.resize(newsize);
+			}
+			if (voice >= (int)staffVoiceCounts[staff].size()) {
+				int oldsize = (int)staffVoiceCounts[staff].size();
+				int newsize = voice + 1;
+				staffVoiceCounts[staff].resize(newsize);
+				for (int i=oldsize; i<newsize; i++) {
+					staffVoiceCounts[staff][voice] = 0;
+				}
+			}
+			staffVoiceCounts[staff][voice]++;
+		}
+	}
+
+	bool needreindexing = false;
+
+	for (int i=0; i<(int)staffVoiceCounts.size(); i++) {
+		if (staffVoiceCounts[i].size() < 2) {
+			continue;
+		}
+		for (int j=1; j<(int)staffVoiceCounts[i].size(); j++) {
+			if (staffVoiceCounts[i][j] == 0) {
+				needreindexing = true;
+				break;
+			}
+		}
+		if (needreindexing) {
+			break;
+		}
+	}
+
+	if (!needreindexing) {
+		return;
+	}
+
+	vector<vector<int> > remapping;
+	remapping.resize(staffVoiceCounts.size());
+	int reindex;
+	for (int i=0; i<(int)staffVoiceCounts.size(); i++) {
+		remapping[i].resize(staffVoiceCounts[i].size());
+		reindex = 0;
+		for (int j=0; j<(int)remapping[i].size(); j++) {
+			if (remapping[i].size() == 1) {
+				remapping[i][j] = 0;
+				continue;
+			}
+			if (staffVoiceCounts[i][j]) {
+				remapping[i][j] = reindex++;
+			} else {
+				remapping[i][j] = -1;  // invalidate voice
+			}
+		}
+	}
+
+	// Go back and remap the voice indexes of elements.
+	// Presuming that the staff does not need to be reindex.
+	for (int i=0; i<elist.size(); i++) {
+		int oldvoice = elist[i]->getVoiceIndex();
+		int staff = elist[i]->getStaffIndex();
+		if (oldvoice < 0) {
+			continue;
+		}
+		int newvoice = remapping[staff][oldvoice];
+		if (newvoice == oldvoice) {
+			continue;
+		}
+		elist[i]->setVoiceIndex(newvoice);
+	}
+
+}
+
+
+
+//////////////////////////////
+//
 // musicxml2hum_interface::setOptions --
 //
 
@@ -149,7 +264,7 @@ void musicxml2hum_interface::setOptions(const vector<string>& argvlist) {
 	int tempargc = (int)argvlist.size();
 	char* tempargv[tempargc+1];
 	tempargv[tempargc] = NULL;
-	
+
 	int i;
 	for (i=0; i<tempargc; i++) {
 		tempargv[i] = new char[argvlist[i].size() + 1];
@@ -315,7 +430,7 @@ bool musicxml2hum_interface::stitchParts(HumGrid& outdata,
 //////////////////////////////
 //
 // musicxml2hum_interface::cleanupMeasures --
-//     Also add barlines here (keeping track of the 
+//     Also add barlines here (keeping track of the
 //     duration of each measure).
 //
 
@@ -486,7 +601,7 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 void musicxml2hum_interface::checkForDummyRests(MxmlMeasure* measure) {
 	vector<MxmlEvent*>& events = measure->getEventList();
 	vector<int> itemcounts;
-	
+
 	for (int i=0; i<(int)events.size(); i++) {
      	int voicenum  = events[i]->getVoiceNumber();
      	int voiceindex = events[i]->getVoiceIndex(voicenum);
@@ -494,7 +609,7 @@ void musicxml2hum_interface::checkForDummyRests(MxmlMeasure* measure) {
 		if (voiceindex < 0) {
 			continue;
 		}
-		
+
 		if (voiceindex >= (int)itemcounts.size()) {
 			int oldsize = (int)itemcounts.size();
 			int newsize = voiceindex + 1;
@@ -546,12 +661,12 @@ bool musicxml2hum_interface::convertNowEvents(GridMeasure& outdata,
 		for (int j=0; j<(int)nowevents.size(); j++) {
 			vector<MxmlEvent*> nz = nowevents[j]->nonzerodur;
 			for (int i=0; i<(int)nz.size(); i++) {
-				cerr << "NOWEVENT NZ NAME: " << nz[i]->getElementName() 
+				cerr << "NOWEVENT NZ NAME: " << nz[i]->getElementName()
 				     << "<\t" << nz[i]->getKernPitch() << endl;
 			}
 		}
 	}
-	
+
 
 	appendZeroEvents(outdata, nowevents, nowtime, partdata);
 
@@ -579,7 +694,7 @@ void musicxml2hum_interface::appendNonZeroEvents(
 		HumNum nowtime,
 		vector<MxmlPart>& partdata) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime, 
+	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
 			SliceType::Notes);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);
@@ -680,7 +795,7 @@ int musicxml2hum_interface::addHarmony(GridPart* part, MxmlEvent* event) {
 	if (!hnode) {
 		return 0;
 	}
-	
+
 	// ggg fill in X with the harmony values from the <harmony> node
 	string hstring = getHarmonyString(hnode);
 	HTp htok = new HumdrumToken(hstring);
@@ -952,7 +1067,7 @@ bool musicxml2hum_interface::isInvisible(MxmlEvent* event) {
 // musicxml2hum_interface::addSecondaryChordNotes --
 //
 
-void musicxml2hum_interface::addSecondaryChordNotes(ostream& output, MxmlEvent* head, 
+void musicxml2hum_interface::addSecondaryChordNotes(ostream& output, MxmlEvent* head,
 		const string& recip) {
 	vector<MxmlEvent*> links = head->getLinkedNotes();
 	MxmlEvent* note;
@@ -1041,10 +1156,10 @@ void musicxml2hum_interface::appendZeroEvents(
 // musicxml2hum_interface::addClefLine --
 //
 
-void musicxml2hum_interface::addClefLine(GridMeasure& outdata, 
+void musicxml2hum_interface::addClefLine(GridMeasure& outdata,
 		vector<xml_node>& clefs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime, 
+	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
 		SliceType::Clefs);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);
@@ -1063,10 +1178,10 @@ void musicxml2hum_interface::addClefLine(GridMeasure& outdata,
 // musicxml2hum_interface::addTimeSigLine --
 //
 
-void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata, 
+void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata,
 		vector<xml_node>& timesigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime, 
+	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
 		SliceType::TimeSigs);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);
@@ -1085,10 +1200,10 @@ void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata,
 // musicxml2hum_interface::addKeySigLine --
 //
 
-void musicxml2hum_interface::addKeySigLine(GridMeasure& outdata, 
+void musicxml2hum_interface::addKeySigLine(GridMeasure& outdata,
 		vector<xml_node>& keysigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime, 
+	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
 		SliceType::KeySigs);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);
@@ -1252,7 +1367,7 @@ xml_node musicxml2hum_interface::convertKeySigToHumdrum(xml_node keysig,
 	while (child) {
 		if (nodeType(child, "fifths")) {
 			fifths = atoi(child.child_value());
-		} 
+		}
 		child = child.next_sibling();
 	}
 

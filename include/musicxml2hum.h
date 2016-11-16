@@ -128,6 +128,8 @@ class musicxml2hum_interface {
 		string getHarmonyString(xml_node hnode);
 		string cleanSpaces     (const string& input);
 		void checkForDummyRests(MxmlMeasure* measure);
+		void reindexVoices     (vector<MxmlPart>& partdata);
+		void reindexMeasure    (MxmlMeasure* measure);
 
 	public:
 

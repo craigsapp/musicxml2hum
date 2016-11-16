@@ -82,6 +82,8 @@ bool MxmlMeasure::parseMeasure(xpath_node mel) {
 
 bool MxmlMeasure::parseMeasure(xml_node mel) {
 	bool output = true;
+	vector<vector<int> > staffVoiceCounts;
+
 	for (auto el = mel.first_child(); el; el = el.next_sibling()) {
 		MxmlEvent* event = new MxmlEvent(this);
 		m_events.push_back(event);
@@ -107,7 +109,7 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
          setTimeSignatureDuration(getTimeSignatureDuration());
       }
       needdummy = true;
-   } 
+   }
 
    if (needdummy || getEventCount() == 0) {
       // if the duration of the measure is zero, then set the duration
@@ -124,7 +126,7 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
    // a dummy full-measure rest should fill voice/layer 1.  The voice
    // layer 1 should be filled with the duration of the measure accoridng
    // to the other voice/layers in the measure.  This is done later
-   // after a voice analysis has been done in 
+   // after a voice analysis has been done in
    // musicxml2hum_interface::insertMeasure().
 
 	sortEvents();
@@ -567,7 +569,6 @@ void MxmlMeasure::sortEvents(void) {
 		}
 	}
 
-	
 	/* debugging information:
 
 	int j;
@@ -614,7 +615,7 @@ void MxmlMeasure::sortEvents(void) {
 //
 // MxmlMeasure::receiveStaffNumberFromChild -- Receive a staff number
 //    placement for a note or rest and pass it along to the part class
-//    so that it can keep track of the maximum staff number used in 
+//    so that it can keep track of the maximum staff number used in
 //    the part.
 //
 
@@ -660,7 +661,7 @@ HumNum MxmlMeasure::getTimeSignatureDuration(void) {
 //
 // MxmlMeasure::reportStaffNumberToOwner -- Send a staff number
 //    placement for a note or rest and pass it along to the part class
-//    so that it can keep track of the maximum staff number used in 
+//    so that it can keep track of the maximum staff number used in
 //    the part.
 //
 

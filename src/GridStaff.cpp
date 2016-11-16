@@ -96,7 +96,7 @@ void GridStaff::setNullTokenLayer(int layerindex, SliceType type,
 
 	if (layerindex < (int)this->size()) {
 		if (at(layerindex) != NULL) {
-			cerr << "Warning, deleting existing token: " 
+			cerr << "Warning, deleting existing token: "
 			     << *this->at(layerindex)->getToken() << endl;
 		}
 	}

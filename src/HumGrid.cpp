@@ -72,7 +72,7 @@ int HumGrid::getVerseCount(int partindex, int staffindex) {
 		return 0;
 	}
 	int staffnumber = staffindex + 1;
-	if ((staffnumber < 1) || 
+	if ((staffnumber < 1) ||
 			(staffnumber >= (int)m_verseCount.at(partindex).size())) {
 		return 0;
 	}
@@ -137,7 +137,7 @@ bool HumGrid::transferTokens(HumdrumFile& outfile) {
 	calculateGridDurations();
 	addNullTokens();
 	addMeasureLines();
-	buildSingleList(); 
+	buildSingleList();
 	addLastMeasure();
 	if (manipulatorCheck()) {
 		cleanupManipulators();
@@ -160,7 +160,7 @@ bool HumGrid::transferTokens(HumdrumFile& outfile) {
 
 //////////////////////////////
 //
-// HumGrid::cleanupManipulators -- 
+// HumGrid::cleanupManipulators --
 //
 
 void HumGrid::cleanupManipulators(void) {
@@ -261,7 +261,7 @@ GridSlice* HumGrid::checkManipulatorContract(GridSlice* curr) {
 
 	// need to split *v's from different adjacent staves onto separate lines.
 
-	GridSlice* newmanip = new GridSlice(this, curr->getTimestamp(), 
+	GridSlice* newmanip = new GridSlice(this, curr->getTimestamp(),
 		curr->getType(), curr);
 
 	lastvoice = NULL;
@@ -315,7 +315,7 @@ GridSlice* HumGrid::checkManipulatorContract(GridSlice* curr) {
 // converts to:
 // new:            *v   *v        *    *
 // old:            *              *v   *v
-// 
+//
 //
 
 void HumGrid::transferMerges(GridStaff* oldstaff, GridStaff* oldlaststaff,
@@ -596,7 +596,7 @@ void HumGrid::addMeasureLines(void) {
 		if (nextmeasure->size() == 0) {
 			// next measure is empty for some reason so give up
 			continue;
-		} 
+		}
 		timestamp = nextmeasure->front()->getTimestamp();
 		mslice = new GridSlice(this, timestamp, SliceType::Measures);
 		if (measure->size() == 0) {
@@ -692,7 +692,7 @@ bool HumGrid::buildSingleList(void) {
 			m_allslices.push_back(it);
 		}
 	}
-	
+
 	HumNum ts1;
 	HumNum ts2;
 	HumNum dur;
@@ -739,8 +739,8 @@ void HumGrid::addNullTokens(void) {
 						continue;
 					}
 					// found a note/rest which should have a non-zero
-					// duration that needs to be extended to the next 
-					// duration in the 
+					// duration that needs to be extended to the next
+					// duration in the
 					extendDurationToken(i, p, s, v);
 				}
 			}
@@ -755,7 +755,7 @@ void HumGrid::addNullTokens(void) {
 // HumGrid::extendDurationToken --
 //
 
-void HumGrid::extendDurationToken(int slicei, int parti, int staffi, 
+void HumGrid::extendDurationToken(int slicei, int parti, int staffi,
 		int voicei) {
 
 	GridVoice* gt = m_allslices.at(slicei)->at(parti)->at(staffi)->at(voicei);
@@ -1095,7 +1095,7 @@ void HumGrid::insertStaffIndications(HumdrumFile& outfile) {
 // HumGrid::insertSideStaffInfo --
 //
 
-void HumGrid::insertSideStaffInfo(HumdrumLine* line, int part, int staff, 
+void HumGrid::insertSideStaffInfo(HumdrumLine* line, int part, int staff,
 		int staffnum) {
 	HTp token;
 	string text;
@@ -1129,7 +1129,7 @@ void HumGrid::insertSideStaffInfo(HumdrumLine* line, int part, int staff,
 //////////////////////////////
 //
 // HumGrid::insertDataTerminationLine -- Currently presumes
-//    that the last entry contains spines.  And the first 
+//    that the last entry contains spines.  And the first
 //    measure in the HumGrid object must contain a slice.
 //    Also need to compensate for *v on previous line.
 //

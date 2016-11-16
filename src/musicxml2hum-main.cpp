@@ -7,7 +7,7 @@
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //
-// Description:   Command-line interface for converting MusicXML files into 
+// Description:   Command-line interface for converting MusicXML files into
 //                Humdrum files.
 //
 
