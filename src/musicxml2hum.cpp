@@ -417,12 +417,13 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 		if (VoiceDebugQ) {
 			vector<MxmlEvent*>& events = measuredata[i]->getEventList();
 			for (int j=0; j<(int)events.size(); j++) {
-				cerr << "!!ELEMENT: " << events[j]->getElementName();
+				cerr << "!!ELEMENT: ";
 				cerr << "\tSTi: " << events[j]->getStaffIndex();
 				cerr << "\tVi: " << events[j]->getVoiceIndex();
 				cerr << "\tTS: " << events[j]->getStartTime();
 				cerr << "\tDUR: " << events[j]->getDuration();
 				cerr << "\tPITCH: " << events[j]->getKernPitch();
+				cerr << "\tNAME: " << events[j]->getElementName();
 				cerr << endl;
 			}
 		}
@@ -532,13 +533,9 @@ void musicxml2hum_interface::checkForDummyRests(MxmlMeasure* measure) {
 // musicxml2hum_interface::convertNowEvents --
 //
 
-bool musicxml2hum_interface::convertNowEvents(
-		GridMeasure& outdata,
-		vector<SimultaneousEvents*>& nowevents,
-		vector<int>& nowparts,
-		HumNum nowtime,
-		vector<MxmlPart>& partdata,
-		vector<int>& partstaves) {
+bool musicxml2hum_interface::convertNowEvents(GridMeasure& outdata,
+		vector<SimultaneousEvents*>& nowevents, vector<int>& nowparts,
+		HumNum nowtime, vector<MxmlPart>& partdata, vector<int>& partstaves) {
 
 	if (nowevents.size() == 0) {
 		// cout << "NOW EVENTS ARE EMPTY" << endl;
@@ -660,6 +657,7 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	}
 
 	int vcount = addLyrics(slice.at(partindex)->at(staffindex), event);
+
 	if (vcount > 0) {
 		event->reportVerseCountToOwner(staffindex, vcount);
 	}

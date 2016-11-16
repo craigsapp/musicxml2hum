@@ -199,7 +199,10 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 	int s; // staff index
 	int v; // voice index
 
+
 	for (p=(int)size()-1; p>=0; p--) {
+
+
 		GridPart& part = *this->at(p);
 		for (s=(int)part.size()-1; s>=0; s--) {
 			GridStaff& staff = *part.at(s);
@@ -207,7 +210,7 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 				// fix this later.  For now if there are no notes
 				// on the staff, add a null token.  Fix so that 
 				// all open voices are given null tokens.
-				token = new HumdrumToken(".j");
+				token = new HumdrumToken(empty);
 				line->appendToken(token);
 			} else {
 				for (v=0; v<(int)staff.size(); v++) {
@@ -222,12 +225,16 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 						line->appendToken(token);
 					}
 				}
-				int count = getVerseCount(p, s);
-				transferSides(*line, staff, empty, count);
+
+
 			}
+			int maxvcount = getVerseCount(p, s);
+			int maxhcount = getHarmonyCount(p, s);
+			transferSides(*line, staff, empty, maxvcount, maxhcount);
 		}
-		int hcount = getHarmonyCount(p);
-		transferSides(*line, part, empty, hcount);
+		int maxhcount = getHarmonyCount(p);
+		int maxvcount = getVerseCount(p, -1);
+		transferSides(*line, part, empty, maxvcount, maxhcount);
 	}
 
 	outfile.appendLine(line);
@@ -253,9 +260,11 @@ int GridSlice::getVerseCount(int partindex, int staffindex) {
 //////////////////////////////
 //
 // GridSlice::getHarmonyCount --
+//    default value: staffindex = -1; (currently not looking for 
+//        harmony data attached directly to staff (only to part.)
 //
 
-int GridSlice::getHarmonyCount(int partindex) {
+int GridSlice::getHarmonyCount(int partindex, int staffindex) {
 	HumGrid* grid = getOwner();
 	if (!grid) {
 		return 0;
@@ -271,34 +280,60 @@ int GridSlice::getHarmonyCount(int partindex) {
 //
 
 
+// this version is used to transfer Sides from the Part
 void GridSlice::transferSides(HumdrumLine& line, GridPart& sides,
-		const string& empty, int count) {
+		const string& empty, int maxvcount, int maxhcount) {
+
 	int hcount = sides.getHarmonyCount();
+	int vcount = sides.getVerseCount();
 	HTp newtoken;
-	for (int i=0; i<hcount; i++) {
-		HTp harmony = sides.getHarmony();
-		if (harmony) {
-			line.appendToken(harmony);
+
+	for (int i=0; i<vcount; i++) {
+		HTp verse = sides.getVerse(i);
+		if (verse) {
+			line.appendToken(verse);
 			sides.detachHarmony();
 		} else {
 			newtoken = new HumdrumToken(empty);
 			line.appendToken(newtoken);
 		}
 	}
-	for (int i=hcount; i<count; i++) {
+
+	for (int i=vcount; i<maxvcount; i++) {
 		newtoken = new HumdrumToken(empty);
 		line.appendToken(newtoken);
 	}
-// ggg
+
+	for (int i=0; i<hcount; i++) {
+		HTp harmony = sides.getHarmony();
+		if (harmony) {
+			line.appendToken(harmony);
+			sides.setVerse(i, NULL); // needed to avoid double delete
+		} else {
+			newtoken = new HumdrumToken(empty);
+			line.appendToken(newtoken);
+		}
+	}
+
+	for (int i=hcount; i<maxhcount; i++) {
+		newtoken = new HumdrumToken(empty);
+		line.appendToken(newtoken);
+	}
 }
 
 
+// this version is used to transfer Sides from the Staff
 void GridSlice::transferSides(HumdrumLine& line, GridStaff& sides, 
-		const string& empty, int count) {
+		const string& empty, int maxvcount, int maxhcount) {
 
 	// existing verses:
 	int vcount = sides.getVerseCount();
+
+	// there should not be any harony attached to staves 
+	// (only to parts, so hcount should only be zero):
+	int hcount = sides.getHarmonyCount();
 	HTp newtoken;
+
 
 	for (int i=0; i<vcount; i++) {
 		HTp verse = sides.getVerse(i);
@@ -311,20 +346,37 @@ void GridSlice::transferSides(HumdrumLine& line, GridStaff& sides,
 		}
 	}
 
-	if (vcount < count) {
-		for (int i=vcount; i<count; i++) {
+	if (vcount < maxvcount) {
+		for (int i=vcount; i<maxvcount; i++) {
 			newtoken = new HumdrumToken(empty);
 			line.appendToken(newtoken);
 		}
 	}
 
+	for (int i=0; i<hcount; i++) {
+		HTp harmony = sides.getHarmony();
+		if (harmony) {
+			line.appendToken(harmony);
+			sides.detachHarmony();
+		} else {
+			newtoken = new HumdrumToken(empty);
+			line.appendToken(newtoken);
+		}
+	}
+
+	if (hcount < maxhcount) {
+		for (int i=hcount; i<maxhcount; i++) {
+			newtoken = new HumdrumToken(empty);
+			line.appendToken(newtoken);
+		}
+	}
 }
 
 
 
 //////////////////////////////
 //
-// GridSlice::initializePartStaves --
+// GridSlice::initializePartStaves -- Also initialize sides
 //
 
 void GridSlice::initializePartStaves(vector<MxmlPart>& partdata) {

@@ -72,7 +72,7 @@ int HumGrid::getVerseCount(int partindex, int staffindex) {
 		return 0;
 	}
 	int staffnumber = staffindex + 1;
-	if ((staffnumber < 0) || 
+	if ((staffnumber < 1) || 
 			(staffnumber >= (int)m_verseCount.at(partindex).size())) {
 		return 0;
 	}
@@ -196,6 +196,7 @@ void HumGrid::cleanManipulator(vector<GridSlice*>& newslices, GridSlice* curr) {
 	GridSlice* output;
 
 	// deal with *^ manipulators:
+
 // ggg implement later:
 //	while (output = checkManipulatorExpand(curr)) {
 //		newslices.push_back(output);
@@ -468,7 +469,15 @@ GridSlice* HumGrid::manipulatorCheck(GridSlice* ice1, GridSlice* ice2) {
 		}
 		for (s=0; s<s1count; s++) {
 			v1count = (int)ice1->at(p)->at(s)->size();
+			// the voice count always must be at least 1.  This case
+			// is related to inserting clefs in other parts.
+			if (v1count < 1) {
+				v1count = 1;
+			}
 			v2count = (int)ice2->at(p)->at(s)->size();
+			if (v2count < 1) {
+				v2count = 1;
+			}
 			if (v1count == v2count) {
 				continue;
 			}
@@ -802,7 +811,8 @@ void HumGrid::extendDurationToken(int slicei, int parti, int staffi,
 //    NULL otherwise. Requires HumGrid::buildSingleList() being run first.
 //
 
-GridVoice* HumGrid::getGridVoice(int slicei, int parti, int staffi, int voicei) {
+GridVoice* HumGrid::getGridVoice(int slicei, int parti, int staffi,
+		int voicei) {
 	if (slicei >= (int)m_allslices.size()) {
 		cerr << "Strange error 1a" << endl;
 		return NULL;

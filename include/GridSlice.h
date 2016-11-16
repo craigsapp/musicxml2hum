@@ -62,11 +62,13 @@ class GridSlice : public vector<GridPart*> {
 		HumGrid* getOwner           (void);
 
 		void transferSides        (HumdrumLine& line, GridStaff& sides, 
-		                           const string& empty, int count);
+		                           const string& empty, int maxvcount,
+		                           int maxhcount);
 		void transferSides        (HumdrumLine& line, GridPart& sides, 
-		                           const string& empty, int count);
+		                           const string& empty, int maxvcount,
+		                           int maxhcount);
 		int getVerseCount         (int partindex, int staffindex);
-		int getHarmonyCount       (int partindex);
+		int getHarmonyCount       (int partindex, int staffindex = -1);
 
 	protected:
 		HTp  createRecipTokenFromDuration  (HumNum duration);

@@ -64,6 +64,7 @@ void MxmlMeasure::clear(void) {
 	}
 	m_events.clear();
 	m_owner = NULL;
+	m_timesigdur = 1;
 	m_previous = m_following = NULL;
 }
 
