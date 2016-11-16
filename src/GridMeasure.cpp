@@ -80,6 +80,30 @@ void GridMeasure::setOwner(HumGrid* owner) {
 }
 
 
+
+//////////////////////////////
+//
+// GridMeasure::setMeasureDuration --
+//
+
+void GridMeasure::setMeasureDuration(HumNum duration) {
+	m_duration = duration;
+}
+
+
+
+//////////////////////////////
+//
+// GridMeasure::getMeasureDuration --
+//
+
+HumNum GridMeasure::getMeasureDuration(void) {
+	return m_duration;
+}
+
+
+
+
 } // end namespace hum
 
 

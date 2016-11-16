@@ -95,6 +95,7 @@ void MxmlEvent::clear(void) {
 
 void MxmlEvent::makeDummyRest(MxmlMeasure* owner, HumNum starttime,
 		HumNum duration, int voiceindex) {
+
 	m_starttime = starttime;
 	m_duration = duration;
 	m_eventtype = mevent_forward;
@@ -108,6 +109,7 @@ void MxmlEvent::makeDummyRest(MxmlMeasure* owner, HumNum starttime,
 	m_staff = 1;  // need to add multiple events, one for each staff in part.
 	m_maxstaff = 1;
 	//	m_hnode remains null
+
 }
 
 
@@ -483,6 +485,23 @@ bool MxmlEvent::isGrace(void) {
 
 //////////////////////////////
 //
+// MxmlEvent::isFloating -- For a harmony or basso continuo item
+//     which is not attached to a note onset.
+//
+
+bool MxmlEvent::isFloating(void) {
+	xml_node empty = xml_node(NULL);
+	if (m_node == empty && (m_hnode != empty)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+//////////////////////////////
+//
 // MxmlEvent::getLinkedNotes --
 //
 
@@ -696,13 +715,14 @@ measure_event_type MxmlEvent::getType(void) const {
 //
 
 bool MxmlEvent::parseEvent(xpath_node el) {
-	return parseEvent(el.node());
+	return parseEvent(el.node(), xml_node(NULL));
 }
 
 
-bool MxmlEvent::parseEvent(xml_node el) {
+bool MxmlEvent::parseEvent(xml_node el, xml_node nextel) {
 	m_node = el;
 
+	bool floatingharmony = false;
 	if (nodeType(m_node, "attributes")) {
 		m_eventtype = mevent_attributes;
 	} else if (nodeType(m_node, "backup")) {
@@ -717,12 +737,18 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		m_eventtype = mevent_figured_bass;
 	} else if (nodeType(m_node, "forward")) {
 		m_eventtype = mevent_forward;
-		m_staff = 1; // set default staff if not supplied
+		m_staff = -1; // set default staff if not supplied
 		m_voice = -1; // set default staff if not supplied
 	} else if (nodeType(m_node, "grouping")) {
 		m_eventtype = mevent_grouping;
 	} else if (nodeType(m_node, "harmony")) {
 		m_eventtype = mevent_harmony;
+		if (!nodeType(nextel, "note")) {
+			// harmony is not attached to a note
+			floatingharmony = true;
+			m_staff = -1;
+			m_voice = -1;
+		}
 	} else if (nodeType(m_node, "link")) {
 		m_eventtype = mevent_link;
 	} else if (nodeType(m_node, "note")) {
@@ -737,8 +763,8 @@ bool MxmlEvent::parseEvent(xml_node el) {
 		m_eventtype = mevent_unknown;
 	}
 
+	int tempstaff    = 1;
 	int tempvoice    = -1;
-	int tempstaff    = -1;
 	int tempduration = 0;
 
 	for (auto el = m_node.first_child(); el; el = el.next_sibling()) {
@@ -752,8 +778,13 @@ bool MxmlEvent::parseEvent(xml_node el) {
 	}
 
 	bool emptyvoice = false;
-	if (tempvoice < 0) {
-		emptyvoice = true;
+	if (!floatingharmony) {
+		if (tempvoice < 0) {
+			emptyvoice = true;
+			if (nodeType(el, "note")) {
+				this->setVoiceIndex(0);
+			}
+		}
 	}
 
 	if (tempvoice >= 0) {
@@ -796,29 +827,41 @@ bool MxmlEvent::parseEvent(xml_node el) {
 			}
 			break;
 
+		case mevent_harmony:
 		case mevent_barline:
 		case mevent_bookmark:
 		case mevent_direction:
 		case mevent_figured_bass:
 		case mevent_grouping:
-		case mevent_harmony:
 		case mevent_link:
 		case mevent_print:
 		case mevent_sound:
 		case mevent_unknown:
 			setDuration(tempduration);
 			break;
+		case mevent_float:
+			// assigned later for floating harmony
+			break;
 	}
 
-	// if the previous sibling was a <harmony>, then store
-	// for later parsing.  May have to check even further back
-	// until another note or barline was found.
-	xml_node lastsib = el.previous_sibling();
-	if (!lastsib) {
-		return true;
-	}
-	if (nodeType(lastsib, "harmony")) {
-		m_hnode = lastsib;
+	if (floatingharmony) {
+		m_hnode = el;
+		m_eventtype = mevent_float;
+		m_duration = 0;
+		m_node = xml_node(NULL);
+		m_voice = 1;
+		m_voiceindex = 0;
+	} else {
+		// if the previous sibling was a <harmony>, then store
+		// for later parsing.  May have to check even further back
+		// until another note or barline was found.
+		xml_node lastsib = el.previous_sibling();
+		if (!lastsib) {
+			return true;
+		}
+		if (nodeType(lastsib, "harmony")) {
+			m_hnode = lastsib;
+		}
 	}
 
 	return true;

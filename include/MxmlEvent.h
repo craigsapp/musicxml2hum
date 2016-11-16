@@ -46,7 +46,8 @@ enum measure_event_type {
 	mevent_link,
 	mevent_note,
 	mevent_print,
-	mevent_sound
+	mevent_sound,
+	mevent_float       // category for GridSides not attached to note onsets
 };
 
 
@@ -55,7 +56,7 @@ class MxmlEvent {
 		                   MxmlEvent          (MxmlMeasure* measure);
 		                  ~MxmlEvent          ();
 		void               clear              (void);
-		bool               parseEvent         (xml_node el);
+		bool               parseEvent         (xml_node el, xml_node nextel);
 		bool               parseEvent         (xpath_node el);
 		void               setTickStart       (long value, long ticks);
 		void               setTickDur         (long value, long ticks);
@@ -76,6 +77,7 @@ class MxmlEvent {
 		bool               isLinked           (void) const;
 		bool               isRest             (void);
 		bool               isGrace            (void);
+		bool               isFloating         (void);
 		void               setLinked          (void);
 		vector<MxmlEvent*> getLinkedNotes     (void);
 		void               attachToLastEvent  (void);

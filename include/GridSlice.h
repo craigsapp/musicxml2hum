@@ -20,6 +20,7 @@
 #include "grid.h"
 #include "MxmlPart.h"
 #include "GridPart.h"
+#include "GridMeasure.h"
 
 #include <vector>
 #include <list>
@@ -34,11 +35,11 @@ class HumGrid;
 
 class GridSlice : public vector<GridPart*> {
 	public:
-		GridSlice(HumGrid* grid, HumNum timestamp, SliceType type,
+		GridSlice(GridMeasure* measure, HumNum timestamp, SliceType type,
 		          int partcount = 0);
-		GridSlice(HumGrid* grid, HumNum timestamp, SliceType type,
+		GridSlice(GridMeasure* measure, HumNum timestamp, SliceType type,
 		          const GridSlice& slice);
-		GridSlice(HumGrid* grid, HumNum timestamp, SliceType type,
+		GridSlice(GridMeasure* measure, HumNum timestamp, SliceType type,
 		          GridSlice* slice);
 		~GridSlice();
 
@@ -54,12 +55,13 @@ class GridSlice : public vector<GridPart*> {
 		void transferTokens    (HumdrumFile& outfile, bool recip);
 		void initializePartStaves (vector<MxmlPart>& partdata);
 
-		HumNum   getDuration        (void);
-		void     setDuration        (HumNum duration);
-		HumNum   getTimestamp       (void);
-		void     setTimestamp       (HumNum timestamp);
-		void     setOwner           (HumGrid* owner);
-		HumGrid* getOwner           (void);
+		HumNum       getDuration        (void);
+		void         setDuration        (HumNum duration);
+		HumNum       getTimestamp       (void);
+		void         setTimestamp       (HumNum timestamp);
+		void         setOwner           (HumGrid* owner);
+		HumGrid*     getOwner           (void);
+		GridMeasure* getMeasure         (void);
 
 		void transferSides        (HumdrumLine& line, GridStaff& sides, 
 		                           const string& empty, int maxvcount,
@@ -74,10 +76,11 @@ class GridSlice : public vector<GridPart*> {
 		HTp  createRecipTokenFromDuration  (HumNum duration);
 
 	private:
-		HumGrid*   m_owner;
-		HumNum     m_timestamp;
-		HumNum     m_duration;
-		SliceType  m_type;
+		HumGrid*     m_owner;
+		GridMeasure* m_measure;
+		HumNum       m_timestamp;
+		HumNum       m_duration;
+		SliceType    m_type;
 
 };
 

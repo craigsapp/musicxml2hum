@@ -27,11 +27,17 @@ namespace hum {
 // default value: partcount = 0
 //
 
-GridSlice::GridSlice(HumGrid* owner, HumNum timestamp, SliceType type,
+GridSlice::GridSlice(GridMeasure* measure, HumNum timestamp, SliceType type,
 		int partcount) {
 	m_timestamp = timestamp;
 	m_type = type;
-	m_owner = owner;
+	if (m_measure) {
+		m_owner = measure->getOwner();
+		m_measure = measure;
+	} else {
+		m_owner = NULL;
+		m_measure = NULL;
+	}
 	if (partcount > 0) {
 		this->resize(partcount);
 		for (int p=0; p<partcount; p++) {
@@ -47,11 +53,17 @@ GridSlice::GridSlice(HumGrid* owner, HumNum timestamp, SliceType type,
 // GridStaffs (they will be required to have at least one).
 //
 
-GridSlice::GridSlice(HumGrid* owner, HumNum timestamp, SliceType type,
+GridSlice::GridSlice(GridMeasure* measure, HumNum timestamp, SliceType type,
 		const GridSlice& slice) {
 	m_timestamp = timestamp;
 	m_type = type;
-	m_owner = owner;
+	if (m_measure) {
+		m_owner = measure->getOwner();
+		m_measure = measure;
+	} else {
+		m_owner = NULL;
+		m_measure = NULL;
+	}
 	int partcount = (int)slice.size();
 	int staffcount;
 	if (partcount > 0) {
@@ -69,11 +81,17 @@ GridSlice::GridSlice(HumGrid* owner, HumNum timestamp, SliceType type,
 }
 
 
-GridSlice::GridSlice(HumGrid* owner, HumNum timestamp, SliceType type,
+GridSlice::GridSlice(GridMeasure* measure, HumNum timestamp, SliceType type,
 		GridSlice* slice) {
 	m_timestamp = timestamp;
 	m_type = type;
-	m_owner = owner;
+	if (m_measure) {
+		m_owner = measure->getOwner();
+		m_measure = measure;
+	} else {
+		m_owner = NULL;
+		m_measure = NULL;
+	}
 	int partcount = (int)slice->size();
 	int staffcount;
 	if (partcount > 0) {
@@ -122,6 +140,11 @@ HTp GridSlice::createRecipTokenFromDuration(HumNum duration) {
 	string str;
 	HumNum dotdur;
 	if (duration.getNumerator() == 0) {
+		// if the GridSlice is at the end of a measure, the
+      // time between the starttime/endtime of the GridSlice should
+		// be subtracted from the endtime of the current GridMeasure.
+cerr << "GOT HERE XXX" << endl;
+// ggg
 		token = new HumdrumToken("g");
 		return token;
 	} else if (duration.getNumerator() == 1) {
@@ -135,8 +158,9 @@ HTp GridSlice::createRecipTokenFromDuration(HumNum duration) {
 		}
 	}
 
-	// try to fit to two dots
-	// try to fit to three dots
+	// try to fit to two dots here
+
+	// try to fit to three dots here
 
 	str = to_string(duration.getDenominator()) + "%" +
 	         to_string(duration.getNumerator());
@@ -178,6 +202,7 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 	if (recip) {
 		if (isNoteSlice()) {
 			token = createRecipTokenFromDuration(getDuration());
+cerr << "xRECIP TOKEN " << token << endl;
 		} else if (isClefSlice()) {
 			token = new HumdrumToken("*");
 			empty = "*";
@@ -202,7 +227,6 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 
 	for (p=(int)size()-1; p>=0; p--) {
 
-
 		GridPart& part = *this->at(p);
 		for (s=(int)part.size()-1; s>=0; s--) {
 			GridStaff& staff = *part.at(s);
@@ -225,7 +249,6 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 						line->appendToken(token);
 					}
 				}
-
 
 			}
 			int maxvcount = getVerseCount(p, s);
@@ -269,7 +292,12 @@ int GridSlice::getHarmonyCount(int partindex, int staffindex) {
 	if (!grid) {
 		return 0;
 	}
-	return grid->getHarmonyCount(partindex);
+	if (staffindex >= 0) {
+		// ignoring staff-level harmony
+		return 0;
+	} else {
+		return grid->getHarmonyCount(partindex);
+	}
 }
 
 
@@ -468,6 +496,17 @@ void GridSlice::setOwner(HumGrid* owner) {
 
 HumGrid* GridSlice::getOwner(void) {
 	return m_owner;
+}
+
+
+
+//////////////////////////////
+//
+// GridSlice::getMeasure --
+//
+
+GridMeasure* GridSlice::getMeasure(void) {
+	return m_measure;
 }
 
 

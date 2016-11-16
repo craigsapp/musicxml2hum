@@ -147,6 +147,7 @@ bool HumGrid::transferTokens(HumdrumFile& outfile) {
 	insertPartIndications(outfile);
 	insertExclusiveInterpretationLine(outfile);
 	for (int measure=0; measure<(int)this->size(); measure++) {
+cerr << "zMRECIP = " << m_recip << endl;
 		status &= at(measure)->transferTokens(outfile, m_recip);
 		if (!status) {
 			break;
@@ -261,7 +262,7 @@ GridSlice* HumGrid::checkManipulatorContract(GridSlice* curr) {
 
 	// need to split *v's from different adjacent staves onto separate lines.
 
-	GridSlice* newmanip = new GridSlice(this, curr->getTimestamp(),
+	GridSlice* newmanip = new GridSlice(curr->getMeasure(), curr->getTimestamp(),
 		curr->getType(), curr);
 
 	lastvoice = NULL;
@@ -497,7 +498,8 @@ GridSlice* HumGrid::manipulatorCheck(GridSlice* ice1, GridSlice* ice2) {
 	// staves have *v manipulators.
 
 	GridSlice* mslice;
-	mslice = new GridSlice(this, ice2->getTimestamp(), SliceType::Manipulators);
+	mslice = new GridSlice(ice1->getMeasure(), ice2->getTimestamp(),
+			SliceType::Manipulators);
 
 	int z;
 	HTp token;
@@ -590,15 +592,17 @@ void HumGrid::addMeasureLines(void) {
 	GridVoice* gt;
 	HTp token;
 	int staffcount, partcount, vcount, nextvcount, lcount;
+	GridMeasure* measure;
+	GridMeasure* nextmeasure;
 	for (int m=0; m<(int)this->size()-1; m++) {
-		GridMeasure* measure = this->at(m);
-		GridMeasure* nextmeasure = this->at(m+1);
+		measure = this->at(m);
+		nextmeasure = this->at(m+1);
 		if (nextmeasure->size() == 0) {
 			// next measure is empty for some reason so give up
 			continue;
 		}
 		timestamp = nextmeasure->front()->getTimestamp();
-		mslice = new GridSlice(this, timestamp, SliceType::Measures);
+		mslice = new GridSlice(measure, timestamp, SliceType::Measures);
 		if (measure->size() == 0) {
 			continue;
 		}
@@ -652,7 +656,8 @@ void HumGrid::addLastMeasure(void) {
 	// to get correct:
 	HumNum timestamp = model->getTimestamp();
 
-	GridSlice* mslice = new GridSlice(this, timestamp, SliceType::Measures);
+	GridSlice* mslice = new GridSlice(model->getMeasure(), timestamp,
+			SliceType::Measures);
 	this->back()->push_back(mslice);
 	mslice->setTimestamp(timestamp);
 	int partcount = model->size();

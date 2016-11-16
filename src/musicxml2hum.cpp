@@ -512,6 +512,7 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 	vector<vector<SimultaneousEvents>* > sevents;
 	int i;
 
+
 	for (i=0; i<(int)partdata.size(); i++) {
 		measuredata.push_back(partdata[i].getMeasure(mnum));
 		checkForDummyRests(partdata[i].getMeasure(mnum));
@@ -519,6 +520,7 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 	}
 
 	vector<HumNum> curtime(partdata.size());
+	vector<HumNum> measuredurs(partdata.size());
 	vector<int> curindex(partdata.size(), 0); // assuming data in a measure...
 	HumNum nexttime = -1;
 
@@ -552,7 +554,20 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 		} else if (curtime[i] < nexttime) {
 			nexttime = curtime[i];
 		}
+
+cerr << ">>>>>> ADDING MEASURE DURATION" << endl;
+		measuredurs[i] = measuredata[i]->getDuration();
+cerr << "\t\tDONE";
+
 	}
+
+cerr << "++++ MEASURE DURATIONS: ";
+for (int z=0; z<measuredurs.size(); z++) {
+cerr << "\t" << measuredurs[z];
+}
+cerr << endl;
+
+cerr << "GOT HERE XXX " << endl;
 
 	bool allend = false;
 	vector<SimultaneousEvents*> nowevents;
@@ -694,7 +709,7 @@ void musicxml2hum_interface::appendNonZeroEvents(
 		HumNum nowtime,
 		vector<MxmlPart>& partdata) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
+	GridSlice* slice = new GridSlice(&outdata, nowtime,
 			SliceType::Notes);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);
@@ -725,38 +740,51 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	staffindex = event->getStaffIndex();
 	voiceindex = event->getVoiceIndex();
 
-	string recip   = event->getRecip();
-	string pitch   = event->getKernPitch();
-	string prefix  = event->getPrefixNoteInfo();
-	string postfix = event->getPostfixNoteInfo();
-	bool   grace   = event->isGrace();
+	string recip;
+	string pitch;
+	string prefix;
+	string postfix;
+	bool grace = false;
+	bool invisible = false;
 
-	bool invisible = isInvisible(event);
-	if (event->isInvisible()) {
+	if (!event->isFloating()) {
+		recip   = event->getRecip();
+		pitch   = event->getKernPitch();
+		prefix  = event->getPrefixNoteInfo();
+		postfix = event->getPostfixNoteInfo();
+		grace   = event->isGrace();
+
+		bool invisible = isInvisible(event);
+		if (event->isInvisible()) {
 		invisible = true;
-	}
+		}
 
-	if (grace) {
-		cerr << "!! NOTE IS GRACE" << endl;
+		if (grace) {
+			cerr << "!! NOTE IS GRACE" << endl;
+		}
 	}
 
 	stringstream ss;
-	ss << prefix << recip << pitch << postfix;
-	if (invisible) {
-		ss << "yy";
-	}
-
-	// check for chord notes.
-	HTp token;
-	if (event->isChord()) {
-		addSecondaryChordNotes(ss, event, recip);
-		token = new HumdrumToken(ss.str());
-		slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
-			event->getDuration());
+	if (event->isFloating()) {
+		ss << ".";
 	} else {
-		token = new HumdrumToken(ss.str());
-		slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
-			event->getDuration());
+		ss << prefix << recip << pitch << postfix;
+		if (invisible) {
+			ss << "yy";
+		}
+
+		// check for chord notes.
+		HTp token;
+		if (event->isChord()) {
+			addSecondaryChordNotes(ss, event, recip);
+			token = new HumdrumToken(ss.str());
+			slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
+				event->getDuration());
+		} else {
+			token = new HumdrumToken(ss.str());
+			slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
+				event->getDuration());
+		}
 	}
 
 	if (DebugQ) {
@@ -1159,7 +1187,7 @@ void musicxml2hum_interface::appendZeroEvents(
 void musicxml2hum_interface::addClefLine(GridMeasure& outdata,
 		vector<xml_node>& clefs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
+	GridSlice* slice = new GridSlice(&outdata, nowtime,
 		SliceType::Clefs);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);
@@ -1181,7 +1209,7 @@ void musicxml2hum_interface::addClefLine(GridMeasure& outdata,
 void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata,
 		vector<xml_node>& timesigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
+	GridSlice* slice = new GridSlice(&outdata, nowtime,
 		SliceType::TimeSigs);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);
@@ -1203,7 +1231,7 @@ void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata,
 void musicxml2hum_interface::addKeySigLine(GridMeasure& outdata,
 		vector<xml_node>& keysigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(outdata.getOwner(), nowtime,
+	GridSlice* slice = new GridSlice(&outdata, nowtime,
 		SliceType::KeySigs);
 	outdata.push_back(slice);
 	slice->initializePartStaves(partdata);

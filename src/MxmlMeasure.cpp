@@ -84,10 +84,12 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
 	bool output = true;
 	vector<vector<int> > staffVoiceCounts;
 
+	xml_node nextel;
 	for (auto el = mel.first_child(); el; el = el.next_sibling()) {
 		MxmlEvent* event = new MxmlEvent(this);
 		m_events.push_back(event);
-		output &= event->parseEvent(el);
+		nextel = el.next_sibling();
+		output &= event->parseEvent(el, nextel);
 	}
 
 	setStartTimeOfMeasure();
@@ -129,6 +131,7 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
    // after a voice analysis has been done in
    // musicxml2hum_interface::insertMeasure().
 
+cerr << "SORT EVENTS" << endl;
 	sortEvents();
 
 	return output;
@@ -215,16 +218,19 @@ void MxmlMeasure::setStartTimeOfMeasure(HumNum value) {
 //
 
 void MxmlMeasure::calculateDuration(void) {
+cerr << "STARTING CALCULATE DURATION " << endl;
 	HumNum maxdur   = 0;
 	HumNum sum      = 0;
 	for (int i=0; i<(int)m_events.size(); i++) {
 		m_events[i]->setStartTime(sum + getStartTime());
+cerr << "EVENT " << m_events[i]->getElementName() << "\tDUR:" << m_events[i]->getDuration() << " STARTTIME:" << sum+getStartTime() << endl;
 		sum += m_events[i]->getDuration();
 		if (maxdur < sum) {
 			maxdur = sum;
 		}
 	}
 	setDuration(maxdur);
+cerr << "ENDING CALCULATE DURATION " << endl;
 }
 
 
@@ -515,7 +521,13 @@ int MxmlMeasure::getStaffIndex(int voicenum) {
 
 //////////////////////////////
 //
-// MxmlMeasure::sortEvents --
+// MxmlMeasure::sortEvents -- Sorts events for the measure into
+//   time order.  They are split into zero-duration evnets and
+//   non-zero events.  mevent_floating type are placed into the 
+//   non-zero events eventhough they have zero duration (this is
+//   for harmony not attached to a note attack, and will be
+//   eventually including basso continuo figuration having the
+//   same situation).
 //
 
 void MxmlMeasure::sortEvents(void) {
@@ -562,7 +574,10 @@ void MxmlMeasure::sortEvents(void) {
 
 		starttime = m_events[i]->getStartTime();
 		duration  = m_events[i]->getDuration();
-		if (duration == 0) {
+		if (m_events[i]->isFloating()) {
+cerr << "FOUND A FLOATING ELEEMNT!" << endl;
+			mapping[starttime]->nonzerodur.push_back(m_events[i]);
+		} else if (duration == 0) {
 			mapping[starttime]->zerodur.push_back(m_events[i]);
 		} else {
 			mapping[starttime]->nonzerodur.push_back(m_events[i]);
