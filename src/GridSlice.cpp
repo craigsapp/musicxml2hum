@@ -30,13 +30,12 @@ namespace hum {
 GridSlice::GridSlice(GridMeasure* measure, HumNum timestamp, SliceType type,
 		int partcount) {
 	m_timestamp = timestamp;
-	m_type = type;
+	m_type      = type;
+	m_owner     = NULL;
+	m_measure   = measure;
 	if (m_measure) {
 		m_owner = measure->getOwner();
 		m_measure = measure;
-	} else {
-		m_owner = NULL;
-		m_measure = NULL;
 	}
 	if (partcount > 0) {
 		this->resize(partcount);
@@ -143,8 +142,6 @@ HTp GridSlice::createRecipTokenFromDuration(HumNum duration) {
 		// if the GridSlice is at the end of a measure, the
       // time between the starttime/endtime of the GridSlice should
 		// be subtracted from the endtime of the current GridMeasure.
-cerr << "GOT HERE XXX" << endl;
-// ggg
 		token = new HumdrumToken("g");
 		return token;
 	} else if (duration.getNumerator() == 1) {
@@ -190,6 +187,22 @@ bool GridSlice::isInterpretationSlice(void) {
 
 //////////////////////////////
 //
+// GridSlice::isDataSlice --
+//
+
+bool GridSlice::isDataSlice(void) {
+	SliceType type = getType();
+	if (type <= SliceType::_Data) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+//////////////////////////////
+//
 // GridSlice::transferTokens -- Create a HumdrumLine and append it to
 //    the data.
 //
@@ -202,7 +215,6 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 	if (recip) {
 		if (isNoteSlice()) {
 			token = createRecipTokenFromDuration(getDuration());
-cerr << "xRECIP TOKEN " << token << endl;
 		} else if (isClefSlice()) {
 			token = new HumdrumToken("*");
 			empty = "*";
@@ -336,7 +348,7 @@ void GridSlice::transferSides(HumdrumLine& line, GridPart& sides,
 		HTp harmony = sides.getHarmony();
 		if (harmony) {
 			line.appendToken(harmony);
-			sides.setVerse(i, NULL); // needed to avoid double delete
+			sides.detachHarmony();
 		} else {
 			newtoken = new HumdrumToken(empty);
 			line.appendToken(newtoken);

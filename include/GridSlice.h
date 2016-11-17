@@ -50,6 +50,7 @@ class GridSlice : public vector<GridPart*> {
 		bool isTimeSigSlice(void)  { return m_type == SliceType::TimeSigs; }
 		bool isMeterSigSlice(void) { return m_type == SliceType::MeterSigs; }
 		bool isInterpretationSlice(void);
+		bool isDataSlice(void);
 		SliceType getType(void)    { return m_type; }
 
 		void transferTokens    (HumdrumFile& outfile, bool recip);

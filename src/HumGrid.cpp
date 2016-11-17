@@ -147,7 +147,6 @@ bool HumGrid::transferTokens(HumdrumFile& outfile) {
 	insertPartIndications(outfile);
 	insertExclusiveInterpretationLine(outfile);
 	for (int measure=0; measure<(int)this->size(); measure++) {
-cerr << "zMRECIP = " << m_recip << endl;
 		status &= at(measure)->transferTokens(outfile, m_recip);
 		if (!status) {
 			break;
@@ -724,6 +723,18 @@ void HumGrid::addNullTokens(void) {
 	int s; // staff index
 	int v; // voice index
 
+	if (0) {
+		cerr << "SLICE TIMESTAMPS: " << endl;
+		for (int x=0; x<(int)m_allslices.size(); x++) {
+			cerr << "\tTIMESTAMP " << x << "= " 
+			     << m_allslices[x]->getTimestamp()
+			     << "\tDUR=" << m_allslices[x]->getDuration()
+			     << "\t"
+			     << m_allslices[x]
+			     << endl;
+		}
+	}
+
 	for (i=0; i<(int)m_allslices.size(); i++) {
 		GridSlice& slice = *m_allslices.at(i);
 		if (!slice.isNoteSlice()) {
@@ -763,49 +774,86 @@ void HumGrid::addNullTokens(void) {
 void HumGrid::extendDurationToken(int slicei, int parti, int staffi,
 		int voicei) {
 
-	GridVoice* gt = m_allslices.at(slicei)->at(parti)->at(staffi)->at(voicei);
-	if (gt == NULL) {
-		cerr << "Strange error: null starting token" << endl;
+	if (slicei <= (int)m_allslices.size()) {
+		// nothing after this line, so can extend further.
 		return;
 	}
 
-	int lasts = slicei;
-	int s = slicei+1;
-	HumNum lastdur = gt->getDurationToNext();
- 	HTp token = gt->getToken();
+	GridVoice* gv = m_allslices.at(slicei)->at(parti)->at(staffi)->at(voicei);
+ 	HTp token = gv->getToken();
+	if (!token) {
+		cerr << "STRANGE: token should not be null" << endl;
+		return;
+	}
 	if (*token == ".") {
 		// null data token so ignore;
+		// change this later to add a duration for the null token below.
 		return;
 	}
+	
+	HumNum tokendur = Convert::recipToDuration((string)*token);
+	HumNum currts   = m_allslices.at(slicei)->getTimestamp();
+	HumNum nextts   = m_allslices.at(slicei+1)->getTimestamp();
+	HumNum slicedur = nextts - currts;
+	HumNum timeleft = tokendur - slicedur;
 
-// cerr << ">> processing " << gt->getToken() << " DUR = " << lastdur  << endl;
-
-	if (lastdur == 0) {
-		// nothing to do
-		return;
+	if (0) {
+		cerr << "===================" << endl;
+		cerr << "EXTENDING TOKEN    " << token      << endl;
+		cerr << "\tTOKEN DUR:       " << tokendur   << endl;
+		cerr << "\tTOKEN START:     " << currts     << endl;
+		cerr << "\tSLICE DUR:       " << slicedur   << endl;
+		cerr << "\tNEXT SLICE START:" << nextts     << endl;
+		cerr << "\tTIME LEFT:       " << timeleft   << endl;
+		cerr << "\t-----------------" << endl;
 	}
-	GridVoice* lastgt = gt;
-	HumNum nextdur;
-	HumNum prevdur;
-	HumNum slicedur;
-	while (s < (int)m_allslices.size()) {
-		lastgt = getGridVoice(lasts, parti, staffi, voicei);
-		if (lastgt == NULL) {
-			cerr << "Strange error in extendDurationToken()" << endl;
+
+	if (timeleft != 0) {
+		// fill in null tokens for the required duration.
+		if (timeleft < 0) {
+			cerr << "ERROR: Negative duration" << endl;
 			return;
 		}
-		GridStaff* gs = m_allslices.at(s)->at(parti)->at(staffi);
-		SliceType type = m_allslices.at(s)->getType();
-		slicedur = m_allslices.at(lasts)->getDuration();
-		nextdur = lastgt->getDurationToNext() - slicedur;
-		if (nextdur == 0) {
-			// found end of note
-			break;
+
+		SliceType type;
+		GridStaff* gs;
+		int s = slicei+1;
+
+		while ((s < (int)m_allslices.size()) && (timeleft > 0)) {
+			currts = nextts;
+			if (s < (int)m_allslices.size() - 1) {
+				nextts = m_allslices.at(s+1)->getTimestamp();
+			} else {
+				nextts = currts + m_allslices.at(s)->getDuration();
+			}
+			slicedur = nextts - currts;
+			type = m_allslices[s]->getType();
+
+			gs = m_allslices.at(s)->at(parti)->at(staffi);
+			if (gs == NULL) {
+				cerr << "Strange error2 in extendDurationToken()" << endl;
+				return;
+			}
+			gs->setNullTokenLayer(voicei, type, slicedur);
+			
+			if (m_allslices.at(s)->isDataSlice()) {
+				gs->setNullTokenLayer(voicei, type, slicedur);
+				timeleft = timeleft - slicedur;
+			} else {
+				// store a null token for the non-data slice, but probably skip
+				// if there is a token already there (such as a clef-change).
+				gs->setNullTokenLayer(voicei, type, slicedur);
+			}
+			s++;
+			if (s == (int)m_allslices.size() - 1) {
+				m_allslices[s]->setDuration(timeleft);
+			}
 		}
-		prevdur = lastgt->getDurationToPrev() + slicedur;
-		gs->setNullTokenLayer(voicei, type, nextdur, prevdur);
-		lasts = s++;
 	}
+	// walk through zero-dur items and fill them in, but stop at
+	// a token (likely a grace note which should not be erased).
+// ggg
+
 }
 
 

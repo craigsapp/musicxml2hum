@@ -54,8 +54,7 @@ GridStaff::~GridStaff(void) {
 //    other new ones with NULLs.
 //
 
-GridVoice* GridStaff::setTokenLayer(int layerindex, HTp token,
-		HumNum duration) {
+GridVoice* GridStaff::setTokenLayer(int layerindex, HTp token, HumNum duration) {
 	if (layerindex > (int)this->size()-1) {
 		int oldsize = this->size();
 		this->resize(layerindex+1);
@@ -64,11 +63,12 @@ GridVoice* GridStaff::setTokenLayer(int layerindex, HTp token,
 		}
 	}
 	if (this->at(layerindex) != NULL) {
+		cerr << "DELETING GridVoice " << this->at(layerindex) << endl;
 		delete this->at(layerindex);
 	}
-	GridVoice* gt = new GridVoice(token, duration);
-	this->at(layerindex) = gt;
-	return gt;
+	GridVoice* gv = new GridVoice(token, duration);
+	this->at(layerindex) = gv;
+	return gv;
 }
 
 
@@ -79,7 +79,7 @@ GridVoice* GridStaff::setTokenLayer(int layerindex, HTp token,
 //
 
 void GridStaff::setNullTokenLayer(int layerindex, SliceType type,
-		HumNum nextdur, HumNum prevdur) {
+		HumNum nextdur) {
 
 	string nulltoken;
 	if (type < SliceType::_Data) {
@@ -96,8 +96,15 @@ void GridStaff::setNullTokenLayer(int layerindex, SliceType type,
 
 	if (layerindex < (int)this->size()) {
 		if (at(layerindex) != NULL) {
-			cerr << "Warning, deleting existing token: "
-			     << *this->at(layerindex)->getToken() << endl;
+			if ((string)*at(layerindex)->getToken() == ".") {
+				// there is already a null data token here, so don't 
+				// replace it.
+				return;
+			}
+			cerr << "Warning, replacing existing token: "
+			     << *this->at(layerindex)->getToken()
+			     << " with a null token"
+			     << endl;
 		}
 	}
 	HumdrumToken* token = new  HumdrumToken(nulltoken);

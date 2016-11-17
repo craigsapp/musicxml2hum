@@ -170,7 +170,7 @@ void musicxml2hum_interface::reindexMeasure(MxmlMeasure* measure) {
 	vector<vector<int> > staffVoiceCounts;
 	vector<MxmlEvent*>& elist = measure->getEventList();
 
-	for (int i=0; i<elist.size(); i++) {
+	for (int i=0; i<(int)elist.size(); i++) {
 		int staff = elist[i]->getStaffIndex();
 		int voice = elist[i]->getVoiceIndex();
 
@@ -233,7 +233,7 @@ void musicxml2hum_interface::reindexMeasure(MxmlMeasure* measure) {
 
 	// Go back and remap the voice indexes of elements.
 	// Presuming that the staff does not need to be reindex.
-	for (int i=0; i<elist.size(); i++) {
+	for (int i=0; i<(int)elist.size(); i++) {
 		int oldvoice = elist[i]->getVoiceIndex();
 		int staff = elist[i]->getStaffIndex();
 		if (oldvoice < 0) {
@@ -555,19 +555,9 @@ bool musicxml2hum_interface::insertMeasure(HumGrid& outdata, int mnum,
 			nexttime = curtime[i];
 		}
 
-cerr << ">>>>>> ADDING MEASURE DURATION" << endl;
 		measuredurs[i] = measuredata[i]->getDuration();
-cerr << "\t\tDONE";
 
 	}
-
-cerr << "++++ MEASURE DURATIONS: ";
-for (int z=0; z<measuredurs.size(); z++) {
-cerr << "\t" << measuredurs[z];
-}
-cerr << endl;
-
-cerr << "GOT HERE XXX " << endl;
 
 	bool allend = false;
 	vector<SimultaneousEvents*> nowevents;
@@ -599,7 +589,7 @@ cerr << "GOT HERE XXX " << endl;
 				}
 			}
 		}
-		status &= convertNowEvents(*outdata.back(),
+		status &= convertNowEvents(outdata.back(),
 				nowevents, nowparts, processtime, partdata, partstaves);
 	}
 
@@ -663,7 +653,7 @@ void musicxml2hum_interface::checkForDummyRests(MxmlMeasure* measure) {
 // musicxml2hum_interface::convertNowEvents --
 //
 
-bool musicxml2hum_interface::convertNowEvents(GridMeasure& outdata,
+bool musicxml2hum_interface::convertNowEvents(GridMeasure* outdata,
 		vector<SimultaneousEvents*>& nowevents, vector<int>& nowparts,
 		HumNum nowtime, vector<MxmlPart>& partdata, vector<int>& partstaves) {
 
@@ -704,14 +694,14 @@ bool musicxml2hum_interface::convertNowEvents(GridMeasure& outdata,
 //
 
 void musicxml2hum_interface::appendNonZeroEvents(
-		GridMeasure& outdata,
+		GridMeasure* outdata,
 		vector<SimultaneousEvents*>& nowevents,
 		HumNum nowtime,
 		vector<MxmlPart>& partdata) {
 
-	GridSlice* slice = new GridSlice(&outdata, nowtime,
+	GridSlice* slice = new GridSlice(outdata, nowtime,
 			SliceType::Notes);
-	outdata.push_back(slice);
+	outdata->push_back(slice);
 	slice->initializePartStaves(partdata);
 
 	for (int i=0; i<(int)nowevents.size(); i++) {
@@ -754,9 +744,9 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 		postfix = event->getPostfixNoteInfo();
 		grace   = event->isGrace();
 
-		bool invisible = isInvisible(event);
+		invisible = isInvisible(event);
 		if (event->isInvisible()) {
-		invisible = true;
+			invisible = true;
 		}
 
 		if (grace) {
@@ -767,6 +757,9 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 	stringstream ss;
 	if (event->isFloating()) {
 		ss << ".";
+		HTp token = new HumdrumToken(ss.str());
+		slice.at(partindex)->at(staffindex)->setTokenLayer(voiceindex, token,
+			event->getDuration());
 	} else {
 		ss << prefix << recip << pitch << postfix;
 		if (invisible) {
@@ -1118,10 +1111,8 @@ void musicxml2hum_interface::addSecondaryChordNotes(ostream& output, MxmlEvent* 
 // musicxml2hum_interface::appendZeroEvents --
 //
 
-void musicxml2hum_interface::appendZeroEvents(
-		GridMeasure& outdata,
-		vector<SimultaneousEvents*>& nowevents,
-		HumNum nowtime,
+void musicxml2hum_interface::appendZeroEvents(GridMeasure* outdata,
+		vector<SimultaneousEvents*>& nowevents, HumNum nowtime,
 		vector<MxmlPart>& partdata) {
 
 	bool hasclef    = false;
@@ -1184,12 +1175,12 @@ void musicxml2hum_interface::appendZeroEvents(
 // musicxml2hum_interface::addClefLine --
 //
 
-void musicxml2hum_interface::addClefLine(GridMeasure& outdata,
+void musicxml2hum_interface::addClefLine(GridMeasure* outdata,
 		vector<xml_node>& clefs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(&outdata, nowtime,
+	GridSlice* slice = new GridSlice(outdata, nowtime,
 		SliceType::Clefs);
-	outdata.push_back(slice);
+	outdata->push_back(slice);
 	slice->initializePartStaves(partdata);
 
 	for (int i=0; i<(int)partdata.size(); i++) {
@@ -1206,12 +1197,12 @@ void musicxml2hum_interface::addClefLine(GridMeasure& outdata,
 // musicxml2hum_interface::addTimeSigLine --
 //
 
-void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata,
+void musicxml2hum_interface::addTimeSigLine(GridMeasure* outdata,
 		vector<xml_node>& timesigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(&outdata, nowtime,
+	GridSlice* slice = new GridSlice(outdata, nowtime,
 		SliceType::TimeSigs);
-	outdata.push_back(slice);
+	outdata->push_back(slice);
 	slice->initializePartStaves(partdata);
 
 	for (int i=0; i<(int)partdata.size(); i++) {
@@ -1228,12 +1219,12 @@ void musicxml2hum_interface::addTimeSigLine(GridMeasure& outdata,
 // musicxml2hum_interface::addKeySigLine --
 //
 
-void musicxml2hum_interface::addKeySigLine(GridMeasure& outdata,
+void musicxml2hum_interface::addKeySigLine(GridMeasure* outdata,
 		vector<xml_node>& keysigs, vector<MxmlPart>& partdata, HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(&outdata, nowtime,
+	GridSlice* slice = new GridSlice(outdata, nowtime,
 		SliceType::KeySigs);
-	outdata.push_back(slice);
+	outdata->push_back(slice);
 	slice->initializePartStaves(partdata);
 
 	for (int i=0; i<(int)partdata.size(); i++) {
