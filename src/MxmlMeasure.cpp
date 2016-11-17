@@ -126,10 +126,11 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
    // voice index list than layers which contain notes.  For example
    // if voice/layer 2 contains notes, but voice/layer 1 does not, then
    // a dummy full-measure rest should fill voice/layer 1.  The voice
-   // layer 1 should be filled with the duration of the measure accoridng
+   // layer 1 should be filled with the duration of the measure according
    // to the other voice/layers in the measure.  This is done later
    // after a voice analysis has been done in
-   // musicxml2hum_interface::insertMeasure().
+   // musicxml2hum_interface::insertMeasure(), specifically:
+	// musicxml2hum_interface::checkForDummyRests().
 
 	sortEvents();
 
@@ -177,11 +178,12 @@ void MxmlMeasure::addDummyRest(void) {
 }
 
 
-void MxmlMeasure::addDummyRest(HumNum starttime, HumNum duration, int vindex) {
+void MxmlMeasure::addDummyRest(HumNum starttime, HumNum duration,
+		int staffindex, int voiceindex) {
 	MxmlEvent* event = new MxmlEvent(this);
 	m_events.push_back(event);
    MxmlMeasure* measure = this;
-   event->makeDummyRest(measure, starttime, duration, vindex);
+   event->makeDummyRest(measure, starttime, duration, staffindex, voiceindex);
 }
 
 
@@ -559,9 +561,9 @@ void MxmlMeasure::sortEvents(void) {
             if (m_events[i]->getDuration() == this->getDuration()) {
                  // forward elements are encoded as whole-measure rests
                  // if they fill the duration of a measure
-            } else {
-               // Also should probably not skip non-full-measure forwards..
-               // continue;
+            } else if (m_events[i]->getVoiceIndex() < 0) {
+               // Skip forward elements which are not invisible rests
+               continue;
             }
             break;
 			default:

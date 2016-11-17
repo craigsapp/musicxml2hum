@@ -236,7 +236,6 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 	int s; // staff index
 	int v; // voice index
 
-
 	for (p=(int)size()-1; p>=0; p--) {
 
 		GridPart& part = *this->at(p);
@@ -273,6 +272,38 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 	}
 
 	outfile.appendLine(line);
+}
+
+
+
+//////////////////////////////
+//
+// GridSlice::getMeasureDuration --
+//
+
+HumNum GridSlice::getMeasureDuration(void) {
+	GridMeasure* measure = getMeasure();
+	if (!measure) {
+		return -1;
+	} else {
+		return measure->getDuration();
+	}
+}
+
+
+
+//////////////////////////////
+//
+// GridSlice::getMeasureTimestamp -- Return the start time of the measure.
+//
+
+HumNum GridSlice::getMeasureTimestamp(void) {
+	GridMeasure* measure = getMeasure();
+	if (!measure) {
+		return -1;
+	} else {
+		return measure->getTimestamp();
+	}
 }
 
 

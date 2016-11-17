@@ -91,25 +91,26 @@ void MxmlEvent::clear(void) {
 ///////////////////////////////
 //
 // MxmlEvent::makeDummyRest --
+//   default values:
+//     staffindex = 0;
+//     voiceindex = 0;
 //
 
 void MxmlEvent::makeDummyRest(MxmlMeasure* owner, HumNum starttime,
-		HumNum duration, int voiceindex) {
-
+		HumNum duration, int staffindex, int voiceindex) {
 	m_starttime = starttime;
 	m_duration = duration;
-	m_eventtype = mevent_forward;
+	m_eventtype = mevent_forward;  // not a real rest (will be invisible)
 	// m_node remains null
 	// m_links remains empty
 	m_linked = false;
 	m_sequence = -m_counter;
 	m_counter++;
-	m_voice = 1;
+	m_voice = 1;  // don't know what the original voice number is
 	m_voiceindex = voiceindex;
-	m_staff = 1;  // need to add multiple events, one for each staff in part.
-	m_maxstaff = 1;
+	m_staff = staffindex + 1;
+	m_maxstaff = m_staff;  // how is this used/set?
 	//	m_hnode remains null
-
 }
 
 
@@ -641,8 +642,8 @@ bool MxmlEvent::isInvisible(void) {
 //
 
 int MxmlEvent::getStaffIndex(void) const {
-	if (m_voiceindex >= 0) {
-		return m_voiceindex;
+	if (m_staff > 0) {
+		return m_staff - 1;
 	}
 	if (m_owner) {
 		int staffindex = m_owner->getStaffIndex(m_voice);
@@ -787,10 +788,23 @@ bool MxmlEvent::parseEvent(xml_node el, xml_node nextel) {
 		}
 	}
 
+	if (m_eventtype == mevent_forward) {
+		xml_node pel = el.previous_sibling();
+		if (nodeType(pel, "harmony")) {
+			// This is a spacer forward which is not in any voice/layer,
+			// so invalidate is staff/voice to prevent it from being
+			// converted to a rest.
+			m_voice = -1;
+			tempvoice = -1;
+			m_staff = -1;
+			tempstaff = -1;
+		}
+	}
+
 	if (tempvoice >= 0) {
 		m_voice = (short)tempvoice;
 	}
-	if (tempstaff) {
+	if (tempstaff > 0) {
 		m_staff = (short)tempstaff;
 	}
 	if (!emptyvoice) {

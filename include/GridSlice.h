@@ -62,6 +62,8 @@ class GridSlice : public vector<GridPart*> {
 		void         setTimestamp       (HumNum timestamp);
 		void         setOwner           (HumGrid* owner);
 		HumGrid*     getOwner           (void);
+		HumNum       getMeasureDuration (void);
+		HumNum       getMeasureTimestamp(void);
 		GridMeasure* getMeasure         (void);
 
 		void transferSides        (HumdrumLine& line, GridStaff& sides, 

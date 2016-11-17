@@ -55,6 +55,11 @@ GridStaff::~GridStaff(void) {
 //
 
 GridVoice* GridStaff::setTokenLayer(int layerindex, HTp token, HumNum duration) {
+	if (layerindex < 0) {
+		cerr << "Error: layer index is " << layerindex
+		     << " for " << token << endl;
+		return NULL;
+	}
 	if (layerindex > (int)this->size()-1) {
 		int oldsize = this->size();
 		this->resize(layerindex+1);
@@ -63,7 +68,6 @@ GridVoice* GridStaff::setTokenLayer(int layerindex, HTp token, HumNum duration) 
 		}
 	}
 	if (this->at(layerindex) != NULL) {
-		cerr << "DELETING GridVoice " << this->at(layerindex) << endl;
 		delete this->at(layerindex);
 	}
 	GridVoice* gv = new GridVoice(token, duration);

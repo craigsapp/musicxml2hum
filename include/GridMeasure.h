@@ -34,15 +34,18 @@ class GridMeasure : public list<GridSlice*> {
 		GridMeasure(HumGrid* owner);
 		~GridMeasure();
 
-		bool         transferTokens    (HumdrumFile& outfile, bool recip);
-		HumGrid*     getOwner          (void);
-		void         setOwner          (HumGrid* owner);
-		HumNum       getMeasureDuration(void);
-		void         setMeasureDuration(HumNum duration);
+		bool         transferTokens (HumdrumFile& outfile, bool recip);
+		HumGrid*     getOwner       (void);
+		void         setOwner       (HumGrid* owner);
+		HumNum       getDuration    (void);
+		void         setDuration    (HumNum duration);
+		HumNum       getTimestamp   (void);
+		void         setTimestamp   (HumNum timestamp);
 
 	private:
 		HumGrid* m_owner;
 		HumNum   m_duration;
+		HumNum   m_timestamp;
 };
 
 

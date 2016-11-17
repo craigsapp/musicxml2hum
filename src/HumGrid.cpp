@@ -773,8 +773,7 @@ void HumGrid::addNullTokens(void) {
 
 void HumGrid::extendDurationToken(int slicei, int parti, int staffi,
 		int voicei) {
-
-	if (slicei <= (int)m_allslices.size()) {
+	if ((slicei < 0) || (slicei >= ((int)m_allslices.size()) - 1)) {
 		// nothing after this line, so can extend further.
 		return;
 	}

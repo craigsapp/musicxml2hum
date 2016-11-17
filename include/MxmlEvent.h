@@ -109,6 +109,7 @@ class MxmlEvent {
       void               makeDummyRest      (MxmlMeasure* owner, 
 		                                       HumNum startime,
 		                                       HumNum duration,
+		                                       int staffindex = 0,
 		                                       int voiceindex = 0);
 		void               setVoiceIndex      (int voiceindex);
 		void               forceInvisible     (void);
