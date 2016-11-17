@@ -803,7 +803,7 @@ void musicxml2hum_interface::addEvent(GridSlice& slice,
 		cerr << "!!TOKEN: " << ss.str();
 		cerr << "\tTS: "    << event->getStartTime();
 		cerr << "\tDUR: "   << event->getDuration();
-		cerr << "  \tSTi: "   << event->getStaffNumber();
+		cerr << "\tSTi: "   << event->getStaffNumber();
 		cerr << "\tVn: "    << event->getVoiceNumber();
 		cerr << "\tSTi: "   << event->getStaffIndex();
 		cerr << "\tVi: "    << event->getVoiceIndex();

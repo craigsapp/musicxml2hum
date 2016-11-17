@@ -56,7 +56,7 @@ bool GridMeasure::transferTokens(HumdrumFile& outfile, bool recip) {
 	// the true duration from the duration of the measure.
 	if (this->size() > 0) {
 		GridSlice* slice = back();
-		if (slice->isMeasureSlice() && (this->size() > 2)) {
+		if (slice->isMeasureSlice() && (this->size() >= 2)) {
 			auto ending = this->end();
 			--ending;
 			--ending;
