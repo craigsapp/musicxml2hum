@@ -1258,7 +1258,6 @@ void HumGrid::removeRedundantClefChanges(void) {
 	GridVoice* voice;
 	HTp token;
 	for (int m=0; m<(int)this->size(); m++) {
-cerr << "MEASURE " << m << endl;
 		measure = this->at(m);
 		for (auto slice : *measure) {
 			if (!slice->isClefSlice()) {
