@@ -30,6 +30,11 @@ HumGrid::HumGrid(void) {
 	m_verseCount.resize(100);
 	m_harmonyCount.resize(100);
 	fill(m_harmonyCount.begin(), m_harmonyCount.end(), 0);
+
+	// default options
+	m_musicxmlbarlines = false;
+	m_recip = true;
+	m_pickup = false;
 }
 
 
@@ -146,8 +151,13 @@ bool HumGrid::transferTokens(HumdrumFile& outfile) {
 	insertStaffIndications(outfile);
 	insertPartIndications(outfile);
 	insertExclusiveInterpretationLine(outfile);
-	for (int measure=0; measure<(int)this->size(); measure++) {
-		status &= at(measure)->transferTokens(outfile, m_recip);
+	bool addstartbar = (!hasPickup()) && (!m_musicxmlbarlines);
+	for (int m=0; m<(int)this->size(); m++) {
+		if (addstartbar && m == 0) {
+			status &= at(m)->transferTokens(outfile, m_recip, addstartbar);
+		} else {
+			status &= at(m)->transferTokens(outfile, m_recip, false);
+		}
 		if (!status) {
 			break;
 		}
@@ -593,6 +603,12 @@ void HumGrid::addMeasureLines(void) {
 	int staffcount, partcount, vcount, nextvcount, lcount;
 	GridMeasure* measure;
 	GridMeasure* nextmeasure;
+
+	vector<int> barnums;
+	if (!m_musicxmlbarlines) {
+		getMetricBarNumbers(barnums);
+	}
+
 	for (int m=0; m<(int)this->size()-1; m++) {
 		measure = this->at(m);
 		nextmeasure = this->at(m+1);
@@ -627,7 +643,17 @@ void HumGrid::addMeasureLines(void) {
 					lcount = nextvcount;
 				}
 				for (int v=0; v<lcount; v++) {
-					token = new HumdrumToken("=");
+					if (m_musicxmlbarlines) {
+						// m+1 because of the measure number
+						// comes from the previous measure.
+						token = new HumdrumToken("=" + to_string(m+1));
+					} else {
+						if (barnums[m] > 0) {
+							token = new HumdrumToken("=" + to_string(barnums[m]));
+						} else {
+							token = new HumdrumToken("=");
+						}
+					}
 					gt = new GridVoice(token, 0);
 					mslice->at(p)->at(s)->push_back(gt);
 				}
@@ -637,6 +663,54 @@ void HumGrid::addMeasureLines(void) {
 	}
 
    // add last measure later
+}
+
+
+
+//////////////////////////////
+//
+// HumGrid::addMetricBarNumbers --
+//
+
+void HumGrid::getMetricBarNumbers(vector<int>& barnums) {
+	int mcount = (int)this->size();
+	barnums.resize(mcount);
+
+	if (mcount == 0) {
+		return;
+	}
+
+	vector<HumNum> mdur(mcount);
+	vector<HumNum> tsdur(mcount); // time signature duration
+
+	for (int m=0; m<(int)this->size(); m++) {
+		mdur[m]   = this->at(m)->getDuration();
+		tsdur[m] = this->at(m)->getTimeSigDur();
+		if (tsdur[m] <= 0) {
+			tsdur[m] = mdur[m];
+		}
+	}
+
+	int counter = 1;
+	if (mdur[0] == tsdur[0]) {
+		m_pickup = false;
+		counter++;
+		// add the initial barline later when creating HumdrumFile.
+	} else {
+		m_pickup = true;
+	}
+
+	for (int m=0; m<(int)this->size(); m++) {
+		if ((m < mcount-1) && (tsdur[m] == tsdur[m+1])) {
+			if (mdur[m] + mdur[m+1] == tsdur[m]) {
+				barnums[m] = -1;
+			} else {
+				barnums[m] = counter++;
+			}
+		} else {
+			barnums[m] = counter++;
+		}
+	}
 }
 
 
@@ -1315,8 +1389,17 @@ void HumGrid::removeRedundantClefChanges(void) {
 			
 		}
 	}
+}
 
 
+
+//////////////////////////////
+//
+// HumGrid::hasPickup --
+//
+
+bool HumGrid::hasPickup(void) {
+	return m_pickup;
 }
 
 

@@ -210,6 +210,7 @@ bool GridSlice::isDataSlice(void) {
 void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 	HTp token;
 	HumdrumLine* line = new HumdrumLine;
+	GridVoice* voice;
 	string empty = ".";
 
 	if (recip) {
@@ -219,7 +220,8 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 			token = new HumdrumToken("*");
 			empty = "*";
 		} else if (isMeasureSlice()) {
-			token = new HumdrumToken("=");
+			voice = this->at(0)->at(0)->at(0);
+			token = new HumdrumToken((string)*voice->getToken());
 			empty = "=";
 		} else if (isInterpretationSlice()) {
 			token = new HumdrumToken("*");
