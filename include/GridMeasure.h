@@ -18,6 +18,7 @@
 #define _GRIDMEASURE_H
 
 #include "humlib.h"
+#include "grid.h"
 
 #include <list>
 
@@ -44,15 +45,19 @@ class GridMeasure : public list<GridSlice*> {
 		void         setTimestamp   (HumNum timestamp);
 		HumNum       getTimeSigDur  (void);
 		void         setTimeSigDur  (HumNum duration);
+		MeasureType  getType        (void);
+		bool         isFinalBarline(void) {return m_type == MeasureType::Final;}
+		void         makeFinalBarline(void) { m_type = MeasureType::Final; }
 
 	protected:
 		void         appendInitialBarline(HumdrumFile& infile);
 
 	private:
-		HumGrid* m_owner;
-		HumNum   m_duration;
-		HumNum   m_timestamp;
-		HumNum   m_timesigdur;
+		HumGrid*    m_owner;
+		HumNum      m_duration;
+		HumNum      m_timestamp;
+		HumNum      m_timesigdur;
+		MeasureType m_type;
 };
 
 

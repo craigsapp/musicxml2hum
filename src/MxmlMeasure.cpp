@@ -66,6 +66,7 @@ void MxmlMeasure::clear(void) {
 	m_owner = NULL;
 	m_timesigdur = -1;
 	m_previous = m_following = NULL;
+	m_type = MeasureStyle::Plain;
 }
 
 
@@ -696,6 +697,15 @@ void MxmlMeasure::reportStaffNumberToOwner(int staffnum, int voicenum) {
 }
 
 
+
+//////////////////////////////
+//
+// MxmlMeasure::receiveMeasureStyleFromChild --
+//
+
+void  MxmlMeasure::receiveMeasureStyleFromChild(MeasureStyle style) {
+	m_type = style;
+}
 
 
 } // end namespace hum

@@ -221,6 +221,18 @@ void MxmlEvent::reportHarmonyCountToOwner(int count) {
 }
 
 
+//////////////////////////////
+//
+// MxmlEvent::reportMeasureStyleToOwner --
+
+void MxmlEvent::reportMeasureStyleToOwner (MeasureStyle style) {
+	if (!m_owner) {
+		return;
+	}
+	m_owner->receiveMeasureStyleFromChild(style);
+}
+
+
 
 //////////////////////////////
 //
@@ -735,6 +747,7 @@ bool MxmlEvent::parseEvent(xml_node el, xml_node nextel, HumNum starttime) {
 		m_eventtype = mevent_backup;
 	} else if (nodeType(m_node, "barline")) {
 		m_eventtype = mevent_barline;
+		setBarlineStyle(m_node);
 	} else if (nodeType(m_node, "bookmark")) {
 		m_eventtype = mevent_bookmark;
 	} else if (nodeType(m_node, "direction")) {
@@ -768,6 +781,7 @@ bool MxmlEvent::parseEvent(xml_node el, xml_node nextel, HumNum starttime) {
 	} else {
 		m_eventtype = mevent_unknown;
 	}
+cerr << "GOT HERE EEE" << endl;
 
 	int tempstaff    = 1;
 	int tempvoice    = -1;
@@ -805,6 +819,7 @@ bool MxmlEvent::parseEvent(xml_node el, xml_node nextel, HumNum starttime) {
 		}
 	}
 
+cerr << "GOT HERE FFF" << endl;
 	if (tempvoice >= 0) {
 		m_voice = (short)tempvoice;
 	}
@@ -826,6 +841,7 @@ bool MxmlEvent::parseEvent(xml_node el, xml_node nextel, HumNum starttime) {
 	}
 
 	setStartTime(starttime);
+cerr << "GOT HERE GGG" << endl;
 
 	switch (m_eventtype) {
 		case mevent_note:
@@ -877,6 +893,7 @@ bool MxmlEvent::parseEvent(xml_node el, xml_node nextel, HumNum starttime) {
 			break;
 	}
 
+cerr << "GOT HERE HHH" << endl;
 	if (floatingharmony) {
 		m_hnode = el;
 		m_eventtype = mevent_float;
@@ -941,6 +958,32 @@ HumNum MxmlEvent::getTimeSigDur(void) {
 	output /= beattype;
 	output *= 4; // convert to quarter note duration
 	return output;
+}
+
+
+
+//////////////////////////////
+//
+// MxmlEvent::setBarlineStyle --
+//    <barline location="right">
+//       <bar-style>light-heavy</bar-style>
+//    </barline>
+//
+
+void MxmlEvent::setBarlineStyle(xml_node node) {
+	xml_node child = node.first_child();
+	while (child) {
+cerr << "GOT HERE AAA " << endl;
+		if (nodeType(child, "bar-style")) {
+			if (strcmp(child.child_value(), "light-heavy") == 0) {
+cerr << "FINAL BARINE" << endl;
+				reportMeasureStyleToOwner(MeasureStyle::Final);
+cerr << "GOT HERE BBB" << endl;
+			}
+		}
+		child = child.next_sibling();
+	}
+cerr << "GOT HERE CCC" << endl;
 }
 
 

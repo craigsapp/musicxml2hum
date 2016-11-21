@@ -18,6 +18,7 @@
 #define _MXMLMEASURE_H
 
 #include "humlib.h"
+#include "grid.h"
 
 #include "pugiconfig.hpp"
 #include "pugixml.hpp"
@@ -29,6 +30,7 @@ using namespace std;
 
 
 namespace hum {
+
 
 class MxmlEvent;
 class MxmlPart;
@@ -83,10 +85,14 @@ class MxmlMeasure {
 		vector<MxmlEvent*>& getEventList (void);
 		void  sortEvents                 (void);
 		void  forceLastInvisible         (void);
+		MeasureStyle  getType        (void);
+		bool  isFinalBarline(void)   { return m_type == MeasureStyle::Final; }
+		void  makeFinalBarline(void) { m_type = MeasureStyle::Final; }
 
 	private:
 		void  receiveStaffNumberFromChild (int staffnum, int voicenum);
 		void  receiveTimeSigDurFromChild  (HumNum duration);
+		void  receiveMeasureStyleFromChild(MeasureStyle style);
    	void  reportStaffNumberToOwner    (int staffnum, int voicenum);
 		void  reportVerseCountToOwner     (int count);
 		void  reportVerseCountToOwner     (int staffindex, int count);
@@ -102,6 +108,7 @@ class MxmlMeasure {
 		MxmlMeasure*       m_following; // following measure in part or null
 		vector<MxmlEvent*> m_events;    // list of semi-ordered events in measure
 		vector<SimultaneousEvents> m_sortedevents; // list of time-sorted events
+		MeasureStyle       m_type;      // measure style type
 
 	friend MxmlEvent;
 	friend MxmlPart;
