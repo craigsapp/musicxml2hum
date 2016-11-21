@@ -66,7 +66,7 @@ void MxmlMeasure::clear(void) {
 	m_owner = NULL;
 	m_timesigdur = -1;
 	m_previous = m_following = NULL;
-	m_type = MeasureStyle::Plain;
+	m_style = MeasureStyle::Plain;
 }
 
 
@@ -649,6 +649,7 @@ void MxmlMeasure::receiveStaffNumberFromChild(int staffnum, int voicenum) {
 }
 
 
+
 //////////////////////////////
 //
 // MxmlMeasure::receiveTimeSigDurFromChild --
@@ -704,8 +705,32 @@ void MxmlMeasure::reportStaffNumberToOwner(int staffnum, int voicenum) {
 //
 
 void  MxmlMeasure::receiveMeasureStyleFromChild(MeasureStyle style) {
-	m_type = style;
+	m_style = style;
 }
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::getStyle --
+//
+
+MeasureStyle MxmlMeasure::getStyle(void) {
+	return m_style;
+}
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::getBarStyle --
+//
+
+MeasureStyle MxmlMeasure::getBarStyle(void) { 
+	return getStyle();
+}
+
+
 
 
 } // end namespace hum

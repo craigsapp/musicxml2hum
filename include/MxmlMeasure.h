@@ -85,9 +85,11 @@ class MxmlMeasure {
 		vector<MxmlEvent*>& getEventList (void);
 		void  sortEvents                 (void);
 		void  forceLastInvisible         (void);
-		MeasureStyle  getType        (void);
-		bool  isFinalBarline(void)   { return m_type == MeasureStyle::Final; }
-		void  makeFinalBarline(void) { m_type = MeasureStyle::Final; }
+		MeasureStyle  getStyle           (void);
+		MeasureStyle  getBarStyle        (void);
+		void  makeFinalBarline(void) { m_style = MeasureStyle::Final; }
+		bool  isFinal(void)   { return m_style == MeasureStyle::Final; }
+		bool  isRepeatBackward(void)   { return m_style == MeasureStyle::RepeatBackward; }
 
 	private:
 		void  receiveStaffNumberFromChild (int staffnum, int voicenum);
@@ -108,7 +110,7 @@ class MxmlMeasure {
 		MxmlMeasure*       m_following; // following measure in part or null
 		vector<MxmlEvent*> m_events;    // list of semi-ordered events in measure
 		vector<SimultaneousEvents> m_sortedevents; // list of time-sorted events
-		MeasureStyle       m_type;      // measure style type
+		MeasureStyle       m_style;     // measure style type
 
 	friend MxmlEvent;
 	friend MxmlPart;

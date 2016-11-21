@@ -781,7 +781,6 @@ bool MxmlEvent::parseEvent(xml_node el, xml_node nextel, HumNum starttime) {
 	} else {
 		m_eventtype = mevent_unknown;
 	}
-cerr << "GOT HERE EEE" << endl;
 
 	int tempstaff    = 1;
 	int tempvoice    = -1;
@@ -819,7 +818,6 @@ cerr << "GOT HERE EEE" << endl;
 		}
 	}
 
-cerr << "GOT HERE FFF" << endl;
 	if (tempvoice >= 0) {
 		m_voice = (short)tempvoice;
 	}
@@ -841,7 +839,6 @@ cerr << "GOT HERE FFF" << endl;
 	}
 
 	setStartTime(starttime);
-cerr << "GOT HERE GGG" << endl;
 
 	switch (m_eventtype) {
 		case mevent_note:
@@ -893,7 +890,6 @@ cerr << "GOT HERE GGG" << endl;
 			break;
 	}
 
-cerr << "GOT HERE HHH" << endl;
 	if (floatingharmony) {
 		m_hnode = el;
 		m_eventtype = mevent_float;
@@ -965,25 +961,40 @@ HumNum MxmlEvent::getTimeSigDur(void) {
 //////////////////////////////
 //
 // MxmlEvent::setBarlineStyle --
+// "==" -> Final
 //    <barline location="right">
 //       <bar-style>light-heavy</bar-style>
+//    </barline>
+//
+// ":|!" -> RepeatBackward
+//    <barline location="right">
+//       <bar-style>light-heavy</bar-style>
+//       <repeat direction="backward"/>
 //    </barline>
 //
 
 void MxmlEvent::setBarlineStyle(xml_node node) {
 	xml_node child = node.first_child();
+	int repeat = 0;
+	string barstyle;
 	while (child) {
-cerr << "GOT HERE AAA " << endl;
 		if (nodeType(child, "bar-style")) {
-			if (strcmp(child.child_value(), "light-heavy") == 0) {
-cerr << "FINAL BARINE" << endl;
-				reportMeasureStyleToOwner(MeasureStyle::Final);
-cerr << "GOT HERE BBB" << endl;
+			barstyle = child.child_value();
+		} else if (nodeType(child, "repeat")) {
+			if (strcmp(child.attribute("direction").value(), "backward") == 0) {
+				repeat = -1;
+			} else if (strcmp(child.attribute("direction").value(), "forward") == 0) {
+				repeat = +1;
 			}
 		}
 		child = child.next_sibling();
 	}
-cerr << "GOT HERE CCC" << endl;
+
+	if ((repeat == 0) && (barstyle == "light-heavy")) {
+		reportMeasureStyleToOwner(MeasureStyle::Final);
+	} else if ((repeat == -1) && (barstyle == "light-heavy")) {
+		reportMeasureStyleToOwner(MeasureStyle::RepeatBackward);
+	}
 }
 
 

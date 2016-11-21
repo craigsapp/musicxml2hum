@@ -25,7 +25,7 @@ namespace hum {
 
 GridMeasure::GridMeasure(HumGrid* owner) {
 	m_owner = owner;
-	m_type = MeasureType::Plain;
+	m_style = MeasureStyle::Plain;
 }
 
 
@@ -216,16 +216,6 @@ HumNum GridMeasure::getTimeSigDur(void) {
 
 void GridMeasure::setTimeSigDur(HumNum duration) {
 	m_timesigdur = duration;
-}
-
-
-//////////////////////////////
-//
-// GridMeasure::getType -- Returns the measure styling (ending style).
-//
-
-MeasureType GridMeasure::getType(void) {
-	return m_type;
 }
 
 
