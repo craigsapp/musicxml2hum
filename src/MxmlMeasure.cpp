@@ -705,7 +705,14 @@ void MxmlMeasure::reportStaffNumberToOwner(int staffnum, int voicenum) {
 //
 
 void  MxmlMeasure::receiveMeasureStyleFromChild(MeasureStyle style) {
-	m_style = style;
+	if (style == MeasureStyle::RepeatForward) {
+		MxmlMeasure* previous = getPreviousMeasure();
+		if (previous) {
+			previous->setStyle(style);
+		}
+	} else {
+		setStyle(style);
+	}
 }
 
 
@@ -728,6 +735,28 @@ MeasureStyle MxmlMeasure::getStyle(void) {
 
 MeasureStyle MxmlMeasure::getBarStyle(void) { 
 	return getStyle();
+}
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::setStyle --
+//
+
+void MxmlMeasure::setStyle(MeasureStyle style) {
+	m_style = style;
+}
+
+
+
+//////////////////////////////
+//
+// MxmlMeasure::setBarStyle --
+//
+
+void MxmlMeasure::setBarStyle(MeasureStyle style) { 
+	m_style = style;
 }
 
 

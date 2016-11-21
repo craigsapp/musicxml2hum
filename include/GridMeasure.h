@@ -54,6 +54,8 @@ class GridMeasure : public list<GridSlice*> {
 		                  {return m_style == MeasureStyle::Final;}
 		bool         isRepeatBackward(void) 
 		                  { return m_style == MeasureStyle::RepeatBackward; }
+		bool         isRepeatForward(void) 
+		                  { return m_style == MeasureStyle::RepeatForward; }
 
 	protected:
 		void         appendInitialBarline(HumdrumFile& infile);

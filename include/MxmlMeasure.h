@@ -71,10 +71,12 @@ class MxmlMeasure {
 		int           getEventCount      (void) const;
 		vector<SimultaneousEvents>* getSortedEvents(void);
 		MxmlEvent*    getEvent           (int index) const;
-		void          setPreviousMeasure (MxmlMeasure* event);
+
 		void          setNextMeasure     (MxmlMeasure* event);
-		MxmlMeasure*  getPreviousMeasure (void) const;
 		MxmlMeasure*  getNextMeasure     (void) const;
+		MxmlMeasure*  getPreviousMeasure (void) const;
+		void          setPreviousMeasure (MxmlMeasure* event);
+
 		int           getVoiceIndex      (int voicenum);
 		int           getStaffIndex      (int voicenum);
 		void          setTimeSigDur      (HumNum duration);
@@ -87,6 +89,8 @@ class MxmlMeasure {
 		void  forceLastInvisible         (void);
 		MeasureStyle  getStyle           (void);
 		MeasureStyle  getBarStyle        (void);
+		void  setStyle                   (MeasureStyle style);
+		void  setBarStyle                (MeasureStyle style);
 		void  makeFinalBarline(void) { m_style = MeasureStyle::Final; }
 		bool  isFinal(void)   { return m_style == MeasureStyle::Final; }
 		bool  isRepeatBackward(void)   { return m_style == MeasureStyle::RepeatBackward; }

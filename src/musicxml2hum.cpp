@@ -1444,13 +1444,13 @@ xml_node musicxml2hum_interface::convertKeySigToHumdrum(xml_node keysig,
 		if (fifths > 5) { ss << "e#"; }
 		if (fifths > 6) { ss << "b#"; }
 	} else if (fifths < 0) {
-		if (fifths < -6) { ss << "b-"; }
-		if (fifths < -5) { ss << "e-"; }
-		if (fifths < -4) { ss << "a-"; }
+		if (fifths < 0)  { ss << "b-"; }
+		if (fifths < -2) { ss << "e-"; }
+		if (fifths < -1) { ss << "a-"; }
 		if (fifths < -3) { ss << "d-"; }
-		if (fifths < -2) { ss << "c-"; }
-		if (fifths < -1) { ss << "g-"; }
-		if (fifths < 0)  { ss << "f-"; }
+		if (fifths < -4) { ss << "g-"; }
+		if (fifths < -5) { ss << "c-"; }
+		if (fifths < -6) { ss << "f-"; }
 	}
 	ss << "]";
 

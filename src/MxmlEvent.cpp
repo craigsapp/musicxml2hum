@@ -972,6 +972,11 @@ HumNum MxmlEvent::getTimeSigDur(void) {
 //       <repeat direction="backward"/>
 //    </barline>
 //
+//  "!|:" -> RepeatForward
+//    <barline location="left">
+//        <repeat direction="forward"/>
+//    </barline>
+//
 
 void MxmlEvent::setBarlineStyle(xml_node node) {
 	xml_node child = node.first_child();
@@ -983,7 +988,8 @@ void MxmlEvent::setBarlineStyle(xml_node node) {
 		} else if (nodeType(child, "repeat")) {
 			if (strcmp(child.attribute("direction").value(), "backward") == 0) {
 				repeat = -1;
-			} else if (strcmp(child.attribute("direction").value(), "forward") == 0) {
+			} else if (strcmp(child.attribute("direction").value(),
+					"forward") == 0) {
 				repeat = +1;
 			}
 		}
@@ -994,6 +1000,8 @@ void MxmlEvent::setBarlineStyle(xml_node node) {
 		reportMeasureStyleToOwner(MeasureStyle::Final);
 	} else if ((repeat == -1) && (barstyle == "light-heavy")) {
 		reportMeasureStyleToOwner(MeasureStyle::RepeatBackward);
+	} else if (repeat == +1) {
+		reportMeasureStyleToOwner(MeasureStyle::RepeatForward);
 	}
 }
 

@@ -54,6 +54,7 @@ enum class SliceType {
 enum class MeasureStyle {
 	Plain,
 	RepeatBackward,
+	RepeatForward,
 	Final
 };
 

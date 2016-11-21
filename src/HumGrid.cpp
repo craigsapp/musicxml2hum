@@ -758,6 +758,8 @@ string HumGrid::getBarStyle(GridMeasure* measure) {
 		output = "=";
 	} else if (measure->isRepeatBackward()) {
 		output = ":|!";
+	} else if (measure->isRepeatForward()) {
+		output = "!|:";
 	}
 	return output;
 }
