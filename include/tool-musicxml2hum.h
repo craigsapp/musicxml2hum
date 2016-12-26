@@ -2,16 +2,16 @@
 // Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 // Creation Date: Sat Aug  6 10:53:40 CEST 2016
 // Last Modified: Wed Oct 26 18:25:45 PDT 2016 Renamed class
-// Filename:      musicxml2hum.h
-// URL:           https://github.com/craigsapp/musicxml2hum/blob/master/include/musicxml2hum.h
+// Filename:      tool-musicxml2hum.h
+// URL:           https://github.com/craigsapp/musicxml2hum/blob/master/include/tool-musicxml2hum.h
 // Syntax:        C++11
 // vim:           ts=3 noexpandtab
 //
 // Description:   Inteface to convert a MusicXml file into a Humdrum file.
 //
 
-#ifndef _MUSICXML2HUM_H
-#define _MUSICXML2HUM_H
+#ifndef _TOOL_MUSICXML2HUM_H
+#define _TOOL_MUSICXML2HUM_H
 
 #define _USE_HUMLIB_OPTIONS_
 
@@ -32,10 +32,10 @@ using namespace pugi;
 namespace hum {
 
 
-class musicxml2hum_interface {
+class Tool_musicxml2hum {
 	public:
-		musicxml2hum_interface       (void);
-		~musicxml2hum_interface      () {}
+		        Tool_musicxml2hum    (void);
+		       ~Tool_musicxml2hum    () {}
 
 		bool    convertFile          (ostream& out, const char* filename);
 		bool    convert              (ostream& out, xml_document& infile);
@@ -145,7 +145,7 @@ class musicxml2hum_interface {
 
 }  // end of namespace hum
 
-#endif /* _MUSICXML2HUM_H */
+#endif /* _TOOL_MUSICXML2HUM_H */
 
 
 
