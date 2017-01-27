@@ -59,9 +59,6 @@ bindir:
 update:
 	git pull
 
-install:
-	sudo cp bin/musicxml2hum /usr/local/bin/
-
 external:
 ifeq ($(wildcard external/humlib/lib/libhumlib.a),)
 	(cd external && $(MAKE) humlib)
@@ -71,7 +68,7 @@ ifeq ($(wildcard libpugixml.a),)
 endif
 
 install:
-	sudo cp bin/musicxml2hum /usr/local/bin
+	sudo cp bin/musicxml2hum /usr/local/bin/
 
 tests:
 	for i in tests/*.xml; do ./$(TARGET) $$i > tests/`basename $$i .xml`.krn; done
