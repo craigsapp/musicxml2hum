@@ -122,8 +122,12 @@ class Tool_musicxml2hum : public HumTool {
 
 		void addTimeSigLine    (GridMeasure* outdata, vector<vector<xml_node> >& timesigs,
 		                        vector<MxmlPart>& partdata, HumNum nowtime);
-		void insertPartTimeSigs (xml_node timesig, GridPart& part);
+		bool insertPartTimeSigs (xml_node timesig, GridPart& part);
+		void insertPartMensurations(xml_node timesig, GridPart& part);
+		bool checkForMensuration(xml_node timesig);
 		xml_node convertTimeSigToHumdrum(xml_node timesig, 
+		                        HTp& token, int& staffindex);
+		xml_node convertMensurationToHumdrum(xml_node timesig,
 		                        HTp& token, int& staffindex);
 
 		void addEvent          (GridSlice& slice, MxmlEvent* event);

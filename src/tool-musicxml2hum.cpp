@@ -1408,18 +1408,40 @@ void Tool_musicxml2hum::addTimeSigLine(GridMeasure* outdata,
 		vector<vector<xml_node> >& timesigs, vector<MxmlPart>& partdata,
 		HumNum nowtime) {
 
-	GridSlice* slice = new GridSlice(outdata, nowtime,
-		SliceType::TimeSigs);
+	GridSlice* slice = new GridSlice(outdata, nowtime, SliceType::TimeSigs);
 	outdata->push_back(slice);
 	slice->initializePartStaves(partdata);
+
+	bool status = false;
 
 	for (int i=0; i<(int)partdata.size(); i++) {
 		for (int j=0; j<(int)timesigs[i].size(); j++) {
 			if (timesigs[i][j]) {
-				insertPartTimeSigs(timesigs[i][j], *slice->at(i));
+				status |= insertPartTimeSigs(timesigs[i][j], *slice->at(i));
 			}
 		}
 	}
+
+	if (!status) {
+		return;
+	}
+
+	// Add mensurations related to time signatures
+
+	slice = new GridSlice(outdata, nowtime, SliceType::MeterSigs);
+	outdata->push_back(slice);
+	slice->initializePartStaves(partdata);
+
+	// now add mensuration symbols associated with time signatures
+	for (int i=0; i<(int)partdata.size(); i++) {
+		for (int j=0; j<(int)timesigs[i].size(); j++) {
+			if (timesigs[i][j]) {
+				insertPartMensurations(timesigs[i][j], *slice->at(i));
+			}
+		}
+	}
+
+
 }
 
 
@@ -1546,16 +1568,18 @@ void Tool_musicxml2hum::insertPartKeySigs(xml_node keysig, GridPart& part) {
 //		time signature per part for now.
 //
 
-void Tool_musicxml2hum::insertPartTimeSigs(xml_node timesig,
-		GridPart& part) {
+bool Tool_musicxml2hum::insertPartTimeSigs(xml_node timesig, GridPart& part) {
 	if (!timesig) {
 		// no timesig
-		return;
+		return false;
 	}
 
+	bool hasmensuration = false;
 	HTp token;
 	int staffnum = 0;
+	
 	while (timesig) {
+		hasmensuration |= checkForMensuration(timesig);
 		timesig = convertTimeSigToHumdrum(timesig, token, staffnum);
 		if (staffnum < 0) {
 			// time signature applies to all staves in part (most common case)
@@ -1571,8 +1595,67 @@ void Tool_musicxml2hum::insertPartTimeSigs(xml_node timesig,
 			part[staffnum]->setTokenLayer(0, token, 0);
 		}
 	}
+
+	return hasmensuration;
 }
 
+
+
+//////////////////////////////
+//
+// Tool_musicxml2hum::insertPartMensurations -- 
+//
+
+void Tool_musicxml2hum::insertPartMensurations(xml_node timesig,
+		GridPart& part) {
+	if (!timesig) {
+		// no timesig
+		return;
+	}
+
+	HTp token;
+	int staffnum = 0;
+
+	while (timesig) {
+		timesig = convertMensurationToHumdrum(timesig, token, staffnum);
+		if (staffnum < 0) {
+			// time signature applies to all staves in part (most common case)
+			for (int s=0; s<(int)part.size(); s++) {
+				if (s==0) {
+					part[s]->setTokenLayer(0, token, 0);
+				} else {
+					HTp token2 = new HumdrumToken(*token);
+					part[s]->setTokenLayer(0, token2, 0);
+				}
+			}
+		} else {
+			part[staffnum]->setTokenLayer(0, token, 0);
+		}
+	}
+
+}
+
+
+//////////////////////////////
+//
+// Tool_musicxml::checkForMensuration --
+//    Examples:
+//        <time symbol="common">
+//        <time symbol="cut">
+//
+
+bool Tool_musicxml2hum::checkForMensuration(xml_node timesig) {
+	if (!timesig) {
+		return false;
+	}
+
+	xml_attribute mens = timesig.attribute("symbol");
+	if (mens) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
 
 //////////////////////////////
@@ -1650,6 +1733,9 @@ xml_node Tool_musicxml2hum::convertKeySigToHumdrum(xml_node keysig,
 //     <beats>4</beats>
 //     <beat-type>4</beat-type>
 //
+// also:
+//  <time symbol="common">
+//
 
 xml_node Tool_musicxml2hum::convertTimeSigToHumdrum(xml_node timesig,
 		HTp& token, int& staffindex) {
@@ -1680,6 +1766,53 @@ xml_node Tool_musicxml2hum::convertTimeSigToHumdrum(xml_node timesig,
 	stringstream ss;
 	ss << "*M" << beats<< "/" << beattype;
 	token = new HumdrumToken(ss.str());
+
+	timesig = timesig.next_sibling();
+	if (!timesig) {
+		return timesig;
+	}
+	if (nodeType(timesig, "time")) {
+		return timesig;
+	} else {
+		return xml_node(NULL);
+	}
+}
+
+
+
+//////////////////////////////
+//
+//	Tool_musicxml2hum::convertMensurationToHumdrum --
+//
+//  <time symbol="common">
+//     <beats>4</beats>
+//     <beat-type>4</beat-type>
+//
+// also:
+//  <time symbol="common">
+//
+
+xml_node Tool_musicxml2hum::convertMensurationToHumdrum(xml_node timesig,
+		HTp& token, int& staffindex) {
+
+	if (!timesig) {
+		return timesig;
+	}
+
+	staffindex = -1;
+	xml_attribute mens = timesig.attribute("symbol");
+	if (!mens) {
+		token = new HumdrumToken("*");
+	} else {
+		string text = mens.value();
+		if (text == "cut") {
+			token = new HumdrumToken("*met(c|)");
+		} else if (text == "common") {
+			token = new HumdrumToken("*met(c)");
+		} else {
+			token = new HumdrumToken("*");
+		}
+	}
 
 	timesig = timesig.next_sibling();
 	if (!timesig) {
