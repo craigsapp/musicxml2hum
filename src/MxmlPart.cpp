@@ -83,6 +83,17 @@ void MxmlPart::clear(void) {
 
 //////////////////////////////
 //
+// MxmlPart::enableStems --
+//
+
+
+void MxmlPart::enableStems(void) {
+	m_stems = true;
+}
+
+
+//////////////////////////////
+//
 // MxmlPart::getQTicks -- Return the current divisions element value,
 //    which are the number of integer ticks representing a quarter-note
 //    duration.
@@ -132,6 +143,9 @@ bool MxmlPart::addMeasure(xpath_node mel) {
 
 bool MxmlPart::addMeasure(xml_node mel) {
 	MxmlMeasure* meas = new MxmlMeasure(this);
+	if (m_stems) {
+		meas->enableStems();
+	}
 	if (m_measures.size() > 0) {
 		meas->setPreviousMeasure(m_measures.back());
 		m_measures.back()->setNextMeasure(meas);

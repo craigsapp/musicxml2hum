@@ -40,6 +40,7 @@ class MxmlPart {
 		              MxmlPart             (void);
 		             ~MxmlPart             ();
 		void          clear                (void);
+		void          enableStems          (void);
 		bool          readPart             (const string& id, xml_node partdef, 
 		                                    xml_node part);
 		bool          addMeasure           (xml_node mel);
@@ -80,6 +81,7 @@ class MxmlPart {
 		vector<int>          m_verseCount;
 		int                  m_harmonyCount;
 		bool                 m_editorialAccidental;
+		bool                 m_stems = false;
 
 		// m_staffvoicehist: counts of staff and voice numbers.  
 		// staff=0 is used for items such as measures.

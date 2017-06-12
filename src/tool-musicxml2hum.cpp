@@ -32,8 +32,13 @@ namespace hum {
 Tool_musicxml2hum::Tool_musicxml2hum(void) {
 	// Options& options = m_options;
 	// options.define("k|kern=b","display corresponding **kern data");
+
+	define("r|recip=b", "output **recip spine");
+	define("s|stems=b", "include stems in output");
+
 	VoiceDebugQ = false;
 	DebugQ = false;
+
 }
 
 
@@ -78,7 +83,11 @@ bool Tool_musicxml2hum::convert(ostream& out, const char* input) {
 }
 
 
+
 bool Tool_musicxml2hum::convert(ostream& out, xml_document& doc) {
+
+	initialize();
+
 	bool status = true; // for keeping track of problems in conversion process.
 
 	vector<string> partids;            // list of part IDs
@@ -107,6 +116,9 @@ bool Tool_musicxml2hum::convert(ostream& out, xml_document& doc) {
 	reindexVoices(partdata);
 
 	HumGrid outdata;
+	if (m_recipQ) {
+		outdata.enableRecipSpine();
+	}
 	status &= stitchParts(outdata, partids, partinfo, partcontent, partdata);
 
 	outdata.removeRedundantClefChanges();
@@ -153,6 +165,18 @@ bool Tool_musicxml2hum::convert(ostream& out, xml_document& doc) {
 	}
 
 	return status;
+}
+
+
+
+//////////////////////////////
+//
+// initialize --
+//
+
+void Tool_musicxml2hum::initialize(void) {
+	m_recipQ = getBoolean("recip");
+	m_stemsQ = getBoolean("stems");
 }
 
 
@@ -320,6 +344,9 @@ bool Tool_musicxml2hum::fillPartData(vector<MxmlPart>& partdata,
 
 bool Tool_musicxml2hum::fillPartData(MxmlPart& partdata,
 		const string& id, xml_node partdeclaration, xml_node partcontent) {
+	if (m_stemsQ) {
+		partdata.enableStems();
+	}
 	int count;
 	auto measures = partcontent.select_nodes("./measure");
 	for (int i=0; i<(int)measures.size(); i++) {

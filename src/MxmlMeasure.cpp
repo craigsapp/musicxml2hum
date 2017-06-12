@@ -73,6 +73,17 @@ void MxmlMeasure::clear(void) {
 
 //////////////////////////////
 //
+// MxmlMeasure::enableStems --
+//
+
+void MxmlMeasure::enableStems(void) {
+	m_stems = true;
+}
+
+
+
+//////////////////////////////
+//
 // MxmlMeasure::parseMeasure -- Reads XML data for one part's measure.
 //
 
@@ -93,6 +104,9 @@ bool MxmlMeasure::parseMeasure(xml_node mel) {
 	xml_node nextel;
 	for (auto el = mel.first_child(); el; el = el.next_sibling()) {
 		MxmlEvent* event = new MxmlEvent(this);
+		if (m_stems) {
+			event->enableStems();
+		}
 		m_events.push_back(event);
 		nextel = el.next_sibling();
 		output &= event->parseEvent(el, nextel, starttime);

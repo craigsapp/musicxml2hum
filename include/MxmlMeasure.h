@@ -52,6 +52,7 @@ class MxmlMeasure {
 		              MxmlMeasure        (MxmlPart* part);
 		             ~MxmlMeasure        (void);
 		void          clear              (void);
+		void          enableStems        (void);
 		bool          parseMeasure       (xml_node mel);
 		bool          parseMeasure       (xpath_node mel);
 		void          setStartTimeOfMeasure (HumNum value);
@@ -120,6 +121,7 @@ class MxmlMeasure {
 		vector<MxmlEvent*> m_events;    // list of semi-ordered events in measure
 		vector<SimultaneousEvents> m_sortedevents; // list of time-sorted events
 		MeasureStyle       m_style;     // measure style type
+		bool               m_stems = false;
 
 	friend MxmlEvent;
 	friend MxmlPart;

@@ -19,20 +19,24 @@ using namespace std;
 
 int main(int argc, char** argv) {
 	hum::Tool_musicxml2hum converter;
-	hum::Options options(converter.getOptionDefinitions());
-	options.process(argc, argv);
+	if (!converter.process(argc, argv)) {
+		converter.getError(cerr);
+		return -1;
+	}
+	// hum::Options options(converter.getOptionDefinitions());
+	// options.process(argc, argv);
 
 	pugi::xml_document infile;
 	string filename;
-	if (options.getArgCount() == 0) {
+	if (converter.getArgCount() == 0) {
 		filename = "<STDIN>";
 		infile.load(cin);
 	} else {
-		filename = options.getArg(1);
+		filename = converter.getArg(1);
 		infile.load_file(filename.c_str());
 	}
 
-	converter.setOptions(argc, argv);
+	//converter.setOptions(argc, argv);
 	stringstream out;
 	bool status = converter.convert(out, infile);
 	if (!status) {
@@ -42,6 +46,4 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
-
-
 

@@ -49,6 +49,7 @@ MxmlEvent::MxmlEvent(MxmlMeasure* measure) {
 	clear();
 	m_owner = measure;
 	m_sequence = m_counter++;
+	m_stems = false;
 }
 
 
@@ -84,6 +85,17 @@ void MxmlEvent::clear(void) {
 		m_links[i] = NULL;
 	}
 	m_links.resize(0);
+}
+
+
+
+///////////////////////////////
+//
+// MxmlEvent::enableStems --
+//
+
+void MxmlEvent::enableStems(void) {
+	m_stems = true;
 }
 
 
@@ -1358,7 +1370,7 @@ string MxmlEvent::getPostfixNoteInfo(bool primarynote) const {
 			} else if (strcmp(beaminfo, "backward hook") == 0) {
 				hookbacks++;
 			}
-		} else if (nodeType(child, "stem")) {
+		} else if (m_stems && nodeType(child, "stem")) {
 			const char* stemdir = child.child_value();
 			if (strcmp(stemdir, "up") == 0) {
 				stem = 1;

@@ -32,7 +32,7 @@ using namespace pugi;
 namespace hum {
 
 
-class Tool_musicxml2hum {
+class Tool_musicxml2hum : public HumTool {
 	public:
 		        Tool_musicxml2hum    (void);
 		       ~Tool_musicxml2hum    () {}
@@ -47,6 +47,7 @@ class Tool_musicxml2hum {
 		Options getOptionDefinitions (void);
 
 	protected:
+		void   initialize           (void);
 		string getChildElementText  (xml_node root, const char* xpath);
 		string getChildElementText  (xpath_node root, const char* xpath);
 		string getAttributeValue    (xml_node xnode, const string& target);
@@ -145,6 +146,8 @@ class Tool_musicxml2hum {
 		Options m_options;
 		bool DebugQ;
 		bool VoiceDebugQ;
+		bool m_recipQ = false;
+		bool m_stemsQ = false;
 		int m_slurabove = 0;
 		int m_slurbelow = 0;
 

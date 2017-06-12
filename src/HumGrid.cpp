@@ -34,7 +34,7 @@ HumGrid::HumGrid(void) {
 
 	// default options
 	m_musicxmlbarlines = false;
-	m_recip = true;
+	m_recip = false;
 	m_pickup = false;
 }
 
@@ -53,6 +53,15 @@ HumGrid::~HumGrid(void) {
 	}
 }
 
+
+//////////////////////////////
+//
+// HumGrid::enableRecipSpine --
+//
+
+void HumGrid::enableRecipSpine(void) {
+	m_recip = true;
+}
 
 
 //////////////////////////////
@@ -382,7 +391,7 @@ void HumGrid::transferMerges(GridStaff* oldstaff, GridStaff* oldlaststaff,
 	}
 
 	// Go back to the oldlaststaff and chop off all ending NULLs
-	// * t should never get to zero (there should be at least one "*" left.
+	// * it should never get to zero (there should be at least one "*" left.
 	// In theory intermediate NULLs should be checked for, and if they
 	// exist, then something bad will happen.  But it does not seem
 	// possible to have intermediate NULLs.
@@ -528,6 +537,10 @@ GridSlice* HumGrid::manipulatorCheck(GridSlice* ice1, GridSlice* ice2) {
 			mslice->at(p)->at(s) = new GridStaff;
 			v1count = (int)ice1->at(p)->at(s)->size();
 			v2count = (int)ice2->at(p)->at(s)->size();
+			if (v2count < 1) {
+				// empty spines will be filled in with at least one null token.
+				v2count = 1;
+			}
 			if ((v1count == 0) && (v2count == 1)) {
 				// grace note at the start of the measure in another voice
 				token = new HumdrumToken("*G");
@@ -941,9 +954,18 @@ void HumGrid::FillInNullTokensForGraceNotes(GridSlice* graceslice, GridSlice* la
 			v1count = (int)lastnote->at(p)->at(s)->size();
 			v2count = (int)nextnote->at(p)->at(s)->size();
 			vgcount = (int)graceslice->at(p)->at(s)->size();
-			// cerr << "\t\tv1count = " << v1count << endl;
-			// cerr << "\t\tv2count = " << v2count << endl;
-			// cerr << "\t\tvgcount = " << vgcount << endl;
+			// if (vgcount < 1) {
+			// 	vgcount = 1;
+			// }
+			if (v1count < 1) {
+				v1count = 1;
+			}
+			if (v2count < 1) {
+				v2count = 1;
+			}
+			// cerr << "p=" << p << "\ts=" << s << "\tv1count = " << v1count;
+			// cerr << "\tv2count = " << v2count;
+			// cerr << "\tvgcount = " << vgcount << endl;
 			if (v1count != v2count) {
 				// Note slices are expanding or contracting so do
 				// not try to adjust grace slice between them.
@@ -960,8 +982,6 @@ void HumGrid::FillInNullTokensForGraceNotes(GridSlice* graceslice, GridSlice* la
 			}
 		}
 	}
-// ggg
-
 }
 
 
@@ -989,7 +1009,6 @@ void HumGrid::addNullTokens(void) {
 		}
 	}
 
-	addNullTokensForGraceNotes();
 
 	for (i=0; i<(int)m_allslices.size(); i++) {
 		GridSlice& slice = *m_allslices.at(i);
@@ -1018,6 +1037,8 @@ void HumGrid::addNullTokens(void) {
 			}
 		}
 	}
+
+	addNullTokensForGraceNotes();
 }
 
 

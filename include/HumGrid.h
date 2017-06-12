@@ -30,6 +30,7 @@ class HumGrid : public vector<GridMeasure*> {
 	public:
 		HumGrid(void);
 		~HumGrid();
+		void enableRecipSpine (void);
 		bool transferTokens   (HumdrumFile& outfile);
 		int  getHarmonyCount  (int partindex);
 		int  getVerseCount    (int partindex, int staffindex);

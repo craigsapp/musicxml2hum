@@ -57,6 +57,7 @@ class MxmlEvent {
 		                   MxmlEvent          (MxmlMeasure* measure);
 		                  ~MxmlEvent          ();
 		void               clear              (void);
+		void               enableStems        (void);
 		bool               parseEvent         (xml_node el, xml_node nextel,
 		                                       HumNum starttime);
 		bool               parseEvent         (xpath_node el, HumNum starttime);
@@ -138,6 +139,7 @@ class MxmlEvent {
       int                m_maxstaff;   // maximum staff number for measure
 		xml_node           m_hnode;      // harmony label starting at note event
 		bool               m_invisible;  // for forceInvisible();
+		bool               m_stems;      // for preserving stems
 
 
 	private:
