@@ -54,6 +54,7 @@ HumGrid::~HumGrid(void) {
 }
 
 
+
 //////////////////////////////
 //
 // HumGrid::getHarmonyCount --
@@ -527,7 +528,12 @@ GridSlice* HumGrid::manipulatorCheck(GridSlice* ice1, GridSlice* ice2) {
 			mslice->at(p)->at(s) = new GridStaff;
 			v1count = (int)ice1->at(p)->at(s)->size();
 			v2count = (int)ice2->at(p)->at(s)->size();
-			if (v1count == v2count) {
+			if ((v1count == 0) && (v2count == 1)) {
+				// grace note at the start of the measure in another voice
+				token = new HumdrumToken("*G");
+				gv = new GridVoice(token, 0);
+				mslice->at(p)->at(s)->push_back(gv);
+			} else if (v1count == v2count) {
 				for (v=0; v<v1count; v++) {
 					token = new HumdrumToken("*");
 					gv = new GridVoice(token, 0);
@@ -543,7 +549,7 @@ GridSlice* HumGrid::manipulatorCheck(GridSlice* ice1, GridSlice* ice2) {
 						gv = new GridVoice(token, 0);
 						mslice->at(p)->at(s)->push_back(gv);
 					}
-				} else if (grow > 2 * v1count) {
+				} else if ((v1count > 0) && (grow > 2 * v1count)) {
 					// too large to split all at the same time, deal with later
 					for (z=0; z<v1count-1; z++) {
 						token = new HumdrumToken("*^");
@@ -857,6 +863,111 @@ bool HumGrid::buildSingleList(void) {
 
 //////////////////////////////
 //
+// HumGrid::addNullTokensForGraceNotes -- Avoid grace notes at
+//     starts of measures from contracting the subspine count.
+//
+
+void HumGrid::addNullTokensForGraceNotes(void) {
+	// add null tokens for grace notes in other voices
+	GridSlice *lastnote = NULL;
+	GridSlice *nextnote = NULL;
+	for (int i=0; i<(int)m_allslices.size(); i++) {
+		if (!m_allslices[i]->isGraceSlice()) {
+			continue;
+		}
+		// cerr << "PROCESSING " << m_allslices[i] << endl;
+		lastnote = NULL;
+		nextnote = NULL;
+
+		for (int j=i+1; j<(int)m_allslices.size(); j++) {
+			if (m_allslices[j]->isNoteSlice()) {
+				nextnote = m_allslices[j];
+				break;
+			}
+		}
+		if (nextnote == NULL) {
+			continue;
+		}
+
+		for (int j=i-1; j>=0; j--) {
+			if (m_allslices[j]->isNoteSlice()) {
+				lastnote = m_allslices[j];
+				break;
+			}
+		}
+		if (lastnote == NULL) {
+			continue;
+		}
+
+		FillInNullTokensForGraceNotes(m_allslices[i], lastnote, nextnote);
+	}
+
+}
+
+
+
+//////////////////////////////
+//
+// HumGrid::FillInNullTokensForGraceNotes --
+//
+
+void HumGrid::FillInNullTokensForGraceNotes(GridSlice* graceslice, GridSlice* lastnote,
+		GridSlice* nextnote) {
+
+	if (graceslice == NULL) {
+		return;
+	}
+	if (lastnote == NULL) {
+		return;
+	}
+	if (nextnote == NULL) {
+		return;
+	}
+
+	// cerr << "CHECKING GRACE SLICE: " << endl;
+	// cerr << "\tgrace\t" << graceslice << endl;
+	// cerr << "\tlast\t" << lastnote << endl;
+	// cerr << "\tnext\t" << nextnote << endl;
+
+	int partcount = (int)graceslice->size();
+	int staffcount;
+	int vgcount;
+	int v1count;
+	int v2count;
+
+	for (int p=0; p<partcount; p++) {
+		staffcount = (int)lastnote->at(p)->size();
+		for (int s=0; s<staffcount; s++) {
+			v1count = (int)lastnote->at(p)->at(s)->size();
+			v2count = (int)nextnote->at(p)->at(s)->size();
+			vgcount = (int)graceslice->at(p)->at(s)->size();
+			// cerr << "\t\tv1count = " << v1count << endl;
+			// cerr << "\t\tv2count = " << v2count << endl;
+			// cerr << "\t\tvgcount = " << vgcount << endl;
+			if (v1count != v2count) {
+				// Note slices are expanding or contracting so do
+				// not try to adjust grace slice between them.
+				continue;
+			}
+			if (vgcount == v1count) {
+				// Grace note slice does not need to be adjusted.
+			}
+			int diff = v1count - vgcount;
+			// fill in a null for each empty slot in voice
+			for (int i=0; i<diff; i++) {
+				GridVoice* gv = new GridVoice(".", 0);
+				graceslice->at(p)->at(s)->push_back(gv);
+			}
+		}
+	}
+// ggg
+
+}
+
+
+
+//////////////////////////////
+//
 // HumGrid::addNullTokens --
 //
 
@@ -877,6 +988,8 @@ void HumGrid::addNullTokens(void) {
 			     << endl;
 		}
 	}
+
+	addNullTokensForGraceNotes();
 
 	for (i=0; i<(int)m_allslices.size(); i++) {
 		GridSlice& slice = *m_allslices.at(i);

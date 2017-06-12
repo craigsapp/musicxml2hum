@@ -29,7 +29,7 @@ namespace hum {
 // Tool_musicxml2hum::Tool_musicxml2hum --
 //
 
-Tool_musicxml2hum::Tool_musicxml2hum(void){
+Tool_musicxml2hum::Tool_musicxml2hum(void) {
 	// Options& options = m_options;
 	// options.define("k|kern=b","display corresponding **kern data");
 	VoiceDebugQ = false;
@@ -44,8 +44,7 @@ Tool_musicxml2hum::Tool_musicxml2hum(void){
 //     Humdrum content.
 //
 
-bool Tool_musicxml2hum::convertFile(ostream& out,
-		const char* filename) {
+bool Tool_musicxml2hum::convertFile(ostream& out, const char* filename) {
 	xml_document doc;
 	auto result = doc.load_file(filename);
 	if (!result) {

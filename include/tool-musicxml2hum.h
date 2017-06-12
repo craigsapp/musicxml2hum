@@ -41,6 +41,7 @@ class Tool_musicxml2hum {
 		bool    convert              (ostream& out, xml_document& infile);
 		bool    convert              (ostream& out, const char* input);
 		bool    convert              (ostream& out, istream& input);
+
 		void    setOptions           (int argc, char** argv);
 		void    setOptions           (const vector<string>& argvlist);
 		Options getOptionDefinitions (void);

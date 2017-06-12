@@ -47,6 +47,9 @@ class HumGrid : public vector<GridMeasure*> {
 		void insertPartIndications         (HumdrumFile& outfile);
 		void insertStaffIndications        (HumdrumFile& outfile);
 		void addNullTokens                 (void);
+		void addNullTokensForGraceNotes    (void);
+		void FillInNullTokensForGraceNotes(GridSlice* graceslice, GridSlice* lastnote,
+		                                   GridSlice* nextnote);
 		bool buildSingleList               (void);
 		void extendDurationToken           (int slicei, int parti,
 		                                    int staffi, int voicei);
