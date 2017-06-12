@@ -169,7 +169,7 @@ HumNum MxmlEvent::getStartTime(void) const {
 //      of quarter note durations.
 //
 
-HumNum MxmlEvent::getDuration(void) {
+HumNum MxmlEvent::getDuration(void) const {
 	return m_duration;
 }
 
@@ -1370,12 +1370,14 @@ string MxmlEvent::getPostfixNoteInfo(bool primarynote) const {
 			} else if (strcmp(beaminfo, "backward hook") == 0) {
 				hookbacks++;
 			}
-		} else if (m_stems && nodeType(child, "stem")) {
-			const char* stemdir = child.child_value();
-			if (strcmp(stemdir, "up") == 0) {
-				stem = 1;
-			} else if (strcmp(stemdir, "down") == 0) {
-				stem = -1;
+		} else if (nodeType(child, "stem")) {
+			if (m_stems || (getDuration() == 0)) {
+				const char* stemdir = child.child_value();
+				if (strcmp(stemdir, "up") == 0) {
+					stem = 1;
+				} else if (strcmp(stemdir, "down") == 0) {
+					stem = -1;
+				}
 			}
 		} else if (nodeType(child, "notations")) {
 			notations = child;

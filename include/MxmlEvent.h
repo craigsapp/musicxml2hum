@@ -68,7 +68,7 @@ class MxmlEvent {
 		void               setDurationByTicks (long value,
 		                                       xml_node el = xml_node(NULL));
 		HumNum             getStartTime       (void) const;
-		HumNum             getDuration        (void);
+		HumNum             getDuration        (void) const;
 		void               setOwner           (MxmlMeasure* measure);
 		MxmlMeasure*       getOwner           (void) const;
 		const char*        getName            (void) const;
