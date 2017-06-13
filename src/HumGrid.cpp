@@ -541,8 +541,13 @@ GridSlice* HumGrid::manipulatorCheck(GridSlice* ice1, GridSlice* ice2) {
 				// empty spines will be filled in with at least one null token.
 				v2count = 1;
 			}
+			if (v1count < 1) {
+				// empty spines will be filled in with at least one null token.
+				v1count = 1;
+			}
 			if ((v1count == 0) && (v2count == 1)) {
 				// grace note at the start of the measure in another voice
+				// no longer can get here due to v1count min being 1.
 				token = new HumdrumToken("*G");
 				gv = new GridVoice(token, 0);
 				mslice->at(p)->at(s)->push_back(gv);
@@ -665,6 +670,9 @@ void HumGrid::addMeasureLines(void) {
 				lcount = vcount;
 				if (lcount > nextvcount) {
 					lcount = nextvcount;
+				}
+				if (lcount == 0) {
+					lcount = 1;
 				}
 				for (int v=0; v<lcount; v++) {
 					token = createBarToken(m, barnums[m], measure);

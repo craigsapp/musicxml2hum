@@ -100,7 +100,7 @@ void GridStaff::setNullTokenLayer(int layerindex, SliceType type,
 
 	if (layerindex < (int)this->size()) {
 		if (at(layerindex) != NULL) {
-			if ((string)*at(layerindex)->getToken() == ".") {
+			if ((string)*at(layerindex)->getToken() == nulltoken) {
 				// there is already a null data token here, so don't 
 				// replace it.
 				return;
