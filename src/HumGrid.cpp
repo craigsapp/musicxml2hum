@@ -1284,7 +1284,6 @@ void HumGrid::insertExclusiveInterpretationLine(HumdrumFile& outfile) {
 //
 
 void HumGrid::insertExInterpSides(HumdrumLine* line, int part, int staff) {
-
 	if (staff >= 0) {
 		int versecount = getVerseCount(part, staff); // verses related to staff
 		for (int i=0; i<versecount; i++) {
@@ -1300,7 +1299,6 @@ void HumGrid::insertExInterpSides(HumdrumLine* line, int part, int staff) {
 			line->appendToken(token);
 		}
 	}
-
 }
 
 

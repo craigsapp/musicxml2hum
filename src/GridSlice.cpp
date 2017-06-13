@@ -212,6 +212,16 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 	HumdrumLine* line = new HumdrumLine;
 	GridVoice* voice;
 	string empty = ".";
+	if (isMeasureSlice()) {
+		if (this->at(0)->at(0)->size() > 0) {
+			voice = this->at(0)->at(0)->at(0);
+			empty = (string)*voice->getToken();
+		} else {
+			empty = "=";
+		}
+	} else if (isInterpretationSlice()) {
+		empty = "*";
+	}
 
 	if (recip) {
 		if (isNoteSlice()) {
@@ -226,14 +236,13 @@ void GridSlice::transferTokens(HumdrumFile& outfile, bool recip) {
 			} else {
 				token = new HumdrumToken("=X");
 			}
-//ggg
 			empty = (string)*token;
 		} else if (isInterpretationSlice()) {
 			token = new HumdrumToken("*");
 			empty = "*";
 		} else if (isGraceSlice()) {
 			token = new HumdrumToken("q");
-			empty = ".";
+			empty = ".H";
 		} else {
 			token = new HumdrumToken("55");
 			empty = "!z";
