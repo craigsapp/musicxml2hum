@@ -1434,8 +1434,6 @@ string MxmlEvent::getPostfixNoteInfo(bool primarynote) const {
 // see: http://www.music-cog.ohio-state.edu/Humdrum/representations/kern.html
 //
 // Others to add:
-//   Mordent
-//   Inverted mordent
 //   Turn
 //   Inverted turn (Wagnerian turn)
 //   TrillTurn (TR or tR).
@@ -1456,6 +1454,8 @@ void MxmlEvent::addNotations(stringstream& ss, xml_node notations) const {
 	bool strongaccent   = false;
 	bool fermata        = false;
 	bool trill          = false;
+	bool umordent       = false;
+	bool lmordent       = false;
 	bool upbow          = false;
 	bool downbow        = false;
 	bool harmonic       = false;
@@ -1496,9 +1496,22 @@ void MxmlEvent::addNotations(stringstream& ss, xml_node notations) const {
 		} else if (strcmp(child.name(), "ornaments") == 0) {
 			grandchild = child.first_child();
 			while (grandchild) {
+
 				if (strcmp(grandchild.name(), "trill-mark") == 0) {
 					trill = true;
 				}
+
+				// umordent
+          	// <ornaments>
+          	//   <inverted-mordent default-x="-4" default-y="-65" placement="below"/>
+          	// </ornaments>
+				if (strcmp(grandchild.name(), "inverted-mordent") == 0) {
+					umordent = true;
+				}
+				if (strcmp(grandchild.name(), "mordent") == 0) {
+					lmordent = true;
+				}
+
 				grandchild = grandchild.next_sibling();
 			}
 		} else if (strcmp(child.name(), "fermata") == 0) {
@@ -1518,6 +1531,8 @@ void MxmlEvent::addNotations(stringstream& ss, xml_node notations) const {
 	if (fermata)      { ss << ";";  }
 	if (upbow)        { ss << "v";  }
 	if (downbow)      { ss << "u";  }
+	if (umordent)     { ss << "m";  }  // figure out whole-tone mordents later
+	if (lmordent)     { ss << "w";  }  // figure out whole-tone mordents later
 
 }
 
