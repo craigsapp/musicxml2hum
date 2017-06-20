@@ -1,8 +1,8 @@
-## hum2ly GNU makefile 
+## musicxml2hum GNU makefile 
 ##
 ## Programmer:    Craig Stuart Sapp <craig@ccrma.stanford.edu>
 ## Creation Date: Sat Aug  6 10:57:54 CEST 2016
-## Last Modified: Sun Sep 18 12:31:52 PDT 2016
+## Last Modified: Tue Jun 20 11:54:25 CEST 2017
 ## Filename:      musicxml2hum/Makefile
 ##
 ## Description: This Makefile compiles the musicxml2hum program.
@@ -12,90 +12,49 @@
 ##
 
 # targets which don't actually refer to files:
-.PHONY: external tests humlib pugixml
+.PHONY: tests 
+
 .SUFFIXES:
 
-OBJDIR    = obj
 SRCDIR    = src
 INCDIR    = include
 BINDIR    = bin
-TARGET    = musicxml2hum
-INCDIRS   = -I$(INCDIR)
-INCDIRS  += -Iexternal/humlib/include 
-INCDIRS  += -Iexternal/pugixml/src 
-LIBDIRS   = -Lexternal/humlib/lib
-LIBDIRS  += -Lexternal/pugixml
-HUMLIB    = humlib
-PUGIXML   = pugixml
 COMPILER  = g++
-#PREFLAGS  = -O3 -Wall $(INCDIRS)
-PREFLAGS  = -Wall $(INCDIRS)
-POSTFLAGS = $(LIBDIRS) -l$(HUMLIB) -l$(PUGIXML)
+TARGET    = musicxml2hum
+PREFLAGS  = -Wall -O3 -I$(INCDIR)
+POSTFLAGS = 
 
 # Humlib needs C++11:
 PREFLAGS += -std=c++11
 
-# setting up the directory paths to search for dependency files
-vpath %.h   $(INCDIR)
-vpath %.cpp $(SRCDIR)
-vpath %.o   $(OBJDIR)
+FILES    = src/humlib.cpp src/musicxml2hum.cpp src/pugixml.cpp
 
-# generating a list of the object files
-OBJS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%,$(patsubst %.cpp,%.o,$(wildcard $(SRCDIR)/*.cpp)))
-
-
-all: objdir bindir external $(OBJS)
-	@echo [CC] $(BINDIR)/$(TARGET)
-	@$(COMPILER) $(PREFLAGS) -o $(BINDIR)/$(TARGET) $(OBJS) $(POSTFLAGS) 
-#		&& strip $(BINDIR)/$(TARGET)
-
-objdir:
-	mkdir -p $(OBJDIR)
+all: bindir update compile
 
 
 bindir:
-	mkdir -p $(BINDIR)
+	@mkdir -p $(BINDIR)
 
+
+download: update
 update:
-	git pull
+	@(cd src; ./.download);
+	@(cd include; ./.download);
 
-external:
-ifeq ($(wildcard external/humlib/lib/libhumlib.a),)
-	(cd external && $(MAKE) humlib)
-endif
-ifeq ($(wildcard libpugixml.a),)
-	(cd external && $(MAKE) pugixml)
-endif
 
 install:
 	sudo cp bin/musicxml2hum /usr/local/bin/
 
+
+compile: bindir
+	@echo [CC] $(BINDIR)/$(TARGET)
+	@$(COMPILER) $(PREFLAGS) $(FILES) -o $(BINDIR)/$(TARGET) && \
+		strip $(BINDIR)/$(TARGET)
+	@echo Executable created in $(BINDIR)/$(TARGET)
+	@echo Type "[32mmake install[0m" to copy to /usr/local/bin.
+
+
 tests:
 	for i in tests/*.xml; do ./$(TARGET) $$i > tests/`basename $$i .xml`.krn; done
-
-
-clean:
-	-rm $(OBJDIR)/*.o
-	-rmdir $(OBJDIR)
-
-
-superclean: clean
-	(cd external && $(MAKE) clean)
-	-rm $(BINDIR)/$(TARGET)
-	-rmdir $(BINDIR)
-
-
-###########################################################################
-#                                                                         #
-# defining an explicit rule for object file dependencies                  #
-#                                                                         #
-
-$(OBJDIR)/%.o : %.cpp
-	@echo [CC] $@
-	@$(COMPILER) $(PREFLAGS) -g -c -o $(OBJDIR)/$(notdir $@) $<
-
-
-#                                                                         #
-###########################################################################
 
 

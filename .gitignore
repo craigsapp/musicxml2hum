@@ -1,6 +1,9 @@
 obj
 *.o
 *.zip
+*.cpp
+*.hpp
+*.h
 external
 tests
 bin
