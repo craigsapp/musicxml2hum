@@ -20,13 +20,13 @@ sub getFile {
 	$basename =~ s/.*\///;
 	my $command;
 	if ($wget !~ /^\s*$/) {
-		$command = "$wget \"$baseaddr/$file\" -O \"$basename\" 2> /dev/null";
+		$command = "$wget \"$baseaddr/$file\" -O \"$basename\" &> /dev/null";
 		`$command`;
 	} else {
-		$command = "$curl --remote-name \"$baseaddr/$file\" 2> /dev/null";
+		$command = "$curl --remote-name \"$baseaddr/$file\" &> /dev/null";
 		`$command`;
 	}
-	print "$command\n";
+	# print "$command\n";
 }
 
 

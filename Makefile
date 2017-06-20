@@ -38,6 +38,7 @@ bindir:
 
 download: update
 update:
+	@echo Downloading source code...
 	@(cd src; ./.download);
 	@(cd include; ./.download);
 
